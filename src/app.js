@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const config = require('./config/env');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const roomRoutes = require('./routes/roomRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const AppError = require('./utils/AppError');
 const app = express();
@@ -54,6 +55,8 @@ app.get('/health', (req, res) => {
 app.use( '/api/v1/auth',  authRoutes);
 
 app.use( '/api/v1/admin', loginLimiter, adminRoutes);
+
+app.use( '/api/v1/rooms', roomRoutes);
 
 app.use((req, res, next) => {
     next(new AppError('Ruta no encontrada', 404));
