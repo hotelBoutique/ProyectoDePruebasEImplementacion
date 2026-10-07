@@ -8,7 +8,8 @@ const rateLimit = require('express-rate-limit');
 const config = require('./config/env');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const errorHandler =require('./middlewares/errorHandler');
+const errorHandler = require('./middlewares/errorHandler');
+const AppError = require('./utils/AppError');
 const app = express();
 
 app.disable('x-powered-by');
@@ -54,11 +55,8 @@ app.use( '/api/v1/auth',  authRoutes);
 
 app.use( '/api/v1/admin', loginLimiter, adminRoutes);
 
-app.use((req, res) => {
-    res.status(404).json({
-        status: 'fail',
-        message: `Ruta ${req.originalUrl} no encontrada`
-    });
+app.use((req, res, next) => {
+    next(new AppError('Ruta no encontrada', 404));
 });
 
 app.use(errorHandler);
