@@ -8,8 +8,7 @@ const {protect} = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.post(
-    '/register',
+router.post('/register',
 
     body('name')
         .trim()
@@ -32,8 +31,7 @@ router.post(
     authController.register
 );
 
-router.post(
-    '/login',
+router.post('/login',
 
     body('email')
         .isEmail()
@@ -51,8 +49,7 @@ router.post(
     authController.login
 );
 
-router.get(
-    '/me',
+router.get('/me',
     protect,
     authController.me
 );

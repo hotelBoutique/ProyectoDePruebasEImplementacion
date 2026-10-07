@@ -16,9 +16,7 @@ if (resultado.error) {
     throw new Error(`no se puedo cargar el archivo de entorno: ${envPath}`)
 }
 
-const requiereVariables = [
-    'MONGODB_URI', 'JWT_SECRET'
-]
+const requiereVariables = ['MONGODB_URI', 'JWT_SECRET']
 
 for (const varable of requiereVariables){
     if (!process.env[varable]){

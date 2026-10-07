@@ -12,9 +12,7 @@ const protect = catchAsync(
         const authHeader =
             req.headers.authorization;
 
-        if (
-            !authHeader ||
-            !authHeader.startsWith('Bearer ')
+        if (!authHeader || !authHeader.startsWith('Bearer ')
         ) {
             throw new AppError(
                 'Token de autenticación requerido',
@@ -22,19 +20,14 @@ const protect = catchAsync(
             );
         }
 
-        const token =
-            authHeader.split(' ')[1];
+        const token = authHeader.split(' ')[1];
 
-        const decoded =
-            jwt.verify(
+        const decoded = jwt.verify(
                 token,
                 config.JWT_SECRET
             );
 
-        const user =
-            await User.findById(
-                decoded.sub
-            );
+        const user = await User.findById( decoded.sub);
 
         if (!user) {
             throw new AppError(
