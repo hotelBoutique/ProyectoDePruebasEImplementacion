@@ -7,21 +7,21 @@ const errorHandler = (err, req, res, next) => {
 
     if (err.name === 'JsonWebTokenError') {
         return res.status(401).json({
-            status: 'fail',
+            success: false,
             message: 'Token inválido'
         });
     }
 
     if (err.name === 'TokenExpiredError') {
         return res.status(401).json({
-            status: 'fail',
+            success: false,
             message: 'Token expirado'
         });
     }
 
     if (err.code === 11000) {
         return res.status(409).json({
-            status: 'fail',
+            success: false,
             message: 'El recurso ya existe'
         });
     }
@@ -29,7 +29,7 @@ const errorHandler = (err, req, res, next) => {
     if (err.name === 'ValidationError') {
 
         return res.status(400).json({
-            status: 'fail',
+            success: false,
             message: 'Datos inválidos',
             details: Object.values(
                 err.errors
@@ -42,7 +42,7 @@ const errorHandler = (err, req, res, next) => {
     if (err.name === 'CastError') {
 
         return res.status(400).json({
-            status: 'fail',
+            success: false,
             message: 'Identificador inválido'
         });
     }
@@ -52,17 +52,22 @@ const errorHandler = (err, req, res, next) => {
         return res.status(
             err.statusCode
         ).json({
-            status: err.status,
+            success: false,
             message: err.message
         });
     }
 
+    if (err.statusCode === 404) {
+
+        return res.status(404).json({
+            success: false,
+            message: 'Recurso no encontrado'
+        });
+    }
+
     res.status(500).json({
-        status: 'error',
-        message:
-            process.env.NODE_ENV === 'development'
-                ? err.message
-                : 'Error interno del servidor'
+        success: false,
+        message: 'Error interno del servidor'
     });
 };
 
