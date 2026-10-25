@@ -427,8 +427,12 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               mode={activeItem === 'users-create' ? 'create' : activeItem === 'users-admin-create' ? 'create-admin' : 'list'}
               onNavigate={selectItem}
             />
-          ) : isAdmin && activeItem === 'rooms-create' ? (
-            <RoomsPage token={token} />
+          ) : isAdmin && ['rooms-list', 'rooms-create'].includes(activeItem) ? (
+            <RoomsPage
+              token={token}
+              mode={activeItem === 'rooms-create' ? 'create' : 'list'}
+              onNavigate={selectItem}
+            />
           ) : (
             <section className="module-placeholder" aria-labelledby="module-title">
               <span className="module-placeholder-mark" aria-hidden="true"><SidebarIcon name="home" /></span>

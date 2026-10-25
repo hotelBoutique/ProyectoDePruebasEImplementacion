@@ -37,7 +37,20 @@ const createRoom = catchAsync(async (req, res) => {
     });
 });
 
+const updateRoom = catchAsync(async (req, res) => {
+    const room = await roomService.updateRoom(req.params.id, req.body);
+
+    res.status(200).json({
+        status: 'success',
+        message: req.body.status === 'fuera de servicio'
+            ? 'La habitación se desactivó correctamente'
+            : 'La habitación se actualizó correctamente',
+        data: { room }
+    });
+});
+
 module.exports = {
     getRooms,
-    createRoom
+    createRoom,
+    updateRoom
 };
