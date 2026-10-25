@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import {
   getAdminDashboard,
   getCurrentUser,
@@ -297,7 +298,7 @@ function LoginScreen({ onLogin, busy, message, messageTone }) {
   );
 }
 
-function RoleDashboard({ user, role, onLogout, busy }) {
+function RoleDashboard({ user, role, token, onLogout, busy }) {
   const isAdmin = role === ROLE_ADMIN;
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'equipo';
   const roleLabel = isAdmin ? 'ADMINISTRADOR' : 'RECEPCIONISTA';
@@ -430,6 +431,12 @@ function RoleDashboard({ user, role, onLogout, busy }) {
                 <span className="account-role-pill">{sidebarRoleLabel}</span>
               </div>
             </section>
+          ) : isAdmin && (activeItem === 'users-list' || activeItem === 'users-create') ? (
+            <ReceptionistsPage
+              token={token}
+              mode={activeItem === 'users-create' ? 'create' : 'list'}
+              onNavigate={selectItem}
+            />
           ) : (
             <section className="module-placeholder" aria-labelledby="module-title">
               <span className="module-placeholder-mark" aria-hidden="true"><SidebarIcon name="home" /></span>
@@ -577,7 +584,7 @@ export default function App() {
   }
 
   if (view === 'dashboard') {
-    return <RoleDashboard user={user} role={role} onLogout={handleLogout} busy={busy} />;
+    return <RoleDashboard user={user} role={role} token={token} onLogout={handleLogout} busy={busy} />;
   }
 
   return (
