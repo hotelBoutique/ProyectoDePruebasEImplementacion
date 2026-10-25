@@ -20,30 +20,6 @@ const generateToken = (user) => {
     );
 };
 
-const register = async ({ name, email, password }) => {
-
-    const existingUser = await User.findOne({email});
-
-    if (existingUser) {
-        throw new AppError( 'El correo ya está registrado', 409);
-    }
-
-    const user = await User.create({
-        name,
-        email,
-        password,
-        role: 'user'
-    });
-
-    const token = generateToken(user);
-
-    return {
-        user,
-        token
-    };
-};
-
-
 const login = async (email, password) => {
 
     const user = await User
@@ -56,6 +32,10 @@ const login = async (email, password) => {
         ))
     ) {
         throw new AppError('Correo o contraseña incorrectos',401);
+    }
+
+    if (user.isActive === false) {
+        throw new AppError('La cuenta está desactivada', 403);
     }
 
     const token = generateToken(user);
@@ -95,7 +75,6 @@ const getMe = async (userId) => {
 
 
 module.exports = {
-    register,
     login,
     logout,
     getMe

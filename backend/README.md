@@ -47,28 +47,37 @@ backend/
     │   ├── env.js
     │   └── database.js
     │
+    ├── constants/
+    │   └── roles.js
+    │
     ├── models/
     │   └── user.js
     │
     ├── services/
-    │   └── authService.js
+    │   ├── authService.js
+    │   └── userService.js
     │
     ├── controllers/
-    │   └── authController.js
+    │   ├── authController.js
+    │   └── userController.js
     │
     ├── routes/
     │   ├── authRoutes.js
-    │   └── adminRoutes.js
+    │   ├── adminRoutes.js
+    │   └── userRoutes.js
     │
     ├── middlewares/
     │   ├── authMiddleware.js
     │   ├── validate.js
     │   └── errorHandler.js
     │
-    └── utils/
-        ├── AppError.js
-        ├── catchAsync.js
-        └── logger.js
+    ├── utils/
+    │   ├── AppError.js
+    │   ├── catchAsync.js
+    │   └── logger.js
+    │
+    └── scripts/
+        └── migrateUserRoles.js
 ```
 
 La arquitectura puede entenderse como una combinación de:
@@ -245,14 +254,33 @@ name
 email
 password
 role
+isActive
 ```
 
 El campo `role` solamente admite:
 
 ```text
-user
-admin
+ADMIN
+RECEPCIONISTA
 ```
+
+Los registros nuevos reciben `RECEPCIONISTA` por defecto. El campo es obligatorio y
+Mongoose rechaza cualquier otro valor.
+
+Los usuarios que ya existían se actualizan ejecutando la migración desde `backend/`:
+
+```bash
+NODE_ENV=development npm run migrate:roles
+```
+
+La migración convierte `admin` a `ADMIN`, `user` a `RECEPCIONISTA` y asigna
+`RECEPCIONISTA` a los documentos sin rol. Es idempotente y se puede ejecutar más de
+una vez. Para otro entorno, define `NODE_ENV` y configura el archivo `.env` que le
+corresponde antes de ejecutarla.
+
+El registro para crear recepcionistas requiere un `ADMIN` y siempre asigna
+`RECEPCIONISTA`. La creación y asignación de cuentas `ADMIN` se hará mediante un
+flujo administrativo o una operación controlada en MongoDB.
 
 La contraseña tiene:
 
@@ -301,7 +329,6 @@ Contiene la lógica de autenticación.
 Actualmente implementa:
 
 ```text
-register()
 login()
 logout()
 getMe()
@@ -310,23 +337,15 @@ generateToken()
 
 ## Registro
 
-El registro:
+El registro administrativo:
 
-1. Comprueba si el correo ya existe.
-2. Crea el usuario.
-3. Fuerza el rol inicial a `user`.
-4. Genera un JWT.
-5. Devuelve usuario y token.
+1. Requiere un JWT de `ADMIN`.
+2. Comprueba si el correo ya existe.
+3. Crea una cuenta activa con rol `RECEPCIONISTA`.
+4. Devuelve la cuenta, sin emitir un token para el usuario nuevo.
 
-Esto evita que una persona pueda registrarse directamente como `admin` enviando:
-
-```json
-{
-  "role": "admin"
-}
-```
-
-desde Postman.
+La ruta antigua `/api/v1/auth/register` se conserva por compatibilidad y también
+requiere un JWT de `ADMIN`. El rol siempre se asigna en el servidor.
 
 ## Login
 
@@ -389,7 +408,7 @@ y genera:
 Response
 ```
 
-La lógica de negocio permanece en `authService.js`.
+La lógica de negocio permanece en `authService.js` y `userService.js`.
 
 Por ejemplo, el controller no genera el hash de una contraseña ni consulta MongoDB directamente.
 
@@ -404,17 +423,34 @@ Define los endpoints de autenticación.
 Actualmente:
 
 ```http
-POST /api/v1/auth/register
+POST /api/v1/auth/register  (solo ADMIN; compatibilidad)
 POST /api/v1/auth/login
 POST /api/v1/auth/logout
 GET  /api/v1/auth/me
 ```
+
+## Gestión de recepcionistas
+
+Estas rutas requieren `Authorization: Bearer <TOKEN_ADMIN>`:
+
+```http
+POST  /api/v1/users
+GET   /api/v1/users
+PATCH /api/v1/users/:id/status
+```
+
+La creación asigna siempre el rol `RECEPCIONISTA` y activa la cuenta. El listado
+incluye cuentas activas e inactivas. El cambio de estado recibe un booleano JSON,
+por ejemplo `{ "isActive": false }`. Los endpoints solo operan sobre usuarios
+`RECEPCIONISTA`; no permiten modificar ni desactivar cuentas `ADMIN`.
 
 ## Registro
 
 ```http
 POST /api/v1/auth/register
 ```
+
+Esta ruta requiere `Authorization: Bearer <TOKEN_ADMIN>`.
 
 Ejemplo:
 
@@ -541,7 +577,7 @@ Su objetivo es autorizar según el rol.
 Por ejemplo:
 
 ```javascript
-restrictTo('admin')
+restrictTo('ADMIN')
 ```
 
 comprueba:
@@ -595,9 +631,9 @@ JWT válido
 Usuario autenticado
    │
    ▼
-role = user
+role = RECEPCIONISTA
    │
-   └── no puede entrar a una ruta exclusiva de admin
+   └── no puede entrar a una ruta exclusiva de ADMIN
 ```
 
 ---
@@ -605,13 +641,15 @@ role = user
 # 15. `routes/adminRoutes.js`
 
 Actualmente se utiliza para demostrar una ruta protegida exclusivamente para administradores.
+Las reglas para los demás módulos se añadirán cuando se defina qué operaciones
+corresponden a cada rol.
 
 La estructura es:
 
 ```text
 protect
    ↓
-restrictTo('admin')
+restrictTo('ADMIN')
    ↓
 controller
 ```
@@ -778,7 +816,10 @@ Actualmente el backend ya cuenta con una base funcional de autenticación.
 [x] Validación JWT
 [x] Middleware protect
 [x] Middleware restrictTo
-[x] Roles user/admin
+[x] Roles ADMIN/RECEPCIONISTA
+[x] Crear y listar recepcionistas (solo ADMIN)
+[x] Activar y desactivar recepcionistas (solo ADMIN)
+[x] Bloquear login y tokens de cuentas desactivadas
 [x] Ruta /me
 [x] Validación de entrada
 [x] Manejo de errores
@@ -798,30 +839,9 @@ El proyecto todavía puede crecer en varias direcciones.
 
 ## Gestión de usuarios
 
-Actualmente no existe una API completa para:
-
-- listar usuarios.
-- consultar un usuario específico.
-- actualizar usuarios.
-- desactivar usuarios.
-- eliminar usuarios.
-- cambiar roles.
-
-Una siguiente funcionalidad lógica sería:
-
-```http
-PATCH /api/v1/users/:id/role
-```
-
-protegida por:
-
-```text
-protect
-   ↓
-restrictTo('admin')
-```
-
-Así solamente un administrador podría promover o degradar usuarios.
+La gestión de cuentas de recepcionistas ya está implementada en `/api/v1/users`.
+Todavía no hay endpoints para consultar uno específico, editar sus datos, eliminar
+usuarios ni cambiar roles.
 
 ---
 
@@ -829,50 +849,15 @@ Así solamente un administrador podría promover o degradar usuarios.
 
 El orden recomendado para continuar es:
 
-## Etapa 1 — Completar usuarios
+## Etapa 1 — Completar autorización por módulo
 
-Crear:
-
-```text
-users/
-├── userController.js
-├── userService.js
-└── userRoutes.js
-```
-
-y agregar operaciones para:
-
-```text
-GET /users
-GET /users/:id
-PATCH /users/:id
-PATCH /users/:id/role
-DELETE /users/:id
-```
-
-Todas deben tener reglas de autorización apropiadas.
+Definir y aplicar las reglas de acceso de `ADMIN` y `RECEPCIONISTA` para cada módulo
+cuando se acuerde la matriz de permisos. El middleware `protect` y `restrictTo` ya
+está disponible para proteger esas rutas.
 
 ---
 
-## Etapa 2 — Completar autorización
-
-Agregar reglas como:
-
-```text
-user
-   ↓
-puede consultar sus propios datos
-
-admin
-   ↓
-puede administrar usuarios
-```
-
-Esto permitirá probar realmente la diferencia entre autenticación y autorización.
-
----
-
-## Etapa 3 — Mejorar seguridad
+## Etapa 2 — Mejorar seguridad
 
 Posibles mejoras:
 
@@ -886,7 +871,7 @@ Posibles mejoras:
 
 ---
 
-## Etapa 4 — Crear el recurso principal del proyecto
+## Etapa 3 — Crear el recurso principal del proyecto
 
 Una vez terminada la autenticación, la API puede comenzar a trabajar sobre las entidades reales del sistema.
 
@@ -951,8 +936,10 @@ GET http://localhost:3000/health
 ## Registro
 
 ```http
-POST http://localhost:3000/api/v1/auth/register
+POST http://localhost:3000/api/v1/users
 ```
+
+Header: `Authorization: Bearer <TOKEN_ADMIN>`.
 
 Body:
 
@@ -963,6 +950,23 @@ Body:
   "password": "12345678"
 }
 ```
+
+## Listar recepcionistas
+
+```http
+GET http://localhost:3000/api/v1/users
+Authorization: Bearer <TOKEN_ADMIN>
+```
+
+## Desactivar o activar una cuenta
+
+```http
+PATCH http://localhost:3000/api/v1/users/<USER_ID>/status
+Authorization: Bearer <TOKEN_ADMIN>
+Content-Type: application/json
+```
+
+Body para desactivar: `{ "isActive": false }`. Para reactivar, envía `true`.
 
 ## Login
 
@@ -1020,7 +1024,7 @@ Authorization: Bearer <TOKEN>
 # 25. Flujo completo de autenticación
 
 ```text
-REGISTRO
+CREAR RECEPCIONISTA (ADMIN)
    │
    ▼
 Validar datos
@@ -1039,10 +1043,7 @@ Validar datos
     MongoDB
        │
        ▼
-    jwt.sign()
-       │
-       ▼
-     TOKEN
+    cuenta creada
 
 
 LOGIN
@@ -1095,11 +1096,11 @@ RUTA SOLO ADMIN
 protect
    │
    ▼
-restrictTo('admin')
+restrictTo('ADMIN')
    │
-   ├── user → 403
+   ├── RECEPCIONISTA → 403
    │
-   └── admin
+   └── ADMIN
        │
        ▼
     controller

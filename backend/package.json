@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon src/server.js",
     "start": "node src/server.js",
+    "migrate:roles": "node src/scripts/migrateUserRoles.js",
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles"
   },
   "keywords": [],
