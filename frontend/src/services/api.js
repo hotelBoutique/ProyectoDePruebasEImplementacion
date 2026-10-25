@@ -74,6 +74,14 @@ export function createReceptionist(token, receptionist) {
   });
 }
 
+export function createAdminUser(token, account) {
+  return apiRequest('/users/admin', {
+    method: 'POST',
+    token,
+    body: JSON.stringify(account),
+  });
+}
+
 export function setReceptionistStatus(token, userId, isActive) {
   return apiRequest(`/users/${encodeURIComponent(userId)}/status`, {
     method: 'PATCH',

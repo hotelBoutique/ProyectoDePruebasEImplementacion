@@ -2,7 +2,7 @@ const User = require('../models/user');
 const AppError = require('../utils/AppError');
 const { ROLES } = require('../constants/roles');
 
-const createReceptionist = async ({ name, email, password }) => {
+const createAccount = async ({ name, email, password }, role) => {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -13,9 +13,17 @@ const createReceptionist = async ({ name, email, password }) => {
         name,
         email,
         password,
-        role: ROLES.RECEPCIONISTA,
+        role,
         isActive: true
     });
+};
+
+const createReceptionist = async (account) => {
+    return createAccount(account, ROLES.RECEPCIONISTA);
+};
+
+const createAdmin = async (account) => {
+    return createAccount(account, ROLES.ADMIN);
 };
 
 const getReceptionists = async () => {
@@ -84,6 +92,7 @@ const updateReceptionist = async (userId, changes) => {
 
 module.exports = {
     createReceptionist,
+    createAdmin,
     getReceptionists,
     setReceptionistStatus,
     updateReceptionist

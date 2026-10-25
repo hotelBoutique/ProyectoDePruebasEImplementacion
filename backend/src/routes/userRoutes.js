@@ -24,6 +24,23 @@ router.use(protect, restrictTo(ROLES.ADMIN));
 router.get('/', userController.getReceptionists);
 
 router.post(
+    '/admin',
+    body('name')
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('El nombre debe tener entre 2 y 100 caracteres'),
+    body('email')
+        .isEmail()
+        .withMessage('Correo inválido')
+        .normalizeEmail(),
+    body('password')
+        .isLength({ min: 8 })
+        .withMessage('La contraseña debe tener al menos 8 caracteres'),
+    validate,
+    userController.createAdmin
+);
+
+router.post(
     '/',
     body('name')
         .trim()
