@@ -11,6 +11,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const receptionRoutes = require('./routes/receptionRoutes');
 const userRoutes = require('./routes/userRoutes');
 const roomRoutes = require('./routes/roomRoutes');
+const productRoutes = require('./routes/productRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const AppError = require('./utils/AppError');
 const app = express();
@@ -61,7 +62,8 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/reception', receptionRoutes);
 app.use('/api/v1/users', userRoutes);
 
-app.use( '/api/v1/rooms', roomRoutes);
+app.use('/api/v1/rooms', roomRoutes);
+app.use('/api/v1/products', productRoutes);
 
 app.use((req, res, next) => {
     next(new AppError('Ruta no encontrada', 404));
