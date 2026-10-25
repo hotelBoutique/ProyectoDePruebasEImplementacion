@@ -37,64 +37,7 @@ describe('POST /api/v1/rooms', () => {
         jest.clearAllMocks();
     });
 
-    describe('PATCH /api/v1/rooms/:id', () => {
-        beforeEach(() => {
-            jest.clearAllMocks();
-        });
-
-        it('updates room information and confirms the change', async () => {
-            const room = { _id: '507f1f77bcf86cd799439011', number: '102', price: 200 };
-            roomService.updateRoom.mockResolvedValue(room);
-
-            const response = await request(app)
-                .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
-                .send({ number: '102', price: 200 });
-
-            expect(response.status).toBe(200);
-            expect(response.body.message).toBe('La habitación se actualizó correctamente');
-            expect(response.body.data.room).toEqual(room);
-        });
-
-        it('rejects required fields left blank', async () => {
-            const response = await request(app)
-                .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
-                .send({ type: ' ' });
-
-            expect(response.status).toBe(400);
-            expect(response.body.errors.map(({ msg }) => msg)).toContain('El tipo de habitación es obligatorio');
-            expect(roomService.updateRoom).not.toHaveBeenCalled();
-        });
-
-        it('returns a clear conflict for a duplicate room number', async () => {
-            roomService.updateRoom.mockRejectedValue(
-                new AppError('Ya existe una habitación con ese número', 409)
-            );
-
-            const response = await request(app)
-                .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
-                .send({ number: '102' });
-
-            expect(response.status).toBe(409);
-            expect(response.body.message).toBe('Ya existe una habitación con ese número');
-        });
-
-        it('allows administrators to deactivate a room', async () => {
-            roomService.updateRoom.mockResolvedValue({
-                _id: '507f1f77bcf86cd799439011',
-                status: 'fuera de servicio'
-            });
-
-            const response = await request(app)
-                .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
-                .send({ status: 'fuera de servicio' });
-
-            expect(response.status).toBe(200);
-            expect(response.body.message).toBe('La habitación se desactivó correctamente');
-            expect(response.body.data.room.status).toBe('fuera de servicio');
-        });
-    });
-
-    it('registers a room and confirms success', async () => {
+    it('allows an administrator to register a room and confirms success', async () => {
         const room = { _id: 'room-id', number: '101', type: 'Suite', price: 150 };
         roomService.createRoom.mockResolvedValue(room);
 
@@ -134,7 +77,7 @@ describe('POST /api/v1/rooms', () => {
         expect(response.body.message).toBe('Ya existe una habitación con ese número');
     });
 
-    it('allows only administrators to register a room', async () => {
+    it('rejects receptionists attempting to register a room', async () => {
         const response = await request(app)
             .post('/api/v1/rooms')
             .set('x-role', 'RECEPCIONISTA')
@@ -142,5 +85,72 @@ describe('POST /api/v1/rooms', () => {
 
         expect(response.status).toBe(403);
         expect(roomService.createRoom).not.toHaveBeenCalled();
+    });
+});
+
+describe('PATCH /api/v1/rooms/:id', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('updates room information and confirms the change', async () => {
+        const room = { _id: '507f1f77bcf86cd799439011', number: '102', price: 200 };
+        roomService.updateRoom.mockResolvedValue(room);
+
+        const response = await request(app)
+            .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
+            .send({ number: '102', price: 200 });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('La habitación se actualizó correctamente');
+        expect(response.body.data.room).toEqual(room);
+    });
+
+    it('rejects required fields left blank', async () => {
+        const response = await request(app)
+            .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
+            .send({ type: ' ' });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg)).toContain('El tipo de habitación es obligatorio');
+        expect(roomService.updateRoom).not.toHaveBeenCalled();
+    });
+
+    it('returns a clear conflict for a duplicate room number', async () => {
+        roomService.updateRoom.mockRejectedValue(
+            new AppError('Ya existe una habitación con ese número', 409)
+        );
+
+        const response = await request(app)
+            .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
+            .send({ number: '102' });
+
+        expect(response.status).toBe(409);
+        expect(response.body.message).toBe('Ya existe una habitación con ese número');
+    });
+
+    it('allows administrators to deactivate a room', async () => {
+        roomService.updateRoom.mockResolvedValue({
+            _id: '507f1f77bcf86cd799439011',
+            status: 'fuera de servicio'
+        });
+
+        const response = await request(app)
+            .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
+            .send({ status: 'fuera de servicio' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('La habitación se desactivó correctamente');
+        expect(response.body.data.room.status).toBe('fuera de servicio');
+    });
+
+    it('keeps room updates restricted to administrators', async () => {
+        const response = await request(app)
+            .patch('/api/v1/rooms/507f1f77bcf86cd799439011')
+            .set('x-role', 'RECEPCIONISTA')
+            .send({ price: 200 });
+
+        expect(response.status).toBe(403);
+        expect(roomService.updateRoom).not.toHaveBeenCalled();
     });
 });

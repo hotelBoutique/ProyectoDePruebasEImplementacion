@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
+import ReservationsPage from './pages/ReservationsPage.jsx';
 import {
   getAdminDashboard,
   getCurrentUser,
@@ -431,8 +432,23 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <RoomsPage
               token={token}
               mode={activeItem === 'rooms-create' ? 'create' : 'list'}
+              canCreate
+              canManage
+              createItemId="rooms-create"
+              listItemId="rooms-list"
               onNavigate={selectItem}
             />
+          ) : !isAdmin && activeItem === 'reception-rooms-list' ? (
+            <RoomsPage
+              token={token}
+              mode="list"
+              canCreate={false}
+              canManage={false}
+              listItemId="reception-rooms-list"
+              onNavigate={selectItem}
+            />
+          ) : !isAdmin && activeItem === 'reception-reservations-create' ? (
+            <ReservationsPage token={token} />
           ) : (
             <section className="module-placeholder" aria-labelledby="module-title">
               <span className="module-placeholder-mark" aria-hidden="true"><SidebarIcon name="home" /></span>

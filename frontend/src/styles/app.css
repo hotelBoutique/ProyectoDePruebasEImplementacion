@@ -771,6 +771,32 @@ h1 {
 .room-description { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 9px; line-height: 1.5; }
 .rooms-table td:last-child { min-width: 190px; }
 .room-description-input { min-height: 90px; height: auto !important; padding-top: 11px; resize: vertical; }
+.reservations-page { display: flex; flex-direction: column; gap: 22px; }
+.reservations-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.reservations-heading .eyebrow { margin-bottom: 12px; }
+.reservations-heading h1 { font-size: clamp(38px, 4.3vw, 54px); }
+.reservations-heading .intro { margin: 12px 0 0; font-size: 12px; }
+.reservation-notice { padding: 12px 15px; border: 1px solid transparent; border-radius: 6px; font-size: 11px; line-height: 1.5; }
+.reservation-notice.feedback-success { background: #EAF0E9; border-color: #D7E2D5; }
+.reservation-notice.feedback-error { background: #F5E9E5; border-color: #EBD5CE; }
+.reservation-form-section { padding-top: 22px; }
+.reservation-form-section > .card-kicker { display: block; padding-bottom: 2px; }
+.reservation-form-section + .reservation-form-section { border-top: 1px solid var(--color-border); }
+.reservation-inline-error { margin: 0; color: var(--color-danger); font-size: 11px; line-height: 1.6; }
+.reservation-total-preview { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; padding: 16px; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 6px; }
+.reservation-total-preview span { color: var(--color-text-muted); font-size: 11px; }
+.reservation-total-preview strong { color: var(--color-primary); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 25px; }
+.reservation-receipt { padding: 26px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; box-shadow: 0 10px 24px rgba(26, 46, 59, .04); }
+.reservation-receipt-heading { display: flex; align-items: center; gap: 15px; padding-bottom: 20px; border-bottom: 1px solid var(--color-border); }
+.reservation-receipt-mark { width: 38px; height: 38px; display: grid; flex: 0 0 38px; place-items: center; color: var(--color-success); background: #EAF0E9; border-radius: 50%; font-size: 19px; }
+.reservation-receipt-heading h2 { margin: 5px 0 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 29px; }
+.reservation-receipt-heading p { margin: 5px 0 0; color: var(--color-text-muted); font-size: 10px; }
+.reservation-receipt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 23px 0; }
+.reservation-receipt-grid > div { min-width: 0; }
+.reservation-receipt-grid dt { margin-bottom: 5px; color: var(--color-text-muted); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+.reservation-receipt-grid dd { margin: 0; overflow-wrap: anywhere; color: var(--color-primary); font-size: 12px; font-weight: 600; }
+.reservation-receipt-grid .reservation-receipt-total { padding-top: 14px; border-top: 1px solid var(--color-border); }
+.reservation-receipt-total dd { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 25px; }
 
 .receptionist-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
 .receptionist-stat-card { min-height: 123px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 18px 19px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 7px; box-shadow: 0 8px 20px rgba(26, 46, 59, .035); }
@@ -839,6 +865,8 @@ h1 {
   .receptionists-heading { align-items: flex-start; flex-direction: column; gap: 17px; }
   .rooms-heading { align-items: flex-start; flex-direction: column; gap: 17px; }
   .rooms-create-action { width: 100%; }
+  .reservations-heading { align-items: flex-start; flex-direction: column; gap: 17px; }
+  .reservation-receipt { padding: 19px; }
   .receptionists-create-actions { width: 100%; align-items: stretch; flex-direction: column; }
   .receptionists-create-actions .button-secondary,
   .receptionists-create-action { width: 100%; }
@@ -864,6 +892,7 @@ h1 {
   .receptionist-stat-card strong { grid-column: 2; grid-row: 1 / span 2; }
   .receptionist-stat-card > span:last-child { grid-column: 1; }
   .receptionist-form-heading { flex-direction: column; }
+  .reservation-receipt-grid { grid-template-columns: 1fr; gap: 15px; }
   .receptionist-table thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .receptionist-table,
   .receptionist-table tbody,
