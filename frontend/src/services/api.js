@@ -125,3 +125,18 @@ export function updateRoom(token, roomId, changes) {
     body: JSON.stringify(changes),
   });
 }
+
+export function getAvailableRooms(token, { checkIn, checkOut, roomId }) {
+  const params = new URLSearchParams({ checkIn, checkOut });
+  if (roomId) params.set('roomId', roomId);
+
+  return apiRequest(`/reservations/availability?${params.toString()}`, { token });
+}
+
+export function createReservation(token, reservation) {
+  return apiRequest('/reservations', {
+    method: 'POST',
+    token,
+    body: JSON.stringify(reservation),
+  });
+}
