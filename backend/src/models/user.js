@@ -30,6 +30,12 @@ const userSchema = new mongoose.Schema(
             type: String,
             enum: ['user', 'admin'],
             default: 'user'
+        },
+
+        tokenVersion: {
+            type: Number,
+            default: 0,
+            select: false
         }
     },
     {
@@ -67,6 +73,7 @@ userSchema.methods.toJSON = function() {
     const user = this.toObject();
 
     delete user.password;
+    delete user.tokenVersion;
 
     return user;
 };

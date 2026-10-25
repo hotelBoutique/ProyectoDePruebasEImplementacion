@@ -30,6 +30,17 @@ const login = catchAsync(
     }
 );
 
+const logout = catchAsync(
+    async (req, res) => {
+        await authService.logout(req.user._id);
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Sesión cerrada correctamente'
+        });
+    }
+);
+
 const me = catchAsync(
     async (req, res) => {
 
@@ -49,5 +60,6 @@ const me = catchAsync(
 module.exports = {
     register,
     login,
+    logout,
     me
 };

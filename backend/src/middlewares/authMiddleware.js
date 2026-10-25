@@ -27,11 +27,20 @@ const protect = catchAsync(
                 config.JWT_SECRET
             );
 
-        const user = await User.findById( decoded.sub);
+        const user = await User
+            .findById(decoded.sub)
+            .select('+tokenVersion');
 
         if (!user) {
             throw new AppError(
                 'El usuario ya no existe',
+                401
+            );
+        }
+
+        if (decoded.ver !== (user.tokenVersion ?? 0)) {
+            throw new AppError(
+                'La sesión ya no es válida',
                 401
             );
         }
