@@ -54,6 +54,26 @@ export function getReceptionDashboard(token) {
   return apiRequest('/reception/dashboard', { token });
 }
 
+export function getReceptionists(token) {
+  return apiRequest('/users', { token });
+}
+
+export function createReceptionist(token, receptionist) {
+  return apiRequest('/users', {
+    method: 'POST',
+    token,
+    body: JSON.stringify(receptionist),
+  });
+}
+
+export function setReceptionistStatus(token, userId, isActive) {
+  return apiRequest(`/users/${encodeURIComponent(userId)}/status`, {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify({ isActive }),
+  });
+}
+
 export function logoutSession(token) {
   return apiRequest('/auth/logout', {
     method: 'POST',
