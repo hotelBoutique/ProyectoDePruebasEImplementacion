@@ -47,8 +47,44 @@ const setReceptionistStatus = async (userId, isActive) => {
     return user;
 };
 
+const updateReceptionist = async (userId, changes) => {
+    const user = await User.findOne({
+        _id: userId,
+        role: ROLES.RECEPCIONISTA
+    }).select('+tokenVersion');
+
+    if (!user) {
+        throw new AppError('Recepcionista no encontrado', 404);
+    }
+
+    let shouldRevokeSessions = false;
+
+    if (changes.name !== undefined) {
+        user.name = changes.name;
+    }
+
+    if (changes.password !== undefined) {
+        user.password = changes.password;
+        shouldRevokeSessions = true;
+    }
+
+    if (changes.isActive !== undefined && changes.isActive !== user.isActive) {
+        user.isActive = changes.isActive;
+        shouldRevokeSessions = true;
+    }
+
+    if (shouldRevokeSessions) {
+        user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+    }
+
+    await user.save();
+
+    return user;
+};
+
 module.exports = {
     createReceptionist,
     getReceptionists,
-    setReceptionistStatus
+    setReceptionistStatus,
+    updateReceptionist
 };

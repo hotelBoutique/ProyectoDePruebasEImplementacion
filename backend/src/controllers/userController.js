@@ -32,8 +32,21 @@ const setReceptionistStatus = catchAsync(async (req, res) => {
     });
 });
 
+const updateReceptionist = catchAsync(async (req, res) => {
+    const user = await userService.updateReceptionist(
+        req.params.id,
+        req.body
+    );
+
+    res.status(200).json({
+        status: 'success',
+        data: { user }
+    });
+});
+
 module.exports = {
     createReceptionist,
     getReceptionists,
-    setReceptionistStatus
+    setReceptionistStatus,
+    updateReceptionist
 };
