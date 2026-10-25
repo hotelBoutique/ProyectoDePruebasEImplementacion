@@ -1,14 +1,15 @@
 const authService = require('../services/authService');
+const userService = require('../services/userService');
 const catchAsync = require('../utils/catchAsync');
 
 const register = catchAsync(
     async (req, res) => {
 
-        const result = await authService.register(req.body);
+        const user = await userService.createReceptionist(req.body);
 
         res.status(201).json({
             status: 'success',
-            data: result
+            data: { user }
         });
     }
 );

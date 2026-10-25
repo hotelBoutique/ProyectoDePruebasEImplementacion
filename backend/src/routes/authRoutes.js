@@ -4,11 +4,14 @@ const { body } = require('express-validator');
 const authController = require('../controllers/authController');
 const validate = require('../middlewares/validate');
 
-const {protect} = require('../middlewares/authMiddleware');
+const { protect, restrictTo } = require('../middlewares/authMiddleware');
+const { ROLES } = require('../constants/roles');
 
 const router = express.Router();
 
 router.post('/register',
+    protect,
+    restrictTo(ROLES.ADMIN),
 
     body('name')
         .trim()

@@ -38,6 +38,13 @@ const protect = catchAsync(
             );
         }
 
+        if (user.isActive === false) {
+            throw new AppError(
+                'La cuenta está desactivada',
+                403
+            );
+        }
+
         if (decoded.ver !== (user.tokenVersion ?? 0)) {
             throw new AppError(
                 'La sesión ya no es válida',
