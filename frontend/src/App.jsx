@@ -18,6 +18,7 @@ const ADMIN_NAV_GROUPS = [
   { title: 'Usuarios', icon: 'users', items: [
     { id: 'users-list', label: 'Listado de usuarios' },
     { id: 'users-create', label: 'Crear recepcionista' },
+    { id: 'users-admin-create', label: 'Crear administrador' },
   ] },
   { title: 'Habitaciones', icon: 'rooms', items: [
     { id: 'rooms-list', label: 'Listado de habitaciones' },
@@ -419,10 +420,10 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               roleLabel={roleLabel}
               onProfileUpdated={onProfileUpdated}
             />
-          ) : isAdmin && (activeItem === 'users-list' || activeItem === 'users-create') ? (
+          ) : isAdmin && ['users-list', 'users-create', 'users-admin-create'].includes(activeItem) ? (
             <ReceptionistsPage
               token={token}
-              mode={activeItem === 'users-create' ? 'create' : 'list'}
+              mode={activeItem === 'users-create' ? 'create' : activeItem === 'users-admin-create' ? 'create-admin' : 'list'}
               onNavigate={selectItem}
             />
           ) : (

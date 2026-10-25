@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  createAdminUser,
   createReceptionist,
   getReceptionists,
   setReceptionistStatus,
@@ -65,6 +66,12 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
     };
   }, [token]);
 
+  useEffect(() => {
+    setForm({ name: '', email: '', password: '' });
+    setShowPassword(false);
+    setNotice(null);
+  }, [mode]);
+
   function updateField(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
@@ -76,15 +83,27 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
     setNotice(null);
 
     try {
-      await createReceptionist(token, {
+      const payload = {
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
-      });
+      };
+      if (isAdminCreateMode) {
+        await createAdminUser(token, payload);
+      } else {
+        await createReceptionist(token, payload);
+      }
       setForm({ name: '', email: '', password: '' });
-      setNotice({ tone: 'success', text: 'La cuenta de recepcionista se creó correctamente.' });
-      await loadUsers();
-      onNavigate('users-list');
+      setNotice({
+        tone: 'success',
+        text: isAdminCreateMode
+          ? 'La cuenta de administrador se creó correctamente.'
+          : 'La cuenta de recepcionista se creó correctamente.',
+      });
+      if (!isAdminCreateMode) {
+        await loadUsers();
+        onNavigate('users-list');
+      }
     } catch (error) {
       setNotice({ tone: 'error', text: error.message || 'No fue posible crear la cuenta.' });
     } finally {
@@ -173,16 +192,25 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
 
   const activeCount = users.filter((user) => user.isActive).length;
   const inactiveCount = users.length - activeCount;
-  const isCreateMode = mode === 'create';
+  const isAdminCreateMode = mode === 'create-admin';
+  const isCreateMode = mode === 'create' || isAdminCreateMode;
   const isEditMode = Boolean(editingUser);
 
   return (
     <section className="receptionists-page" aria-labelledby="receptionists-title">
       <div className="receptionists-heading">
         <div>
-          <p className="eyebrow">GESTIÓN DEL EQUIPO</p>
-          <h1 id="receptionists-title">Recepcionistas</h1>
-          <p className="intro">Administra las cuentas que tienen acceso al espacio de recepción.</p>
+          <p className="eyebrow">{isCreateMode ? 'GESTIÓN DE USUARIOS' : 'GESTIÓN DEL EQUIPO'}</p>
+          <h1 id="receptionists-title">
+            {isAdminCreateMode ? 'Crear administrador' : isCreateMode ? 'Crear recepcionista' : 'Recepcionistas'}
+          </h1>
+          <p className="intro">
+            {isAdminCreateMode
+              ? 'Crea una cuenta con permisos administrativos.'
+              : isCreateMode
+                ? 'Crea una cuenta para el equipo de recepción.'
+                : 'Administra las cuentas que tienen acceso al espacio de recepción.'}
+          </p>
         </div>
         {isCreateMode || isEditMode ? (
           <button
@@ -193,9 +221,14 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
             {isEditMode ? 'Volver al listado' : 'Ver listado'}
           </button>
         ) : (
-          <button className="button-primary receptionists-create-action" type="button" onClick={() => onNavigate('users-create')}>
-            <span aria-hidden="true">＋</span> Crear recepcionista
-          </button>
+          <div className="receptionists-create-actions">
+            <button className="button-secondary" type="button" onClick={() => onNavigate('users-admin-create')}>
+              Crear administrador
+            </button>
+            <button className="button-primary receptionists-create-action" type="button" onClick={() => onNavigate('users-create')}>
+              <span aria-hidden="true">＋</span> Crear recepcionista
+            </button>
+          </div>
         )}
       </div>
 
@@ -297,11 +330,15 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
         <form className="receptionist-form-card" onSubmit={handleCreate}>
           <div className="receptionist-form-heading">
             <div>
-              <span className="card-kicker">NUEVA CUENTA</span>
-              <h2>Crear recepcionista</h2>
-              <p>La cuenta se creará activa y con permisos de recepción.</p>
+              <span className="card-kicker">NUEVA CUENTA · {isAdminCreateMode ? 'ADMINISTRACIÓN' : 'RECEPCIÓN'}</span>
+              <h2>{isAdminCreateMode ? 'Crear administrador' : 'Crear recepcionista'}</h2>
+              <p>
+                {isAdminCreateMode
+                  ? 'La cuenta se creará activa y tendrá permisos administrativos.'
+                  : 'La cuenta se creará activa y con permisos de recepción.'}
+              </p>
             </div>
-            <span className="account-role-pill">RECEPCIONISTA</span>
+            <span className="account-role-pill">{isAdminCreateMode ? 'ADMIN' : 'RECEPCIONISTA'}</span>
           </div>
 
           <div className="receptionist-form-grid">

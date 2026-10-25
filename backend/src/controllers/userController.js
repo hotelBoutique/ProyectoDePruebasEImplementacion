@@ -10,6 +10,15 @@ const createReceptionist = catchAsync(async (req, res) => {
     });
 });
 
+const createAdmin = catchAsync(async (req, res) => {
+    const user = await userService.createAdmin(req.body);
+
+    res.status(201).json({
+        status: 'success',
+        data: { user }
+    });
+});
+
 const getReceptionists = catchAsync(async (req, res) => {
     const users = await userService.getReceptionists();
 
@@ -46,6 +55,7 @@ const updateReceptionist = catchAsync(async (req, res) => {
 
 module.exports = {
     createReceptionist,
+    createAdmin,
     getReceptionists,
     setReceptionistStatus,
     updateReceptionist
