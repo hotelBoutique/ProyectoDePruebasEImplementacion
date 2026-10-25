@@ -58,9 +58,22 @@ const me = catchAsync(
     }
 );
 
+const updateMe = catchAsync(async (req, res) => {
+    const result = await authService.updateMyProfile(
+        req.user._id,
+        req.body
+    );
+
+    res.status(200).json({
+        status: 'success',
+        data: result
+    });
+});
+
 module.exports = {
     register,
     login,
     logout,
-    me
+    me,
+    updateMe
 };

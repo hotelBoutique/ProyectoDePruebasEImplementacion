@@ -73,9 +73,43 @@ const getMe = async (userId) => {
     return user;
 };
 
+const updateMyProfile = async (userId, { name, currentPassword, newPassword }) => {
+    const user = await User.findById(userId).select('+password +tokenVersion');
+
+    if (!user) {
+        throw new AppError('Usuario no encontrado', 404);
+    }
+
+    if (newPassword) {
+        const passwordIsCorrect = await user.correctPassword(
+            currentPassword,
+            user.password
+        );
+
+        if (!passwordIsCorrect) {
+            throw new AppError('La contraseña actual es incorrecta', 400);
+        }
+
+        user.password = newPassword;
+        user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+    }
+
+    if (name !== undefined) {
+        user.name = name;
+    }
+
+    await user.save();
+
+    return {
+        user,
+        ...(newPassword ? { token: generateToken(user) } : {})
+    };
+};
+
 
 module.exports = {
     login,
     logout,
-    getMe
+    getMe,
+    updateMyProfile
 };

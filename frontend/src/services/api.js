@@ -46,6 +46,14 @@ export function getCurrentUser(token) {
   return apiRequest('/auth/me', { token });
 }
 
+export function updateMyProfile(token, profile) {
+  return apiRequest('/auth/me', {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify(profile),
+  });
+}
+
 export function getAdminDashboard(token) {
   return apiRequest('/admin/dashboard', { token });
 }
@@ -71,6 +79,14 @@ export function setReceptionistStatus(token, userId, isActive) {
     method: 'PATCH',
     token,
     body: JSON.stringify({ isActive }),
+  });
+}
+
+export function updateReceptionist(token, userId, changes) {
+  return apiRequest(`/users/${encodeURIComponent(userId)}`, {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify(changes),
   });
 }
 

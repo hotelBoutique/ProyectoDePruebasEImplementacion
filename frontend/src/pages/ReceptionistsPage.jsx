@@ -3,6 +3,7 @@ import {
   createReceptionist,
   getReceptionists,
   setReceptionistStatus,
+  updateReceptionist,
 } from '../services/api.js';
 
 function formatDate(dateValue) {
@@ -27,6 +28,9 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
   const [notice, setNotice] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', password: '', isActive: true });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   async function loadUsers() {
     setLoading(true);
@@ -112,9 +116,65 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
     }
   }
 
+  function startEditing(user) {
+    setEditingUser(user);
+    setEditForm({
+      name: user.name || '',
+      password: '',
+      isActive: user.isActive,
+    });
+    setNotice(null);
+  }
+
+  function cancelEditing() {
+    setEditingUser(null);
+    setEditForm({ name: '', password: '', isActive: true });
+  }
+
+  function updateEditField(event) {
+    const { name, value } = event.target;
+    setEditForm((current) => ({
+      ...current,
+      [name]: name === 'isActive' ? value === 'true' : value,
+    }));
+  }
+
+  async function handleUpdateReceptionist(event) {
+    event.preventDefault();
+    const name = editForm.name.trim();
+    if (name.length < 2 || name.length > 100) {
+      setNotice({ tone: 'error', text: 'El nombre debe tener entre 2 y 100 caracteres.' });
+      return;
+    }
+
+    setSavingEdit(true);
+    setNotice(null);
+    const changes = {
+      name,
+      isActive: editForm.isActive,
+    };
+    if (editForm.password) changes.password = editForm.password;
+
+    try {
+      await updateReceptionist(token, editingUser._id, changes);
+      setEditingUser(null);
+      setEditForm({ name: '', password: '', isActive: true });
+      setNotice({
+        tone: 'success',
+        text: 'La cuenta de recepcionista se actualizó correctamente.',
+      });
+      await loadUsers();
+    } catch (error) {
+      setNotice({ tone: 'error', text: error.message || 'No fue posible actualizar la cuenta.' });
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   const activeCount = users.filter((user) => user.isActive).length;
   const inactiveCount = users.length - activeCount;
   const isCreateMode = mode === 'create';
+  const isEditMode = Boolean(editingUser);
 
   return (
     <section className="receptionists-page" aria-labelledby="receptionists-title">
@@ -124,9 +184,13 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
           <h1 id="receptionists-title">Recepcionistas</h1>
           <p className="intro">Administra las cuentas que tienen acceso al espacio de recepción.</p>
         </div>
-        {isCreateMode ? (
-          <button className="button-secondary" type="button" onClick={() => onNavigate('users-list')}>
-            Ver listado
+        {isCreateMode || isEditMode ? (
+          <button
+            className="button-secondary"
+            type="button"
+            onClick={isEditMode ? cancelEditing : () => onNavigate('users-list')}
+          >
+            {isEditMode ? 'Volver al listado' : 'Ver listado'}
           </button>
         ) : (
           <button className="button-primary receptionists-create-action" type="button" onClick={() => onNavigate('users-create')}>
@@ -141,7 +205,95 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
         </div>
       )}
 
-      {isCreateMode ? (
+      {isEditMode ? (
+        <form className="receptionist-form-card" onSubmit={handleUpdateReceptionist}>
+          <div className="receptionist-form-heading">
+            <div>
+              <span className="card-kicker">EDICIÓN DE CUENTA</span>
+              <h2>Editar recepcionista</h2>
+              <p>Actualiza los datos de {editingUser.name}. El correo no se puede modificar.</p>
+            </div>
+            <span className="account-role-pill">RECEPCIONISTA</span>
+          </div>
+
+          <div className="receptionist-form-grid">
+            <label className="form-field" htmlFor="edit-receptionist-name">
+              <span className="field-label">Nombre completo</span>
+              <input
+                className="form-input"
+                id="edit-receptionist-name"
+                name="name"
+                autoComplete="name"
+                minLength={2}
+                maxLength={100}
+                value={editForm.name}
+                onChange={updateEditField}
+                required
+                disabled={savingEdit}
+              />
+            </label>
+            <label className="form-field" htmlFor="edit-receptionist-email">
+              <span className="field-label">Correo electrónico</span>
+              <input
+                className="form-input profile-readonly-input"
+                id="edit-receptionist-email"
+                type="email"
+                value={editingUser.email || ''}
+                readOnly
+              />
+              <span className="profile-field-hint">El correo no se puede modificar.</span>
+            </label>
+            <label className="form-field" htmlFor="edit-receptionist-password">
+              <span className="field-label">Nueva contraseña</span>
+              <input
+                className="form-input"
+                id="edit-receptionist-password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                placeholder="Dejar vacío para conservarla"
+                value={editForm.password}
+                onChange={updateEditField}
+                disabled={savingEdit}
+              />
+              <span className="profile-field-hint">Si la cambias, debe tener al menos 8 caracteres.</span>
+            </label>
+            <div className="form-field">
+              <span className="field-label">Rol de la cuenta</span>
+              <div className="form-input profile-readonly-input profile-static-value" aria-readonly="true">
+                Recepcionista
+              </div>
+            </div>
+            <label className="form-field" htmlFor="edit-receptionist-status">
+              <span className="field-label">Estado de la cuenta</span>
+              <select
+                className="form-input"
+                id="edit-receptionist-status"
+                name="isActive"
+                value={String(editForm.isActive)}
+                onChange={updateEditField}
+                disabled={savingEdit}
+              >
+                <option value="true">Activa</option>
+                <option value="false">Inactiva</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="receptionist-form-footer">
+            <p>Al cambiar la contraseña o el estado, se revocarán las sesiones existentes de esta cuenta.</p>
+            <div className="receptionist-form-actions">
+              <button className="button-secondary" type="button" onClick={cancelEditing} disabled={savingEdit}>
+                Cancelar
+              </button>
+              <button className="button-primary" type="submit" disabled={savingEdit}>
+                {savingEdit ? 'Guardando cambios…' : 'Guardar cambios'}
+              </button>
+            </div>
+          </div>
+        </form>
+      ) : isCreateMode ? (
         <form className="receptionist-form-card" onSubmit={handleCreate}>
           <div className="receptionist-form-heading">
             <div>
@@ -281,7 +433,7 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
                       <th scope="col">Correo</th>
                       <th scope="col">Estado</th>
                       <th scope="col">Fecha de creación</th>
-                      <th scope="col"><span className="sr-only">Acciones</span></th>
+                      <th scope="col">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -302,16 +454,27 @@ export default function ReceptionistsPage({ token, mode = 'list', onNavigate }) 
                             </span>
                           </td>
                           <td data-label="Fecha de creación">{formatDate(user.createdAt)}</td>
-                          <td data-label="Acción" className="receptionist-action-cell">
-                            <button
-                              className={`receptionist-status-action${user.isActive ? ' receptionist-deactivate-action' : ''}`}
-                              type="button"
-                              onClick={() => handleStatusChange(user)}
-                              disabled={Boolean(updatingUserId)}
-                              aria-label={`${user.isActive ? 'Desactivar' : 'Activar'} cuenta de ${user.name}`}
-                            >
-                              {updating ? 'Guardando…' : user.isActive ? 'Desactivar' : 'Activar'}
-                            </button>
+                          <td data-label="Acciones" className="receptionist-action-cell">
+                            <div className="receptionist-actions">
+                              <button
+                                className="receptionist-status-action receptionist-edit-action"
+                                type="button"
+                                onClick={() => startEditing(user)}
+                                disabled={Boolean(updatingUserId)}
+                                aria-label={`Editar cuenta de ${user.name}`}
+                              >
+                                Editar
+                              </button>
+                              <button
+                                className={`receptionist-status-action${user.isActive ? ' receptionist-deactivate-action' : ''}`}
+                                type="button"
+                                onClick={() => handleStatusChange(user)}
+                                disabled={Boolean(updatingUserId)}
+                                aria-label={`${user.isActive ? 'Desactivar' : 'Activar'} cuenta de ${user.name}`}
+                              >
+                                {updating ? 'Guardando…' : user.isActive ? 'Desactivar' : 'Activar'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

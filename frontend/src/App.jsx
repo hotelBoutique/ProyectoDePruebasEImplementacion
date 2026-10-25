@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
 import {
   getAdminDashboard,
   getCurrentUser,
@@ -140,7 +141,7 @@ function RoleSidebar({ groups, roleLabel, activeItem, accountActive, onSelect, o
             aria-current={accountActive ? 'page' : undefined}
           >
             <SidebarIcon name="account" />
-            <span>Mi cuenta</span>
+            <span>Mi perfil</span>
           </button>
           <button className="sidebar-utility sidebar-logout" type="button" onClick={onLogout} disabled={busy}>
             <SidebarIcon name="logout" />
@@ -298,7 +299,7 @@ function LoginScreen({ onLogin, busy, message, messageTone }) {
   );
 }
 
-function RoleDashboard({ user, role, token, onLogout, busy }) {
+function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) {
   const isAdmin = role === ROLE_ADMIN;
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'equipo';
   const roleLabel = isAdmin ? 'ADMINISTRADOR' : 'RECEPCIONISTA';
@@ -345,7 +346,7 @@ function RoleDashboard({ user, role, token, onLogout, busy }) {
           <div className="dashboard-topbar-title">
             <span className="topbar-label">{isAdmin ? 'Panel administrativo' : 'Espacio de recepción'}</span>
             <span className="dashboard-topbar-divider" aria-hidden="true" />
-            <span className="dashboard-topbar-section">{accountActive ? 'Mi cuenta' : selectedItem?.label}</span>
+            <span className="dashboard-topbar-section">{accountActive ? 'Mi perfil' : selectedItem?.label}</span>
           </div>
           <div className="dashboard-user-chip">
             <span className="dashboard-user-avatar" aria-hidden="true">{firstName.slice(0, 1).toUpperCase()}</span>
@@ -412,25 +413,12 @@ function RoleDashboard({ user, role, token, onLogout, busy }) {
               </section>
             </>
           ) : accountActive ? (
-            <section className="account-view" aria-labelledby="account-title">
-              <div className="dashboard-heading">
-                <div>
-                  <p className="eyebrow">PERFIL DE USUARIO</p>
-                  <h1 id="account-title">Mi cuenta</h1>
-                  <p className="intro">Información de la sesión y del perfil activo.</p>
-                </div>
-                <span className="role-badge"><span aria-hidden="true">✦</span> {roleLabel}</span>
-              </div>
-              <div className="account-details-card">
-                <span className="dashboard-user-avatar account-large-avatar" aria-hidden="true">{firstName.slice(0, 1).toUpperCase()}</span>
-                <div>
-                  <span className="card-kicker">USUARIO</span>
-                  <strong>{user?.name || firstName}</strong>
-                  <span className="account-detail-secondary">{user?.email || 'Correo no disponible'}</span>
-                </div>
-                <span className="account-role-pill">{sidebarRoleLabel}</span>
-              </div>
-            </section>
+            <ProfilePage
+              user={user}
+              token={token}
+              roleLabel={roleLabel}
+              onProfileUpdated={onProfileUpdated}
+            />
           ) : isAdmin && (activeItem === 'users-list' || activeItem === 'users-create') ? (
             <ReceptionistsPage
               token={token}
@@ -464,6 +452,16 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState('info');
+
+  function handleProfileUpdated(profile) {
+    if (profile?.token) {
+      window.sessionStorage.setItem(SESSION_TOKEN_KEY, profile.token);
+      setToken(profile.token);
+    }
+    if (profile?.user) {
+      setUser(profile.user);
+    }
+  }
 
   useEffect(() => {
     const savedToken = window.sessionStorage.getItem(SESSION_TOKEN_KEY);
@@ -584,7 +582,16 @@ export default function App() {
   }
 
   if (view === 'dashboard') {
-    return <RoleDashboard user={user} role={role} token={token} onLogout={handleLogout} busy={busy} />;
+    return (
+      <RoleDashboard
+        user={user}
+        role={role}
+        token={token}
+        onLogout={handleLogout}
+        onProfileUpdated={handleProfileUpdated}
+        busy={busy}
+      />
+    );
   }
 
   return (
