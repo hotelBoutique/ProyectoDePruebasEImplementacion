@@ -163,6 +163,9 @@ Entre los componentes utilizados se encuentran:
 - `express-rate-limit`
 - `morgan`
 
+El login tiene un límite de 10 intentos cada 15 minutos, además del límite
+general de la API.
+
 El `app.js` se encarga de configurar la aplicación, mientras `server.js` se encarga de ponerla en ejecución.
 
 ---
@@ -187,6 +190,12 @@ Además, se comprueba que existan variables obligatorias como:
 
 - `MONGODB_URI`
 - `JWT_SECRET`
+
+`JWT_SECRET` debe tener al menos 32 bytes. Para generar una clave segura:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
 Esto evita que diferentes partes del proyecto accedan directamente a `process.env` de manera descontrolada.
 
@@ -294,6 +303,7 @@ Actualmente implementa:
 ```text
 register()
 login()
+logout()
 getMe()
 generateToken()
 ```
@@ -340,6 +350,10 @@ sub
 
 que representa el identificador del usuario.
 
+También contiene una versión de sesión (`ver`). Al cerrar sesión, el backend
+la incrementa y deja inválidos los JWT emitidos anteriormente para ese usuario.
+Por eso el cierre invalida las sesiones abiertas en otros dispositivos también.
+
 El tiempo de expiración se obtiene desde:
 
 ```env
@@ -359,6 +373,7 @@ Actualmente expone operaciones para:
 ```text
 register
 login
+logout
 me
 ```
 
@@ -391,6 +406,7 @@ Actualmente:
 ```http
 POST /api/v1/auth/register
 POST /api/v1/auth/login
+POST /api/v1/auth/logout
 GET  /api/v1/auth/me
 ```
 
@@ -436,6 +452,16 @@ Esta ruta requiere:
 ```http
 Authorization: Bearer <TOKEN>
 ```
+
+## Cierre de sesión
+
+```http
+POST /api/v1/auth/logout
+```
+
+También requiere `Authorization: Bearer <TOKEN>`. El backend incrementa la
+versión de sesión del usuario; el token usado y los demás tokens existentes
+dejan de autorizar peticiones. El cliente debe eliminar el token almacenado.
 
 ---
 
@@ -502,6 +528,9 @@ El middleware:
 ```javascript
 req.user
 ```
+
+También compara la versión del token con la versión guardada del usuario. Así,
+los tokens revocados al cerrar sesión dejan de ser aceptados.
 
 Después llama `next()` para permitir que la petición continúe.
 
@@ -744,6 +773,7 @@ Actualmente el backend ya cuenta con una base funcional de autenticación.
 [x] Registro
 [x] Hash de contraseña con bcrypt
 [x] Login
+[x] Logout con revocación de tokens
 [x] Generación JWT
 [x] Validación JWT
 [x] Middleware protect
@@ -953,6 +983,18 @@ Body:
 
 ```http
 GET http://localhost:3000/api/v1/auth/me
+```
+
+Header:
+
+```http
+Authorization: Bearer <TOKEN>
+```
+
+## Cierre de sesión
+
+```http
+POST http://localhost:3000/api/v1/auth/logout
 ```
 
 Header:

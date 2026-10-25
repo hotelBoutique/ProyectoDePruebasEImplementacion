@@ -49,6 +49,11 @@ router.post('/login',
     authController.login
 );
 
+router.post('/logout',
+    protect,
+    authController.logout
+);
+
 router.get('/me',
     protect,
     authController.me

@@ -52,9 +52,10 @@ app.get('/health', (req, res) => {
     });
 });
 
-app.use( '/api/v1/auth',  authRoutes);
+app.use('/api/v1/auth/login', loginLimiter);
+app.use('/api/v1/auth', authRoutes);
 
-app.use( '/api/v1/admin', loginLimiter, adminRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 app.use( '/api/v1/rooms', roomRoutes);
 

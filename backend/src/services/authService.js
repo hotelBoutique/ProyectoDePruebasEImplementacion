@@ -4,11 +4,12 @@ const User = require('../models/user');
 const AppError = require('../utils/AppError');
 const config = require('../config/env');
 
-const generateToken = (userId) => {
+const generateToken = (user) => {
 
     return jwt.sign(
         {
-            sub: userId.toString()
+            sub: user._id.toString(),
+            ver: user.tokenVersion ?? 0
         },
 
         config.JWT_SECRET,
@@ -34,7 +35,7 @@ const register = async ({ name, email, password }) => {
         role: 'user'
     });
 
-    const token = generateToken(user._id);
+    const token = generateToken(user);
 
     return {
         user,
@@ -47,7 +48,7 @@ const login = async (email, password) => {
 
     const user = await User
         .findOne({ email })
-        .select('+password');
+        .select('+password +tokenVersion');
 
     if (!user || !(await user.correctPassword(
             password,
@@ -57,7 +58,7 @@ const login = async (email, password) => {
         throw new AppError('Correo o contraseña incorrectos',401);
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(user);
 
     return {
         user,
@@ -65,6 +66,18 @@ const login = async (email, password) => {
     };
 };
 
+
+const logout = async (userId) => {
+    const user = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { tokenVersion: 1 } },
+        { new: true }
+    );
+
+    if (!user) {
+        throw new AppError('El usuario ya no existe', 401);
+    }
+};
 
 const getMe = async (userId) => {
 
@@ -84,5 +97,6 @@ const getMe = async (userId) => {
 module.exports = {
     register,
     login,
+    logout,
     getMe
 };
