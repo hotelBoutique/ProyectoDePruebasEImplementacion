@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const config = require('./config/env');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const receptionRoutes = require('./routes/receptionRoutes');
 const userRoutes = require('./routes/userRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const errorHandler = require('./middlewares/errorHandler');
@@ -57,6 +58,7 @@ app.use('/api/v1/auth/login', loginLimiter);
 app.use('/api/v1/auth', authRoutes);
 
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/reception', receptionRoutes);
 app.use('/api/v1/users', userRoutes);
 
 app.use( '/api/v1/rooms', roomRoutes);
