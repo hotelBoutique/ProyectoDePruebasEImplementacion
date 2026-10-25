@@ -17,7 +17,15 @@ const ROOM_STATUSES = [
   { value: 'fuera de servicio', label: 'Fuera de servicio' },
 ];
 
-export default function RoomsPage({ token, mode = 'list', onNavigate }) {
+export default function RoomsPage({
+  token,
+  mode = 'list',
+  canCreate = false,
+  canManage = false,
+  createItemId = 'rooms-create',
+  listItemId = 'rooms-list',
+  onNavigate,
+}) {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(mode === 'list');
   const [loadError, setLoadError] = useState('');
@@ -198,15 +206,15 @@ export default function RoomsPage({ token, mode = 'list', onNavigate }) {
           <button
             className="button-secondary"
             type="button"
-            onClick={isEditing ? cancelEditing : () => onNavigate('rooms-list')}
+            onClick={isEditing ? cancelEditing : () => onNavigate(listItemId)}
           >
             {isEditing ? 'Cancelar edición' : 'Ver habitaciones'}
           </button>
-        ) : (
-          <button className="button-primary rooms-create-action" type="button" onClick={() => onNavigate('rooms-create')}>
+        ) : canCreate ? (
+          <button className="button-primary rooms-create-action" type="button" onClick={() => onNavigate(createItemId)}>
             <span aria-hidden="true">＋</span> Registrar habitación
           </button>
-        )}
+        ) : null}
       </div>
 
       {notice && (
@@ -366,9 +374,11 @@ export default function RoomsPage({ token, mode = 'list', onNavigate }) {
             <div className="receptionist-empty-state">
               <strong>Aún no hay habitaciones</strong>
               <p>Registra una habitación para comenzar a administrar el inventario.</p>
-              <button className="button-primary" type="button" onClick={() => onNavigate('rooms-create')}>
-                Registrar habitación
-              </button>
+              {canCreate && (
+                <button className="button-primary" type="button" onClick={() => onNavigate(createItemId)}>
+                  Registrar habitación
+                </button>
+              )}
             </div>
           ) : (
             <div className="receptionist-table-wrap">
@@ -405,23 +415,27 @@ export default function RoomsPage({ token, mode = 'list', onNavigate }) {
                       </td>
                       <td className="receptionist-action-cell">
                         <div className="receptionist-actions">
-                          <button
-                            className="button-secondary receptionist-status-action receptionist-edit-action"
-                            type="button"
-                            onClick={() => startEditing(room)}
-                            disabled={Boolean(updatingRoomId)}
-                          >
-                            Editar
-                          </button>
-                          {room.status !== 'fuera de servicio' && (
-                            <button
-                              className="receptionist-status-action receptionist-deactivate-action"
-                              type="button"
-                              onClick={() => deactivateRoom(room)}
-                              disabled={Boolean(updatingRoomId)}
-                            >
-                              {updatingRoomId === room._id ? 'Desactivando…' : 'Desactivar'}
-                            </button>
+                          {canManage && (
+                            <>
+                              <button
+                                className="button-secondary receptionist-status-action receptionist-edit-action"
+                                type="button"
+                                onClick={() => startEditing(room)}
+                                disabled={Boolean(updatingRoomId)}
+                              >
+                                Editar
+                              </button>
+                              {room.status !== 'fuera de servicio' && (
+                                <button
+                                  className="receptionist-status-action receptionist-deactivate-action"
+                                  type="button"
+                                  onClick={() => deactivateRoom(room)}
+                                  disabled={Boolean(updatingRoomId)}
+                                >
+                                  {updatingRoomId === room._id ? 'Desactivando…' : 'Desactivar'}
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>

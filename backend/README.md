@@ -181,9 +181,10 @@ El `app.js` se encarga de configurar la aplicación, mientras `server.js` se enc
 
 # Registro de habitaciones
 
-Las rutas de habitaciones requieren un token de sesión. Un administrador puede
-registrar habitaciones con `POST /api/v1/rooms`, consultar el inventario con
-`GET /api/v1/rooms` y actualizar una habitación con `PATCH /api/v1/rooms/:id`.
+Las rutas de habitaciones requieren un token de sesión. Solo un administrador puede
+registrar habitaciones con `POST /api/v1/rooms`; administradores y recepcionistas
+pueden consultar el inventario con `GET /api/v1/rooms`. La actualización de
+habitaciones con `PATCH /api/v1/rooms/:id` sigue restringida al administrador.
 Los campos obligatorios al registrar son `number`, `type` y `price`; `description`
 y `capacity` son opcionales. Si no se proporciona `status`, queda como `disponible`.
 Los estados admitidos son `disponible`, `ocupada`, `mantenimiento` y `fuera de servicio`.
@@ -192,6 +193,29 @@ El número debe ser único. La creación responde con HTTP `201` y la actualizac
 con HTTP `200`. Un número duplicado responde con HTTP `409`. Cambiar el estado a
 `fuera de servicio` desactiva la habitación sin eliminarla del inventario; para
 reactivarla, un administrador puede cambiarla de nuevo a un estado operativo.
+
+# Registro de reservaciones
+
+Solo un recepcionista puede registrar una reservación con
+`POST /api/v1/reservations`; los datos requeridos son los del huésped (nombre, correo, teléfono e
+identificación), `roomId`, `checkIn`, `checkOut` y `nightlyRate`. Las fechas usan
+el formato `AAAA-MM-DD`; el check-out debe ser posterior al check-in. La API
+guarda la tarifa aplicada como una copia del acuerdo y calcula noches y total.
+una reservación correcta responde con HTTP `201` y un comprobante. Un administrador
+que intente crearla recibe HTTP `403`. Administradores y recepcionistas pueden
+consultar disponibilidad.
+
+Antes de elegir una habitación, el frontend consulta
+`GET /api/v1/reservations/availability?checkIn=AAAA-MM-DD&checkOut=AAAA-MM-DD`.
+La disponibilidad se calcula para el rango (check-in incluido, check-out
+excluido), excluye habitaciones fuera de servicio y con reservaciones activas
+superpuestas. Las fechas se vuelven a comprobar dentro de una transacción al
+confirmar, evitando que dos solicitudes concurrentes asignen la misma habitación
+en el mismo periodo. La transacción también impide persistir cambios parciales.
+
+MongoDB debe ejecutarse como replica set (o clúster sharded) para habilitar
+transacciones. En entornos locales configura el replica set antes de usar la
+creación de reservaciones.
 
 # 6. `config/env.js`
 

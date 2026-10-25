@@ -3,6 +3,7 @@ import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
+import ReservationsPage from './pages/ReservationsPage.jsx';
 import {
   getAdminDashboard,
   getCurrentUser,
@@ -432,6 +433,10 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <RoomsPage
               token={token}
               mode={activeItem === 'rooms-create' ? 'create' : 'list'}
+              canCreate
+              canManage
+              createItemId="rooms-create"
+              listItemId="rooms-list"
               onNavigate={selectItem}
             />
           ) : isAdmin && activeItem === 'rooms-availability' ? (
