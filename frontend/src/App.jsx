@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import RoomsPage from './pages/RoomsPage.jsx';
 import {
   getAdminDashboard,
   getCurrentUser,
@@ -426,6 +427,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               mode={activeItem === 'users-create' ? 'create' : activeItem === 'users-admin-create' ? 'create-admin' : 'list'}
               onNavigate={selectItem}
             />
+          ) : isAdmin && activeItem === 'rooms-create' ? (
+            <RoomsPage token={token} />
           ) : (
             <section className="module-placeholder" aria-labelledby="module-title">
               <span className="module-placeholder-mark" aria-hidden="true"><SidebarIcon name="home" /></span>

@@ -179,6 +179,17 @@ El `app.js` se encarga de configurar la aplicación, mientras `server.js` se enc
 
 ---
 
+# Registro de habitaciones
+
+La ruta `POST /api/v1/rooms` permite que un administrador registre una habitación.
+La solicitud requiere un token de sesión y los campos `number`, `type` y `price`.
+El estado (`status`) es opcional y admite `disponible`, `ocupada` o `mantenimiento`;
+si se omite, se registra como `disponible`.
+
+El número debe ser único. Una creación correcta responde con estado HTTP `201`
+y el mensaje `Habitación registrada correctamente`. Los campos obligatorios se
+validan en la API, y un número ya registrado responde con estado HTTP `409`.
+
 # 6. `config/env.js`
 
 ## Objetivo
@@ -1128,5 +1139,4 @@ La base actual puede representarse como:
        ▼                   ▼
      Roles              MongoDB
 ```
-
 

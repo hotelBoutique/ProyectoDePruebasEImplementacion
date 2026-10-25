@@ -12,7 +12,8 @@ const roomSchema = new mongoose.Schema(
         type: {
             type: String,
             required: [true, 'El tipo de habitación es obligatorio'],
-            trim: true
+            trim: true,
+            maxlength: 50
         },
 
         price: {

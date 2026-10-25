@@ -29,6 +29,7 @@ export async function apiRequest(path, options = {}) {
   if (!response.ok) {
     const error = new Error(data.message || `La API respondió con estado ${response.status}`);
     error.status = response.status;
+    error.details = data.errors?.map((item) => item.msg).filter(Boolean) || data.details || [];
     throw error;
   }
 
@@ -102,5 +103,13 @@ export function logoutSession(token) {
   return apiRequest('/auth/logout', {
     method: 'POST',
     token,
+  });
+}
+
+export function createRoom(token, room) {
+  return apiRequest('/rooms', {
+    method: 'POST',
+    token,
+    body: JSON.stringify(room),
   });
 }
