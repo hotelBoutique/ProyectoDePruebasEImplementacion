@@ -181,14 +181,17 @@ El `app.js` se encarga de configurar la aplicación, mientras `server.js` se enc
 
 # Registro de habitaciones
 
-La ruta `POST /api/v1/rooms` permite que un administrador registre una habitación.
-La solicitud requiere un token de sesión y los campos `number`, `type` y `price`.
-El estado (`status`) es opcional y admite `disponible`, `ocupada` o `mantenimiento`;
-si se omite, se registra como `disponible`.
+Las rutas de habitaciones requieren un token de sesión. Un administrador puede
+registrar habitaciones con `POST /api/v1/rooms`, consultar el inventario con
+`GET /api/v1/rooms` y actualizar una habitación con `PATCH /api/v1/rooms/:id`.
+Los campos obligatorios al registrar son `number`, `type` y `price`; `description`
+y `capacity` son opcionales. Si no se proporciona `status`, queda como `disponible`.
+Los estados admitidos son `disponible`, `ocupada`, `mantenimiento` y `fuera de servicio`.
 
-El número debe ser único. Una creación correcta responde con estado HTTP `201`
-y el mensaje `Habitación registrada correctamente`. Los campos obligatorios se
-validan en la API, y un número ya registrado responde con estado HTTP `409`.
+El número debe ser único. La creación responde con HTTP `201` y la actualización
+con HTTP `200`. Un número duplicado responde con HTTP `409`. Cambiar el estado a
+`fuera de servicio` desactiva la habitación sin eliminarla del inventario; para
+reactivarla, un administrador puede cambiarla de nuevo a un estado operativo.
 
 # 6. `config/env.js`
 
@@ -1139,4 +1142,3 @@ La base actual puede representarse como:
        ▼                   ▼
      Roles              MongoDB
 ```
-

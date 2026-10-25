@@ -16,6 +16,22 @@ const roomSchema = new mongoose.Schema(
             maxlength: 50
         },
 
+        description: {
+            type: String,
+            trim: true,
+            maxlength: 500,
+            default: ''
+        },
+
+        capacity: {
+            type: Number,
+            min: [1, 'La capacidad debe ser de al menos una persona'],
+            validate: {
+                validator: value => value == null || Number.isInteger(value),
+                message: 'La capacidad debe ser un número entero'
+            }
+        },
+
         price: {
             type: Number,
             required: [true, 'El precio es obligatorio'],
@@ -24,7 +40,7 @@ const roomSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ['disponible', 'ocupada', 'mantenimiento'],
+            enum: ['disponible', 'ocupada', 'mantenimiento', 'fuera de servicio'],
             default: 'disponible'
         }
     },

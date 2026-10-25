@@ -113,3 +113,15 @@ export function createRoom(token, room) {
     body: JSON.stringify(room),
   });
 }
+
+export function getRooms(token) {
+  return apiRequest('/rooms', { token });
+}
+
+export function updateRoom(token, roomId, changes) {
+  return apiRequest(`/rooms/${encodeURIComponent(roomId)}`, {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify(changes),
+  });
+}
