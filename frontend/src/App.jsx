@@ -11,6 +11,146 @@ const SESSION_TOKEN_KEY = 'estancia.session.token';
 const ROLE_ADMIN = 'ADMIN';
 const ROLE_RECEPTIONIST = 'RECEPCIONISTA';
 
+const ADMIN_NAV_GROUPS = [
+  { title: 'Inicio', icon: 'home', items: [{ id: 'admin-home', label: 'Panel principal' }] },
+  { title: 'Usuarios', icon: 'users', items: [
+    { id: 'users-list', label: 'Listado de usuarios' },
+    { id: 'users-create', label: 'Crear recepcionista' },
+  ] },
+  { title: 'Habitaciones', icon: 'rooms', items: [
+    { id: 'rooms-list', label: 'Listado de habitaciones' },
+    { id: 'rooms-create', label: 'Registrar habitación' },
+    { id: 'rooms-availability', label: 'Disponibilidad' },
+  ] },
+  { title: 'Reservaciones', icon: 'reservations', items: [
+    { id: 'reservations-list', label: 'Todas las reservaciones' },
+    { id: 'reservations-cancellations', label: 'Cancelaciones administrativas' },
+  ] },
+  { title: 'Consumos', icon: 'consumptions', items: [
+    { id: 'consumptions-catalog', label: 'Catálogo de productos' },
+    { id: 'consumptions-create', label: 'Registrar producto' },
+    { id: 'consumptions-history', label: 'Historial de consumos' },
+  ] },
+  { title: 'Liquidaciones', icon: 'payments', items: [
+    { id: 'settlements-history', label: 'Historial de liquidaciones' },
+    { id: 'settlements-payments', label: 'Pagos realizados' },
+  ] },
+  { title: 'Reportes', icon: 'reports', items: [
+    { id: 'reports-occupancy', label: 'Reporte de ocupación' },
+    { id: 'reports-income', label: 'Reporte de ingresos' },
+    { id: 'reports-sales', label: 'Ventas de productos' },
+  ] },
+];
+
+const RECEPTION_NAV_GROUPS = [
+  { title: 'Inicio', icon: 'home', items: [{ id: 'reception-home', label: 'Panel de recepción' }] },
+  { title: 'Habitaciones', icon: 'rooms', items: [
+    { id: 'reception-rooms-list', label: 'Listado de habitaciones' },
+    { id: 'reception-rooms-availability', label: 'Consultar disponibilidad' },
+  ] },
+  { title: 'Reservaciones', icon: 'reservations', items: [
+    { id: 'reception-reservations-list', label: 'Consultar reservaciones' },
+    { id: 'reception-reservations-create', label: 'Nueva reservación' },
+    { id: 'reception-check-in', label: 'Registrar check-in' },
+  ] },
+  { title: 'Consumos', icon: 'consumptions', items: [
+    { id: 'reception-consumptions-catalog', label: 'Catálogo de productos' },
+    { id: 'reception-consumptions-create', label: 'Registrar consumo' },
+    { id: 'reception-consumptions-room', label: 'Consumos por habitación' },
+  ] },
+  { title: 'Liquidaciones', icon: 'payments', items: [
+    { id: 'reception-settlements-open', label: 'Cuentas abiertas' },
+    { id: 'reception-check-out', label: 'Registrar pago y check-out' },
+    { id: 'reception-receipts', label: 'Comprobantes de pago' },
+  ] },
+  { title: 'Reportes', icon: 'reports', items: [
+    { id: 'reception-reports-daily', label: 'Reporte diario' },
+    { id: 'reception-reports-arrivals', label: 'Llegadas programadas' },
+    { id: 'reception-reports-departures', label: 'Salidas previstas' },
+    { id: 'reception-reports-occupancy', label: 'Ocupación actual' },
+  ] },
+];
+
+function SidebarIcon({ name }) {
+  const iconPaths = {
+    home: <><path d="m3 10 9-7 9 7" /><path d="M5 9v11h14V9M9 20v-6h6v6" /></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="10" cy="7" r="4" /><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
+    rooms: <><path d="M3 20V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v15" /><path d="M3 14h18M6 14v-3h5v3M3 20h18" /></>,
+    reservations: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18M8 14h3" /></>,
+    consumptions: <><path d="M4 7h16l-1 14H5L4 7Z" /><path d="M9 7a3 3 0 0 1 6 0M8 11h8" /></>,
+    payments: <><rect x="3" y="5" width="18" height="15" rx="2" /><path d="M3 10h18M7 15h4" /></>,
+    reports: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></>,
+    account: <><circle cx="12" cy="8" r="4" /><path d="M5 21a7 7 0 0 1 14 0" /></>,
+    logout: <><path d="M10 17l5-5-5-5M15 12H3" /><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" /></>,
+  };
+
+  return (
+    <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {iconPaths[name]}
+    </svg>
+  );
+}
+
+function RoleSidebar({ groups, roleLabel, activeItem, accountActive, onSelect, onLogout, onCloseMobile, busy }) {
+  return (
+    <>
+      <button className="sidebar-backdrop" type="button" onClick={onCloseMobile} aria-label="Cerrar menú" />
+      <aside className="dashboard-sidebar" aria-label="Menú principal">
+        <div className="sidebar-brand-row">
+          <Brand />
+          <span className="sidebar-brand-caption">GESTIÓN HOTELERA</span>
+        </div>
+
+        <div className="sidebar-role">
+          <span className="sidebar-role-dot" aria-hidden="true" />
+          <span>ROL: {roleLabel}</span>
+        </div>
+
+        <nav className="sidebar-nav" aria-label={`Opciones para ${roleLabel.toLowerCase()}`}>
+          {groups.map((group) => (
+            <section className="sidebar-group" key={group.title} aria-label={group.title}>
+              <div className="sidebar-group-title">
+                <SidebarIcon name={group.icon} />
+                <span>{group.title}</span>
+              </div>
+              <div className="sidebar-group-items">
+                {group.items.map((item) => (
+                  <button
+                    className={`sidebar-link${activeItem === item.id ? ' sidebar-link-active' : ''}`}
+                    type="button"
+                    key={item.id}
+                    onClick={() => onSelect(item.id)}
+                    aria-current={activeItem === item.id ? 'page' : undefined}
+                  >
+                    <span>{item.label}</span>
+                    {activeItem === item.id && <span className="sidebar-link-indicator" aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <button
+            className={`sidebar-utility${accountActive ? ' sidebar-link-active' : ''}`}
+            type="button"
+            onClick={() => onSelect('account')}
+            aria-current={accountActive ? 'page' : undefined}
+          >
+            <SidebarIcon name="account" />
+            <span>Mi cuenta</span>
+          </button>
+          <button className="sidebar-utility sidebar-logout" type="button" onClick={onLogout} disabled={busy}>
+            <SidebarIcon name="logout" />
+            <span>{busy ? 'Cerrando sesión…' : 'Cerrar sesión'}</span>
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}
+
 async function getRoleDashboard(token, role) {
   if (role === ROLE_ADMIN) return getAdminDashboard(token);
   if (role === ROLE_RECEPTIONIST) return getReceptionDashboard(token);
@@ -161,79 +301,150 @@ function RoleDashboard({ user, role, onLogout, busy }) {
   const isAdmin = role === ROLE_ADMIN;
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'equipo';
   const roleLabel = isAdmin ? 'ADMINISTRADOR' : 'RECEPCIONISTA';
+  const sidebarRoleLabel = isAdmin ? 'ADMIN' : 'RECEPCIONISTA';
+  const groups = isAdmin ? ADMIN_NAV_GROUPS : RECEPTION_NAV_GROUPS;
+  const homeItem = groups[0].items[0];
+  const [activeItem, setActiveItem] = useState(homeItem.id);
+  const [accountActive, setAccountActive] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const selectedItem = groups.flatMap((group) => group.items).find((item) => item.id === activeItem);
+
+  function selectItem(itemId) {
+    setAccountActive(itemId === 'account');
+    setActiveItem(itemId === 'account' ? '' : itemId);
+    setMobileMenuOpen(false);
+  }
+
+  const isHome = !accountActive && activeItem === homeItem.id;
 
   return (
-    <div className="page-shell admin-shell">
-      <Topbar>
-        <div className="admin-topbar-actions">
-          <span className="topbar-label">{isAdmin ? 'Panel administrativo' : 'Espacio de recepción'}</span>
-          <button className="button-secondary logout-button" type="button" onClick={onLogout} disabled={busy}>
-            {busy ? 'Cerrando sesión…' : 'Cerrar sesión'}
+    <div className={`dashboard-layout${mobileMenuOpen ? ' sidebar-open' : ''}`}>
+      <RoleSidebar
+        groups={groups}
+        roleLabel={sidebarRoleLabel}
+        activeItem={activeItem}
+        accountActive={accountActive}
+        onSelect={selectItem}
+        onLogout={onLogout}
+        onCloseMobile={() => setMobileMenuOpen(false)}
+        busy={busy}
+      />
+
+      <div className="dashboard-workspace">
+        <header className="dashboard-topbar">
+          <button
+            className="menu-toggle"
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={mobileMenuOpen}
+          >
+            <span aria-hidden="true">{mobileMenuOpen ? '×' : '☰'}</span>
           </button>
-        </div>
-      </Topbar>
-
-      <main className="dashboard-main">
-        <section className="dashboard-heading" aria-labelledby="dashboard-title">
-          <div>
-            <p className="eyebrow">{isAdmin ? 'ESPACIO DE ADMINISTRACIÓN' : 'ESPACIO DE RECEPCIÓN'}</p>
-            <h1 id="dashboard-title">Hola, {firstName}.</h1>
-            <p className="intro">
-              {isAdmin
-                ? 'Tu sesión está activa y tienes acceso a las funciones administrativas.'
-                : 'Tu sesión está activa y tienes acceso a las funciones de recepción.'}
-            </p>
+          <div className="dashboard-topbar-title">
+            <span className="topbar-label">{isAdmin ? 'Panel administrativo' : 'Espacio de recepción'}</span>
+            <span className="dashboard-topbar-divider" aria-hidden="true" />
+            <span className="dashboard-topbar-section">{accountActive ? 'Mi cuenta' : selectedItem?.label}</span>
           </div>
-          <span className="role-badge"><span aria-hidden="true">✦</span> {roleLabel}</span>
-        </section>
-
-        <section className="dashboard-cards" aria-label="Estado de la cuenta">
-          <article className="summary-card summary-card-primary">
-            <div className="summary-card-topline">
-              <span className="card-kicker">ESTADO DE ACCESO</span>
-              <span className="summary-icon" aria-hidden="true">✓</span>
-            </div>
-            <strong>Verificado</strong>
-            <p>La API confirmó tus credenciales y los permisos de {isAdmin ? 'administración' : 'recepción'}.</p>
-          </article>
-
-          <article className="summary-card">
-            <span className="card-kicker">CUENTA ACTIVA</span>
-            <strong className="account-email">{user?.email || 'Correo no disponible'}</strong>
-            <p>Esta cuenta tiene el rol {roleLabel.toLowerCase()} y acceso a sus rutas autorizadas.</p>
-          </article>
-
-          <article className="summary-card">
-            <span className="card-kicker">SESIÓN</span>
-            <strong className="session-state"><span className="session-dot" /> Activa</strong>
-            <p>La sesión está vinculada a esta pestaña del navegador.</p>
-          </article>
-        </section>
-
-        <section className="security-panel" aria-labelledby="security-title">
-          <div className="security-panel-heading">
-            <div>
-              <p className="eyebrow">SEGURIDAD</p>
-              <h2 id="security-title">Tu acceso está protegido.</h2>
-            </div>
-            <span className="status-badge"><span className="session-dot" /> Sesión segura</span>
+          <div className="dashboard-user-chip">
+            <span className="dashboard-user-avatar" aria-hidden="true">{firstName.slice(0, 1).toUpperCase()}</span>
+            <span>{firstName}</span>
           </div>
-          <p>
-            Cada solicitud vuelve a validar tu sesión y tus permisos para las rutas de
-            {isAdmin ? ' administración y recepción' : ' recepción'}. Al cerrar sesión, el backend
-            invalida los tokens activos de esta cuenta.
-          </p>
-          <div className="security-panel-footer">
-            <span>Autenticación</span>
-            <span>JWT verificado · Rol {roleLabel.toLowerCase()}</span>
-          </div>
-        </section>
-      </main>
+        </header>
 
-      <footer className="page-footer">
-        <span>ESTANCIA · GESTIÓN HOTELERA</span>
-        <span>Sesión de {roleLabel.toLowerCase()} activa</span>
-      </footer>
+        <main className="dashboard-main">
+          {isHome ? (
+            <>
+              <section className="dashboard-heading" aria-labelledby="dashboard-title">
+                <div>
+                  <p className="eyebrow">{isAdmin ? 'ESPACIO DE ADMINISTRACIÓN' : 'ESPACIO DE RECEPCIÓN'}</p>
+                  <h1 id="dashboard-title">Hola, {firstName}.</h1>
+                  <p className="intro">
+                    {isAdmin
+                      ? 'Tu sesión está activa y tienes acceso a las funciones administrativas.'
+                      : 'Tu sesión está activa y tienes acceso a las funciones de recepción.'}
+                  </p>
+                </div>
+                <span className="role-badge"><span aria-hidden="true">✦</span> {roleLabel}</span>
+              </section>
+
+              <section className="dashboard-cards" aria-label="Estado de la cuenta">
+                <article className="summary-card summary-card-primary">
+                  <div className="summary-card-topline">
+                    <span className="card-kicker">ESTADO DE ACCESO</span>
+                    <span className="summary-icon" aria-hidden="true">✓</span>
+                  </div>
+                  <strong>Verificado</strong>
+                  <p>La API confirmó tus credenciales y los permisos de {isAdmin ? 'administración' : 'recepción'}.</p>
+                </article>
+
+                <article className="summary-card">
+                  <span className="card-kicker">CUENTA ACTIVA</span>
+                  <strong className="account-email">{user?.email || 'Correo no disponible'}</strong>
+                  <p>Esta cuenta tiene el rol {roleLabel.toLowerCase()} y acceso a sus rutas autorizadas.</p>
+                </article>
+
+                <article className="summary-card">
+                  <span className="card-kicker">SESIÓN</span>
+                  <strong className="session-state"><span className="session-dot" /> Activa</strong>
+                  <p>La sesión está vinculada a esta pestaña del navegador.</p>
+                </article>
+              </section>
+
+              <section className="security-panel" aria-labelledby="security-title">
+                <div className="security-panel-heading">
+                  <div>
+                    <p className="eyebrow">SEGURIDAD</p>
+                    <h2 id="security-title">Tu acceso está protegido.</h2>
+                  </div>
+                  <span className="status-badge"><span className="session-dot" /> Sesión segura</span>
+                </div>
+                <p>
+                  Cada solicitud vuelve a validar tu sesión y tus permisos para las rutas de
+                  {isAdmin ? ' administración y recepción' : ' recepción'}. Al cerrar sesión, el backend
+                  invalida los tokens activos de esta cuenta.
+                </p>
+                <div className="security-panel-footer">
+                  <span>Autenticación</span>
+                  <span>JWT verificado · Rol {roleLabel.toLowerCase()}</span>
+                </div>
+              </section>
+            </>
+          ) : accountActive ? (
+            <section className="account-view" aria-labelledby="account-title">
+              <div className="dashboard-heading">
+                <div>
+                  <p className="eyebrow">PERFIL DE USUARIO</p>
+                  <h1 id="account-title">Mi cuenta</h1>
+                  <p className="intro">Información de la sesión y del perfil activo.</p>
+                </div>
+                <span className="role-badge"><span aria-hidden="true">✦</span> {roleLabel}</span>
+              </div>
+              <div className="account-details-card">
+                <span className="dashboard-user-avatar account-large-avatar" aria-hidden="true">{firstName.slice(0, 1).toUpperCase()}</span>
+                <div>
+                  <span className="card-kicker">USUARIO</span>
+                  <strong>{user?.name || firstName}</strong>
+                  <span className="account-detail-secondary">{user?.email || 'Correo no disponible'}</span>
+                </div>
+                <span className="account-role-pill">{sidebarRoleLabel}</span>
+              </div>
+            </section>
+          ) : (
+            <section className="module-placeholder" aria-labelledby="module-title">
+              <span className="module-placeholder-mark" aria-hidden="true"><SidebarIcon name="home" /></span>
+              <p className="eyebrow">{isAdmin ? 'ESPACIO DE ADMINISTRACIÓN' : 'ESPACIO DE RECEPCIÓN'}</p>
+              <h1 id="module-title">{selectedItem?.label}</h1>
+              <p>La navegación está lista. Aquí aparecerá esta sección.</p>
+            </section>
+          )}
+        </main>
+
+        <footer className="dashboard-footer">
+          <span>ESTANCIA · GESTIÓN HOTELERA</span>
+          <span>Sesión de {roleLabel.toLowerCase()} activa</span>
+        </footer>
+      </div>
     </div>
   );
 }
