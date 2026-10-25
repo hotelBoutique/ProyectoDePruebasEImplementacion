@@ -126,8 +126,10 @@ export function updateRoom(token, roomId, changes) {
   });
 }
 
-export function getAvailableRooms(token, checkIn, checkOut) {
+export function getAvailableRooms(token, { checkIn, checkOut, roomId }) {
   const params = new URLSearchParams({ checkIn, checkOut });
+  if (roomId) params.set('roomId', roomId);
+
   return apiRequest(`/reservations/availability?${params.toString()}`, { token });
 }
 

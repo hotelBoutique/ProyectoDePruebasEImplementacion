@@ -4,7 +4,8 @@ const catchAsync = require('../utils/catchAsync');
 const getAvailableRooms = catchAsync(async (req, res) => {
     const rooms = await reservationService.getAvailableRooms(
         req.query.checkIn,
-        req.query.checkOut
+        req.query.checkOut,
+        req.query.roomId
     );
 
     res.status(200).json({

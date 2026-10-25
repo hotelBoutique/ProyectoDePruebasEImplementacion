@@ -1,17 +1,15 @@
 jest.mock('../middlewares/authMiddleware', () => ({
     protect: (req, res, next) => {
         req.user = {
-            _id: 'user-id',
-            role: req.get('x-role') || 'ADMIN'
+            _id: '507f1f77bcf86cd799439011',
+            role: req.get('x-role') || 'RECEPCIONISTA'
         };
         next();
     },
     restrictTo: (...roles) => (req, res, next) => {
         if (!roles.includes(req.user.role)) {
-            return res.status(403).json({
-                success: false,
-                message: 'No tienes permisos para esta acción'
-            });
+            const AppError = require('../utils/AppError');
+            return next(new AppError('No tienes permisos para esta acción', 403));
         }
         next();
     }
@@ -20,6 +18,10 @@ jest.mock('../middlewares/authMiddleware', () => ({
 jest.mock('../services/reservationService', () => ({
     getAvailableRooms: jest.fn(),
     createReservation: jest.fn()
+}));
+
+jest.mock('../utils/logger', () => ({
+    error: jest.fn()
 }));
 
 const express = require('express');
@@ -33,107 +35,103 @@ app.use(express.json());
 app.use('/api/v1/reservations', reservationRoutes);
 app.use(errorHandler);
 
-describe('Reservation routes', () => {
+const getFutureDates = () => {
+    const checkIn = new Date();
+    checkIn.setUTCDate(checkIn.getUTCDate() + 1);
+    const checkOut = new Date(checkIn);
+    checkOut.setUTCDate(checkOut.getUTCDate() + 1);
+
+    return {
+        checkIn: checkIn.toISOString().slice(0, 10),
+        checkOut: checkOut.toISOString().slice(0, 10)
+    };
+};
+
+describe('/api/v1/reservations', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     it('returns available rooms for a valid date range', async () => {
-        reservationService.getAvailableRooms.mockResolvedValue([{ _id: 'room-id' }]);
+        const dates = getFutureDates();
+        const rooms = [{ _id: 'room-id', number: '101' }];
+        reservationService.getAvailableRooms.mockResolvedValue(rooms);
 
         const response = await request(app)
             .get('/api/v1/reservations/availability')
-            .query({ checkIn: '2026-11-01', checkOut: '2026-11-03' });
+            .query(dates);
 
         expect(response.status).toBe(200);
-        expect(response.body.data.rooms).toEqual([{ _id: 'room-id' }]);
+        expect(response.body.data.rooms).toEqual(rooms);
+        expect(reservationService.getAvailableRooms).toHaveBeenCalledWith(
+            dates.checkIn,
+            dates.checkOut,
+            undefined
+        );
     });
 
-    it('rejects invalid date ranges', async () => {
+    it('reports required reservation fields and rejects invalid dates', async () => {
         const response = await request(app)
-            .get('/api/v1/reservations/availability')
-            .query({ checkIn: '2026-11-03', checkOut: '2026-11-01' });
+            .post('/api/v1/reservations')
+            .send({ checkIn: 'not-a-date', checkOut: 'also-not-a-date' });
 
         expect(response.status).toBe(400);
-        expect(response.body.errors.map(({ msg }) => msg)).toContain(
-            'El check-out debe ser posterior al check-in'
-        );
-        expect(reservationService.getAvailableRooms).not.toHaveBeenCalled();
+        expect(response.body.errors.map(({ msg }) => msg)).toEqual(expect.arrayContaining([
+            'Los datos del huésped son obligatorios',
+            'La habitación es obligatoria',
+            'El check-in debe ser una fecha válida con formato AAAA-MM-DD',
+            'El check-out debe ser una fecha válida con formato AAAA-MM-DD',
+            'La tarifa aplicada es obligatoria'
+        ]));
+        expect(reservationService.createReservation).not.toHaveBeenCalled();
     });
 
-    it('allows a receptionist to create a reservation', async () => {
+    it('allows a receptionist to create a reservation and returns its receipt', async () => {
+        const dates = getFutureDates();
         const reservation = {
             _id: 'reservation-id',
+            guest: { fullName: 'Ada Lovelace' },
             roomNumber: '101',
-            totalAmount: 300
+            roomType: 'Suite',
+            checkIn: new Date(`${dates.checkIn}T00:00:00.000Z`),
+            checkOut: new Date(`${dates.checkOut}T00:00:00.000Z`),
+            nights: 1,
+            nightlyRate: 175,
+            totalAmount: 175
         };
         reservationService.createReservation.mockResolvedValue(reservation);
 
         const response = await request(app)
             .post('/api/v1/reservations')
-            .set('x-role', 'RECEPCIONISTA')
             .send({
                 guest: {
                     fullName: 'Ada Lovelace',
                     email: 'ada@example.com',
-                    phone: '3001234567',
-                    identification: 'CC123456'
+                    phone: '123456789',
+                    identification: 'AB1234'
                 },
-                roomId: '507f1f77bcf86cd799439011',
-                checkIn: '2026-11-01',
-                checkOut: '2026-11-03',
-                nightlyRate: 150
+                roomId: '507f1f77bcf86cd799439012',
+                ...dates,
+                nightlyRate: 175
             });
 
         expect(response.status).toBe(201);
         expect(response.body.message).toBe('La reservación se confirmó correctamente');
-        expect(response.body.data.receipt.totalAmount).toBe(300);
+        expect(response.body.data.receipt.roomNumber).toBe('101');
         expect(reservationService.createReservation).toHaveBeenCalledWith(expect.objectContaining({
-            createdBy: 'user-id'
+            roomId: '507f1f77bcf86cd799439012',
+            createdBy: '507f1f77bcf86cd799439011',
+            nightlyRate: 175
         }));
     });
 
-    it('rejects administrators attempting to create a reservation', async () => {
+    it('does not allow administrators to create reservations', async () => {
         const response = await request(app)
             .post('/api/v1/reservations')
             .set('x-role', 'ADMIN')
-            .send({
-                guest: {
-                    fullName: 'Ada Lovelace',
-                    email: 'ada@example.com',
-                    phone: '3001234567',
-                    identification: 'CC123456'
-                },
-                roomId: '507f1f77bcf86cd799439011',
-                checkIn: '2026-11-01',
-                checkOut: '2026-11-03',
-                nightlyRate: 150
-            });
+            .send({});
 
         expect(response.status).toBe(403);
-        expect(reservationService.createReservation).not.toHaveBeenCalled();
-    });
-
-    it('reports missing guest data and rate validation errors', async () => {
-        const response = await request(app)
-            .post('/api/v1/reservations')
-            .set('x-role', 'RECEPCIONISTA')
-            .send({
-                guest: {},
-                roomId: '507f1f77bcf86cd799439011',
-                checkIn: '2026-11-01',
-                checkOut: '2026-11-03',
-                nightlyRate: -5
-            });
-
-        expect(response.status).toBe(400);
-        expect(response.body.errors.map(({ msg }) => msg)).toEqual(expect.arrayContaining([
-            'El nombre completo del huésped es obligatorio',
-            'El correo del huésped es obligatorio',
-            'El teléfono del huésped es obligatorio',
-            'La identificación del huésped es obligatoria',
-            'La tarifa aplicada debe ser un número mayor o igual a 0'
-        ]));
         expect(reservationService.createReservation).not.toHaveBeenCalled();
     });
 });

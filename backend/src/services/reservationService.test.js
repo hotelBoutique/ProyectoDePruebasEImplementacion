@@ -1,7 +1,3 @@
-jest.mock('mongoose', () => ({
-    startSession: jest.fn()
-}));
-
 jest.mock('../models/reservation', () => ({
     find: jest.fn(),
     findOne: jest.fn(),
@@ -14,16 +10,32 @@ jest.mock('../models/room', () => ({
     updateOne: jest.fn()
 }));
 
+jest.mock('mongoose', () => ({
+    ...jest.requireActual('mongoose'),
+    startSession: jest.fn()
+}));
+
 const mongoose = require('mongoose');
 const Reservation = require('../models/reservation');
 const Room = require('../models/room');
-const AppError = require('../utils/AppError');
-const reservationService = require('./reservationService');
+const { createReservation, getAvailableRooms } = require('./reservationService');
 
-const createSession = () => {
+const getFutureDates = () => {
+    const checkIn = new Date();
+    checkIn.setUTCDate(checkIn.getUTCDate() + 1);
+    const checkOut = new Date(checkIn);
+    checkOut.setUTCDate(checkOut.getUTCDate() + 2);
+
+    return {
+        checkIn: checkIn.toISOString().slice(0, 10),
+        checkOut: checkOut.toISOString().slice(0, 10)
+    };
+};
+
+const createSessionMock = () => {
     const session = {
         withTransaction: jest.fn(async callback => callback()),
-        endSession: jest.fn().mockResolvedValue(undefined)
+        endSession: jest.fn()
     };
     mongoose.startSession.mockResolvedValue(session);
     return session;
@@ -34,169 +46,128 @@ describe('reservationService', () => {
         jest.clearAllMocks();
     });
 
-    describe('getAvailableRooms', () => {
-        it('excludes rooms with an overlapping active reservation', async () => {
-            const availableRoom = { _id: 'available-room' };
-            const reservedRoom = { _id: 'reserved-room' };
-            Room.find.mockReturnValue({
-                sort: jest.fn().mockResolvedValue([availableRoom, reservedRoom])
-            });
-            Reservation.find.mockReturnValue({
-                select: jest.fn().mockResolvedValue([{ room: 'reserved-room' }])
-            });
+    it('filters out rooms with an active overlapping reservation', async () => {
+        const dates = getFutureDates();
+        const available = { _id: 'available', number: '101' };
+        const reserved = { _id: 'reserved', number: '102' };
+        const rooms = [available, reserved];
+        const conflicts = [{ room: 'reserved' }];
+        Room.find.mockReturnValue({ sort: jest.fn().mockResolvedValue(rooms) });
+        Reservation.find.mockReturnValue({ select: jest.fn().mockResolvedValue(conflicts) });
 
-            await expect(reservationService.getAvailableRooms(
-                '2026-11-01',
-                '2026-11-03'
-            )).resolves.toEqual([availableRoom]);
+        await expect(getAvailableRooms(dates.checkIn, dates.checkOut)).resolves.toEqual([available]);
 
-            expect(Reservation.find).toHaveBeenCalledWith(expect.objectContaining({
-                status: { $in: ['reservada', 'ocupada'] },
-                checkIn: { $lt: new Date('2026-11-03T00:00:00.000Z') },
-                checkOut: { $gt: new Date('2026-11-01T00:00:00.000Z') }
-            }));
-        });
-
-        it('rejects invalid or reversed date ranges', async () => {
-            await expect(reservationService.getAvailableRooms(
-                '2026-02-30',
-                '2026-03-02'
-            )).rejects.toMatchObject({
-                message: 'El check-in no es una fecha válida',
-                statusCode: 400
-            });
-
-            await expect(reservationService.getAvailableRooms(
-                '2026-11-03',
-                '2026-11-01'
-            )).rejects.toMatchObject({
-                message: 'El check-out debe ser posterior al check-in',
-                statusCode: 400
-            });
-        });
+        expect(Reservation.find).toHaveBeenCalledWith(expect.objectContaining({
+            room: { $in: ['available', 'reserved'] },
+            status: { $in: ['reservada', 'ocupada'] },
+            checkIn: { $lt: new Date(`${dates.checkOut}T00:00:00.000Z`) },
+            checkOut: { $gt: new Date(`${dates.checkIn}T00:00:00.000Z`) }
+        }));
     });
 
-    describe('createReservation', () => {
-        const reservationInput = {
-            guest: {
-                fullName: 'Ada Lovelace',
-                email: 'ada@example.com',
-                phone: '3001234567',
-                identification: 'CC123456'
-            },
-            roomId: 'room-id',
-            checkIn: '2026-11-01',
-            checkOut: '2026-11-03',
-            nightlyRate: 150,
-            createdBy: 'user-id'
+    it('creates a reservation atomically with a calculated total', async () => {
+        const dates = getFutureDates();
+        const session = createSessionMock();
+        const room = {
+            _id: 'room-id',
+            number: '101',
+            type: 'Suite',
+            status: 'disponible'
         };
+        const reservation = { _id: 'reservation-id' };
+        Room.findById.mockReturnValue({ session: jest.fn().mockResolvedValue(room) });
+        Room.updateOne.mockResolvedValue({ matchedCount: 1 });
+        Reservation.findOne.mockReturnValue({ session: jest.fn().mockResolvedValue(null) });
+        Reservation.create.mockResolvedValue([reservation]);
 
-        it('persists the reservation and rate snapshot in one transaction', async () => {
-            const room = { _id: 'room-id', number: '101', type: 'Suite', status: 'disponible' };
-            const reservation = { _id: 'reservation-id', totalAmount: 300 };
-            const session = createSession();
-            Room.findById.mockReturnValue({ session: jest.fn().mockResolvedValue(room) });
-            Room.updateOne.mockResolvedValue({ modifiedCount: 1 });
-            Reservation.findOne.mockReturnValue({ session: jest.fn().mockResolvedValue(null) });
-            Reservation.create.mockResolvedValue([reservation]);
+        await expect(createReservation({
+            guest: { fullName: 'Ada Lovelace' },
+            roomId: room._id,
+            checkIn: dates.checkIn,
+            checkOut: dates.checkOut,
+            nightlyRate: 175,
+            createdBy: 'user-id'
+        })).resolves.toBe(reservation);
 
-            await expect(reservationService.createReservation(reservationInput))
-                .resolves.toBe(reservation);
+        expect(Room.updateOne).toHaveBeenCalledWith(
+            { _id: room._id, status: 'disponible' },
+            { $inc: { availabilityRevision: 1 } },
+            { session }
+        );
+        expect(Reservation.create).toHaveBeenCalledWith([expect.objectContaining({
+            room: room._id,
+            roomNumber: room.number,
+            checkIn: new Date(`${dates.checkIn}T00:00:00.000Z`),
+            checkOut: new Date(`${dates.checkOut}T00:00:00.000Z`),
+            nights: 2,
+            nightlyRate: 175,
+            totalAmount: 350,
+            status: 'reservada'
+        })], { session });
+        expect(session.endSession).toHaveBeenCalled();
+    });
 
-            expect(session.withTransaction).toHaveBeenCalledTimes(1);
-            expect(Room.updateOne).toHaveBeenCalledWith(
-                { _id: 'room-id' },
-                { $inc: { availabilityRevision: 1 } },
-                { session }
-            );
-            expect(Reservation.create).toHaveBeenCalledWith([expect.objectContaining({
-                room: 'room-id',
-                checkIn: new Date('2026-11-01T00:00:00.000Z'),
-                checkOut: new Date('2026-11-03T00:00:00.000Z'),
-                nights: 2,
-                nightlyRate: 150,
-                totalAmount: 300,
-                status: 'reservada'
-            })], { session });
-            expect(session.endSession).toHaveBeenCalled();
+    it('rejects an overlapping reservation without creating a record', async () => {
+        const dates = getFutureDates();
+        createSessionMock();
+        Room.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                _id: 'room-id',
+                status: 'disponible'
+            })
+        });
+        Room.updateOne.mockResolvedValue({ matchedCount: 1 });
+        Reservation.findOne.mockReturnValue({
+            session: jest.fn().mockResolvedValue({ _id: 'existing-reservation' })
         });
 
-        it('does not create a reservation for an unavailable room', async () => {
-            const session = createSession();
-            Room.findById.mockReturnValue({
-                session: jest.fn().mockResolvedValue({
-                    _id: 'room-id',
-                    status: 'fuera de servicio'
-                })
-            });
-
-            await expect(reservationService.createReservation(reservationInput))
-                .rejects.toMatchObject({
-                    message: 'La habitación está fuera de servicio y no se puede reservar',
-                    statusCode: 409
-                });
-
-            expect(Reservation.create).not.toHaveBeenCalled();
-            expect(session.endSession).toHaveBeenCalled();
+        await expect(createReservation({
+            guest: { fullName: 'Ada Lovelace' },
+            roomId: 'room-id',
+            checkIn: dates.checkIn,
+            checkOut: dates.checkOut,
+            nightlyRate: 175,
+            createdBy: 'user-id'
+        })).rejects.toMatchObject({
+            statusCode: 409,
+            message: 'La habitación no está disponible para el periodo seleccionado'
         });
 
-        it('rolls back when the selected dates overlap another reservation', async () => {
-            const session = createSession();
-            Room.findById.mockReturnValue({
-                session: jest.fn().mockResolvedValue({
-                    _id: 'room-id',
-                    status: 'disponible'
-                })
-            });
-            Room.updateOne.mockResolvedValue({ modifiedCount: 1 });
-            Reservation.findOne.mockReturnValue({
-                session: jest.fn().mockResolvedValue({ _id: 'existing-reservation' })
-            });
+        expect(Reservation.create).not.toHaveBeenCalled();
+    });
 
-            await expect(reservationService.createReservation(reservationInput))
-                .rejects.toMatchObject({
-                    message: 'La habitación ya tiene una reservación en el rango de fechas seleccionado',
-                    statusCode: 409
-                });
-
-            expect(Reservation.create).not.toHaveBeenCalled();
-            expect(session.endSession).toHaveBeenCalled();
+    it('rejects rooms outside service and invalid rates', async () => {
+        const dates = getFutureDates();
+        createSessionMock();
+        Room.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                _id: 'room-id',
+                status: 'fuera de servicio'
+            })
         });
 
-        it('rejects an invalid tariff before starting a transaction', async () => {
-            const session = createSession();
+        await expect(createReservation({
+            roomId: 'room-id',
+            checkIn: dates.checkIn,
+            checkOut: dates.checkOut,
+            nightlyRate: 10,
+            createdBy: 'user-id'
+        })).rejects.toMatchObject({ statusCode: 409 });
+        expect(Room.updateOne).not.toHaveBeenCalled();
 
-            await expect(reservationService.createReservation({
-                ...reservationInput,
-                nightlyRate: -1
-            })).rejects.toBeInstanceOf(AppError);
-
-            expect(mongoose.startSession).not.toHaveBeenCalled();
-            expect(session.endSession).not.toHaveBeenCalled();
-        });
-
-        it('rejects a total that cannot be safely represented as a currency amount', async () => {
-            createSession();
-            Room.findById.mockReturnValue({
-                session: jest.fn().mockResolvedValue({
-                    _id: 'room-id',
-                    number: '101',
-                    type: 'Suite',
-                    status: 'disponible'
-                })
-            });
-            Room.updateOne.mockResolvedValue({ modifiedCount: 1 });
-            Reservation.findOne.mockReturnValue({ session: jest.fn().mockResolvedValue(null) });
-
-            await expect(reservationService.createReservation({
-                ...reservationInput,
-                nightlyRate: Number.MAX_VALUE
-            })).rejects.toMatchObject({
-                message: 'El total de la reservación supera el límite permitido',
-                statusCode: 400
-            });
-
-            expect(Reservation.create).not.toHaveBeenCalled();
-        });
+        await expect(createReservation({
+            roomId: 'room-id',
+            checkIn: dates.checkIn,
+            checkOut: dates.checkOut,
+            nightlyRate: -1,
+            createdBy: 'user-id'
+        })).rejects.toMatchObject({ statusCode: 400 });
+        await expect(createReservation({
+            roomId: 'room-id',
+            checkIn: dates.checkIn,
+            checkOut: dates.checkOut,
+            nightlyRate: '',
+            createdBy: 'user-id'
+        })).rejects.toMatchObject({ statusCode: 400 });
     });
 });

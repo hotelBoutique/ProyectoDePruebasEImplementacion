@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
 import {
@@ -438,15 +439,10 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               listItemId="rooms-list"
               onNavigate={selectItem}
             />
-          ) : !isAdmin && activeItem === 'reception-rooms-list' ? (
-            <RoomsPage
-              token={token}
-              mode="list"
-              canCreate={false}
-              canManage={false}
-              listItemId="reception-rooms-list"
-              onNavigate={selectItem}
-            />
+          ) : isAdmin && activeItem === 'rooms-availability' ? (
+            <ReservationsPage token={token} mode="availability" />
+          ) : !isAdmin && activeItem === 'reception-rooms-availability' ? (
+            <ReservationsPage token={token} mode="availability" />
           ) : !isAdmin && activeItem === 'reception-reservations-create' ? (
             <ReservationsPage token={token} />
           ) : (

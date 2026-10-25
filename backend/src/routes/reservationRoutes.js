@@ -5,15 +5,15 @@ const reservationController = require('../controllers/reservationController');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validate');
 const { ROLES } = require('../constants/roles');
+const { isValidDateOnly } = require('../utils/reservationDates');
 
 const router = express.Router();
-const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const validateDate = (value, fieldName) => {
+    if (!isValidDateOnly(value)) {
+        throw new Error(`${fieldName} debe ser una fecha válida con formato AAAA-MM-DD`);
+    }
 
-const isRealDate = value => {
-    if (!ISO_DATE_PATTERN.test(value)) return false;
-
-    const date = new Date(`${value}T00:00:00.000Z`);
-    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+    return true;
 };
 
 router.use(protect);
@@ -22,14 +22,19 @@ router.get(
     '/availability',
     restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
     query('checkIn')
-        .custom(isRealDate)
-        .withMessage('El check-in debe ser una fecha válida con formato AAAA-MM-DD'),
+        .notEmpty()
+        .withMessage('El check-in es obligatorio')
+        .bail()
+        .custom(value => validateDate(value, 'El check-in')),
     query('checkOut')
-        .custom(isRealDate)
-        .withMessage('El check-out debe ser una fecha válida con formato AAAA-MM-DD'),
-    query('checkOut')
-        .custom((checkOut, { req }) => checkOut > req.query.checkIn)
-        .withMessage('El check-out debe ser posterior al check-in'),
+        .notEmpty()
+        .withMessage('El check-out es obligatorio')
+        .bail()
+        .custom(value => validateDate(value, 'El check-out')),
+    query('roomId')
+        .optional()
+        .isMongoId()
+        .withMessage('La habitación seleccionada no es válida'),
     validate,
     reservationController.getAvailableRooms
 );
@@ -46,7 +51,7 @@ router.post(
         .bail()
         .trim()
         .isLength({ min: 2, max: 100 })
-        .withMessage('El nombre completo del huésped debe tener entre 2 y 100 caracteres'),
+        .withMessage('El nombre completo debe tener entre 2 y 100 caracteres'),
     body('guest.email')
         .exists()
         .withMessage('El correo del huésped es obligatorio')
@@ -59,17 +64,17 @@ router.post(
         .withMessage('El teléfono del huésped es obligatorio')
         .bail()
         .isString()
-        .withMessage('El teléfono del huésped es obligatorio')
+        .withMessage('El teléfono del huésped debe ser texto')
         .bail()
         .trim()
         .isLength({ min: 7, max: 25 })
-        .withMessage('El teléfono del huésped debe tener entre 7 y 25 caracteres'),
+        .withMessage('El teléfono debe tener entre 7 y 25 caracteres'),
     body('guest.identification')
         .exists()
         .withMessage('La identificación del huésped es obligatoria')
         .bail()
         .isString()
-        .withMessage('La identificación del huésped es obligatoria')
+        .withMessage('La identificación debe ser texto')
         .bail()
         .trim()
         .isLength({ min: 4, max: 30 })
@@ -81,20 +86,15 @@ router.post(
         .isMongoId()
         .withMessage('Selecciona una habitación válida'),
     body('checkIn')
-        .exists()
-        .withMessage('La fecha de check-in es obligatoria')
+        .notEmpty()
+        .withMessage('El check-in es obligatorio')
         .bail()
-        .custom(isRealDate)
-        .withMessage('El check-in debe ser una fecha válida con formato AAAA-MM-DD'),
+        .custom(value => validateDate(value, 'El check-in')),
     body('checkOut')
-        .exists()
-        .withMessage('La fecha de check-out es obligatoria')
+        .notEmpty()
+        .withMessage('El check-out es obligatorio')
         .bail()
-        .custom(isRealDate)
-        .withMessage('El check-out debe ser una fecha válida con formato AAAA-MM-DD')
-        .bail()
-        .custom((checkOut, { req }) => checkOut > req.body.checkIn)
-        .withMessage('El check-out debe ser posterior al check-in'),
+        .custom(value => validateDate(value, 'El check-out')),
     body('nightlyRate')
         .exists()
         .withMessage('La tarifa aplicada es obligatoria')
