@@ -27,6 +27,17 @@ const getRooms = catchAsync(
     }
 );
 
+const createRoom = catchAsync(async (req, res) => {
+    const room = await roomService.createRoom(req.body);
+
+    res.status(201).json({
+        status: 'success',
+        message: 'Habitación registrada correctamente',
+        data: { room }
+    });
+});
+
 module.exports = {
-    getRooms
+    getRooms,
+    createRoom
 };
