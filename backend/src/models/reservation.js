@@ -32,6 +32,78 @@ const guestSchema = new mongoose.Schema(
     { _id: false }
 );
 
+const additionalChargeSchema = new mongoose.Schema(
+    {
+        description: {
+            type: String,
+            required: true,
+            trim: true,
+            minlength: 2,
+            maxlength: 120
+        },
+        amount: {
+            type: Number,
+            required: true,
+            min: 0
+        }
+    },
+    { _id: false }
+);
+
+const settlementSchema = new mongoose.Schema(
+    {
+        status: {
+            type: String,
+            enum: ['pagada'],
+            required: true
+        },
+        actualNights: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+        nightlyRate: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        roomSubtotal: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        additionalCharges: {
+            type: [additionalChargeSchema],
+            default: []
+        },
+        additionalChargesTotal: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        totalAmount: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        paidAmount: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        paymentMethod: {
+            type: String,
+            enum: ['efectivo', 'tarjeta', 'transferencia'],
+            required: true
+        },
+        paidAt: {
+            type: Date,
+            required: true
+        }
+    },
+    { _id: false }
+);
+
 const reservationSchema = new mongoose.Schema(
     {
         guest: {
@@ -82,6 +154,12 @@ const reservationSchema = new mongoose.Schema(
         },
         checkInAt: {
             type: Date
+        },
+        checkOutAt: {
+            type: Date
+        },
+        settlement: {
+            type: settlementSchema
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,

@@ -895,6 +895,32 @@ h1 {
 .check-in-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .check-in-card-footer p { max-width: 390px; margin: 0; color: var(--color-text-muted); font-size: 9px; line-height: 1.6; }
 .check-in-empty-state { padding: 25px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; text-align: center; }
+.checkout-layout { display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.5fr); align-items: start; gap: 18px; }
+.checkout-reservation-option { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; width: 100%; padding: 16px; color: var(--color-primary); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 7px; text-align: left; cursor: pointer; }
+.checkout-reservation-option > span { display: flex; flex-direction: column; gap: 6px; }
+.checkout-reservation-option > span strong { font-size: 12px; }
+.checkout-reservation-option > span span { color: var(--color-text-muted); font-size: 9px; }
+.checkout-reservation-option > strong { flex: 0 0 auto; font-size: 10px; }
+.checkout-reservation-option:hover,
+.checkout-reservation-option.is-selected { background: #F4F1E9; border-color: #A68A62; }
+.checkout-form { min-width: 0; }
+.checkout-form .receptionist-form-heading h2 { margin: 0; color: var(--color-primary); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; }
+.checkout-form .receptionist-form-heading p { margin: 5px 0 0; color: var(--color-text-muted); font-size: 9px; }
+.checkout-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 19px 0; border-bottom: 1px solid var(--color-border); }
+.checkout-summary dt { margin-bottom: 5px; color: var(--color-text-muted); font-size: 8px; text-transform: uppercase; letter-spacing: .06em; }
+.checkout-summary dd { margin: 0; color: var(--color-primary); font-size: 10px; font-weight: 600; }
+.checkout-charges-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 19px 0 12px; }
+.checkout-charges-heading h3 { margin: 0; color: var(--color-primary); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; }
+.checkout-charge-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, .55fr) auto; align-items: end; gap: 10px; margin: 0 0 12px; }
+.checkout-charge-row .form-field { gap: 6px; }
+.checkout-charge-row .form-input { min-width: 0; height: 40px; }
+.checkout-remove-charge { min-height: 40px; padding: 0 10px; }
+.checkout-payment-method { margin: 18px 0; }
+.checkout-payment-method .form-input { height: 42px; }
+.checkout-total-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 16px 0; border-top: 1px solid var(--color-border); color: var(--color-primary); font-size: 11px; }
+.checkout-total-row strong { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; }
+.checkout-form .receptionist-form-footer { align-items: flex-end; }
+.checkout-receipt { grid-column: 1 / -1; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 760px) {
@@ -926,6 +952,11 @@ h1 {
   .check-in-details { grid-template-columns: 1fr; }
   .check-in-card-footer { align-items: stretch; flex-direction: column; }
   .check-in-card-footer .button-primary { width: 100%; }
+  .checkout-layout { grid-template-columns: 1fr; }
+  .checkout-charge-row { grid-template-columns: minmax(0, 1fr) minmax(110px, .6fr); }
+  .checkout-remove-charge { grid-column: 2; justify-self: end; }
+  .checkout-form .receptionist-form-footer { align-items: stretch; }
+  .checkout-form .receptionist-form-footer .button-primary { width: 100%; }
 }
 
 @media (max-width: 560px) {

@@ -25,6 +25,12 @@ router.get(
 );
 
 router.get(
+    '/check-outs/pending',
+    restrictTo(ROLES.RECEPCIONISTA),
+    reservationController.getPendingCheckOuts
+);
+
+router.get(
     '/availability',
     restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
     query('checkIn')
@@ -53,6 +59,43 @@ router.post(
         .withMessage('El identificador de la reservación no es válido'),
     validate,
     reservationController.checkInReservation
+);
+
+router.post(
+    '/:id/check-out',
+    restrictTo(ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    body('paidAmount')
+        .exists()
+        .withMessage('El importe pagado es obligatorio')
+        .bail()
+        .isFloat({ min: 0 })
+        .withMessage('El importe pagado debe ser un número mayor o igual a 0')
+        .toFloat(),
+    body('paymentMethod')
+        .isIn(['efectivo', 'tarjeta', 'transferencia'])
+        .withMessage('Selecciona un método de pago válido'),
+    body('additionalCharges')
+        .optional()
+        .isArray({ max: 20 })
+        .withMessage('Los cargos adicionales deben ser una lista de máximo 20 conceptos'),
+    body('additionalCharges.*.description')
+        .if(body('additionalCharges').exists())
+        .isString()
+        .withMessage('El concepto del cargo debe ser texto')
+        .bail()
+        .trim()
+        .isLength({ min: 2, max: 120 })
+        .withMessage('El concepto del cargo debe tener entre 2 y 120 caracteres'),
+    body('additionalCharges.*.amount')
+        .if(body('additionalCharges').exists())
+        .isFloat({ min: 0 })
+        .withMessage('El importe del cargo debe ser un número mayor o igual a 0')
+        .toFloat(),
+    validate,
+    reservationController.checkOutReservation
 );
 
 router.post(

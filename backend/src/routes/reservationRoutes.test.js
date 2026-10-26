@@ -19,7 +19,9 @@ jest.mock('../services/reservationService', () => ({
     getAvailableRooms: jest.fn(),
     createReservation: jest.fn(),
     getPendingCheckIns: jest.fn(),
-    checkInReservation: jest.fn()
+    checkInReservation: jest.fn(),
+    getPendingCheckOuts: jest.fn(),
+    checkOutReservation: jest.fn()
 }));
 
 jest.mock('../utils/logger', () => ({
@@ -176,5 +178,61 @@ describe('/api/v1/reservations', () => {
             .set('x-role', 'ADMIN');
         expect(forbidden.status).toBe(403);
         expect(reservationService.checkInReservation).not.toHaveBeenCalled();
+    });
+
+    it('lists active stays for reception checkout', async () => {
+        const reservations = [{ _id: 'reservation-id', settlementEstimate: { total: 200 } }];
+        reservationService.getPendingCheckOuts.mockResolvedValue(reservations);
+
+        const response = await request(app).get('/api/v1/reservations/check-outs/pending');
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.reservations).toEqual(reservations);
+        expect(reservationService.getPendingCheckOuts).toHaveBeenCalled();
+    });
+
+    it('accepts a valid checkout payment and returns the receipt', async () => {
+        const receipt = {
+            _id: '507f1f77bcf86cd799439012',
+            status: 'finalizada',
+            settlement: { status: 'pagada', totalAmount: 250 }
+        };
+        reservationService.checkOutReservation.mockResolvedValue(receipt);
+
+        const response = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/check-out')
+            .send({
+                paidAmount: 250,
+                paymentMethod: 'tarjeta',
+                additionalCharges: [{ description: 'Minibar', amount: 50 }]
+            });
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.receipt.settlement.totalAmount).toBe(250);
+        expect(reservationService.checkOutReservation).toHaveBeenCalledWith({
+            reservationId: '507f1f77bcf86cd799439012',
+            paidAmount: 250,
+            paymentMethod: 'tarjeta',
+            additionalCharges: [{ description: 'Minibar', amount: 50 }]
+        });
+    });
+
+    it('validates checkout payment fields and restricts checkout to reception', async () => {
+        const invalid = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/check-out')
+            .send({
+                paidAmount: -1,
+                paymentMethod: 'cheque',
+                additionalCharges: [{ description: 'x', amount: -10 }]
+            });
+        expect(invalid.status).toBe(400);
+        expect(reservationService.checkOutReservation).not.toHaveBeenCalled();
+
+        const forbidden = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/check-out')
+            .set('x-role', 'ADMIN')
+            .send({ paidAmount: 100, paymentMethod: 'efectivo' });
+        expect(forbidden.status).toBe(403);
+        expect(reservationService.checkOutReservation).not.toHaveBeenCalled();
     });
 });
