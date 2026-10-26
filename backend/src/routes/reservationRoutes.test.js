@@ -71,8 +71,56 @@ describe('/api/v1/reservations', () => {
         expect(reservationService.getAvailableRooms).toHaveBeenCalledWith(
             dates.checkIn,
             dates.checkOut,
-            undefined
+            undefined,
+            { type: undefined, guests: undefined, maxPrice: undefined }
         );
+    });
+
+    it('passes availability filters to the service', async () => {
+        const dates = getFutureDates();
+        reservationService.getAvailableRooms.mockResolvedValue([]);
+
+        const response = await request(app)
+            .get('/api/v1/reservations/availability')
+            .query({ ...dates, type: 'Doble', guests: '2', maxPrice: '200000' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.results).toBe(0);
+        expect(reservationService.getAvailableRooms).toHaveBeenCalledWith(
+            dates.checkIn,
+            dates.checkOut,
+            undefined,
+            { type: 'Doble', guests: '2', maxPrice: '200000' }
+        );
+    });
+
+    it('rejects invalid availability filters', async () => {
+        const dates = getFutureDates();
+
+        const response = await request(app)
+            .get('/api/v1/reservations/availability')
+            .query({ ...dates, type: 'Penthouse', guests: '0', maxPrice: '-1' });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg)).toEqual(expect.arrayContaining([
+            'El tipo de habitación no es válido',
+            'El número de huéspedes debe ser un entero mayor o igual a 1',
+            'El precio máximo debe ser un número mayor o igual a 0'
+        ]));
+        expect(reservationService.getAvailableRooms).not.toHaveBeenCalled();
+    });
+
+    it('requires both dates to check availability', async () => {
+        const response = await request(app)
+            .get('/api/v1/reservations/availability')
+            .query({ type: 'Doble' });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg)).toEqual(expect.arrayContaining([
+            'El check-in es obligatorio',
+            'El check-out es obligatorio'
+        ]));
+        expect(reservationService.getAvailableRooms).not.toHaveBeenCalled();
     });
 
     it('reports required reservation fields and rejects invalid dates', async () => {

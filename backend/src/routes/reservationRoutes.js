@@ -78,6 +78,22 @@ router.get(
         .optional()
         .isMongoId()
         .withMessage('La habitación seleccionada no es válida'),
+    query(['type', 'guests', 'maxPrice'])
+        .optional()
+        .custom(value => typeof value === 'string')
+        .withMessage('Cada filtro admite un solo valor'),
+    query('type')
+        .optional({ checkFalsy: true })
+        .isIn(ROOM_TYPES)
+        .withMessage('El tipo de habitación no es válido'),
+    query('guests')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 1 })
+        .withMessage('El número de huéspedes debe ser un entero mayor o igual a 1'),
+    query('maxPrice')
+        .optional({ checkFalsy: true })
+        .isFloat({ min: 0 })
+        .withMessage('El precio máximo debe ser un número mayor o igual a 0'),
     validate,
     reservationController.getAvailableRooms
 );

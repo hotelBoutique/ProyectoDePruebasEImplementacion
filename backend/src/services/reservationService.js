@@ -518,7 +518,7 @@ const parseFilterDate = (value, fieldName) => {
     return new Date(`${value}T00:00:00.000Z`);
 };
 
-const getAvailableRooms = async (checkInValue, checkOutValue, roomId) => {
+const getAvailableRooms = async (checkInValue, checkOutValue, roomId, { type, guests, maxPrice } = {}) => {
     const { checkIn, checkOut } = getDateRange(checkInValue, checkOutValue);
     const roomFilter = {
         status: { $nin: UNAVAILABLE_ROOM_STATUSES }
@@ -526,6 +526,18 @@ const getAvailableRooms = async (checkInValue, checkOutValue, roomId) => {
 
     if (roomId) {
         roomFilter._id = roomId;
+    }
+
+    if (type) {
+        roomFilter.type = type;
+    }
+
+    if (guests) {
+        roomFilter.capacity = { $gte: Number(guests) };
+    }
+
+    if (maxPrice) {
+        roomFilter.price = { $lte: Number(maxPrice) };
     }
 
     const rooms = await Room.find(roomFilter).sort({ number: 1 });

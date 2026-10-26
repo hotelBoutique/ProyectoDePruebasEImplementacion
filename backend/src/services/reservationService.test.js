@@ -75,6 +75,60 @@ describe('reservationService', () => {
         }));
     });
 
+    it('searches only operational rooms when no availability filter is given', async () => {
+        const dates = getFutureDates();
+        Room.find.mockReturnValue({ sort: jest.fn().mockResolvedValue([]) });
+
+        await expect(getAvailableRooms(dates.checkIn, dates.checkOut)).resolves.toEqual([]);
+
+        expect(Room.find).toHaveBeenCalledWith({
+            status: { $nin: ['ocupada', 'mantenimiento', 'fuera de servicio', 'limpieza', 'desinfeccion'] }
+        });
+        expect(Reservation.find).not.toHaveBeenCalled();
+    });
+
+    it('applies room type, guest capacity and maximum price to availability', async () => {
+        const dates = getFutureDates();
+        Room.find.mockReturnValue({ sort: jest.fn().mockResolvedValue([]) });
+
+        await getAvailableRooms(dates.checkIn, dates.checkOut, undefined, {
+            type: 'Doble',
+            guests: '2',
+            maxPrice: '200000'
+        });
+
+        expect(Room.find).toHaveBeenCalledWith(expect.objectContaining({
+            type: 'Doble',
+            capacity: { $gte: 2 },
+            price: { $lte: 200000 }
+        }));
+    });
+
+    it('ignores empty availability filters', async () => {
+        const dates = getFutureDates();
+        Room.find.mockReturnValue({ sort: jest.fn().mockResolvedValue([]) });
+
+        await getAvailableRooms(dates.checkIn, dates.checkOut, undefined, {
+            type: '',
+            guests: '',
+            maxPrice: ''
+        });
+
+        const [roomFilter] = Room.find.mock.calls[0];
+        expect(roomFilter).not.toHaveProperty('type');
+        expect(roomFilter).not.toHaveProperty('capacity');
+        expect(roomFilter).not.toHaveProperty('price');
+    });
+
+    it('rejects an availability search starting in the past', async () => {
+        await expect(getAvailableRooms('2020-01-01', '2020-01-03')).rejects.toMatchObject({
+            message: 'La fecha de check-in no puede estar en el pasado',
+            statusCode: 400
+        });
+
+        expect(Room.find).not.toHaveBeenCalled();
+    });
+
     it('returns only reservations scheduled for check-in today', async () => {
         const reservations = [{ _id: 'reservation-id' }];
         const query = {

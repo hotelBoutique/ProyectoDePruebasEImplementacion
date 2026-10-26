@@ -936,6 +936,8 @@ h1 {
 .reservation-room-option.is-selected { background: #F4F1E9; border-color: #A68A62; }
 .reservation-empty-state { margin: 15px 0 0; color: var(--color-text-muted); font-size: 11px; }
 .reservation-guest-heading { padding-top: 22px; border-top: 1px solid var(--color-border); }
+.availability-search-grid { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.availability-summary { margin: 0; color: var(--color-text-muted); font-size: 10px; text-align: right; }
 .reservation-guest-heading p { margin: 5px 0 0; color: var(--color-text-muted); font-size: 10px; }
 .reservation-receipt { padding: 22px 24px; background: #EAF0E9; border: 1px solid #D7E2D5; border-radius: 8px; }
 .reservation-receipt .eyebrow { margin: 0 0 7px; }
@@ -1026,6 +1028,7 @@ h1 {
   .receptionist-stat-card .card-kicker { font-size: 7px; }
   .receptionist-stat-card > span:last-child { font-size: 8px; line-height: 1.45; }
   .receptionist-list-heading { align-items: flex-start; flex-direction: column; }
+  .availability-summary { text-align: left; }
   .receptionist-refresh { align-self: flex-end; }
   .receptionist-form-card { padding: 19px; }
   .receptionist-form-grid { grid-template-columns: 1fr; gap: 16px; }

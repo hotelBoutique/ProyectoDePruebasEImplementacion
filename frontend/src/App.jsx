@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AvailabilityPage from './pages/AvailabilityPage.jsx';
 import CheckInPage from './pages/CheckInPage.jsx';
 import CheckOutPage from './pages/CheckOutPage.jsx';
 import ConsumptionPage from './pages/ConsumptionPage.jsx';
@@ -442,9 +443,9 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               onNavigate={selectItem}
             />
           ) : isAdmin && activeItem === 'rooms-availability' ? (
-            <ReservationsPage token={token} mode="availability" />
+            <AvailabilityPage token={token} />
           ) : !isAdmin && activeItem === 'reception-rooms-availability' ? (
-            <ReservationsPage token={token} mode="availability" />
+            <AvailabilityPage token={token} canReserve onNavigate={selectItem} />
           ) : (isAdmin && activeItem === 'reservations-list') || (!isAdmin && ['reception-reservations-list', 'reception-reservations-create'].includes(activeItem)) ? (
             <ReservationsPage
               token={token}
