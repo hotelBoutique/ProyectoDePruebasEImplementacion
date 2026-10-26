@@ -131,6 +131,16 @@ const getReservations = catchAsync(async (req, res) => {
     });
 });
 
+const getSettlementHistory = catchAsync(async (req, res) => {
+    const settlements = await reservationService.getSettlementHistory();
+
+    res.status(200).json({
+        status: 'success',
+        results: settlements.length,
+        data: { settlements }
+    });
+});
+
 const getReservationById = catchAsync(async (req, res) => {
     const reservation = await reservationService.getReservationById(req.params.id);
 
@@ -204,6 +214,7 @@ module.exports = {
     voidReservationConsumption,
     getAvailableRooms,
     getReservations,
+    getSettlementHistory,
     getReservationById,
     createReservation,
     updateReservation,

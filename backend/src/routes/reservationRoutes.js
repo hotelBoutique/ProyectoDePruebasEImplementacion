@@ -50,6 +50,12 @@ router.get(
 );
 
 router.get(
+    '/settlements/history',
+    restrictTo(ROLES.ADMIN),
+    reservationController.getSettlementHistory
+);
+
+router.get(
     '/check-ins/pending',
     restrictTo(ROLES.RECEPCIONISTA),
     reservationController.getPendingCheckIns
