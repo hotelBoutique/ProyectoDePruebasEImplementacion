@@ -1045,7 +1045,11 @@ h1 {
 .occupancy-report-table td:nth-child(4) { min-width: 155px; white-space: normal; }
 .occupancy-report-empty { margin: 0; padding: 20px; color: var(--color-text-muted); font-size: 11px; }
 .income-report-page { gap: 18px; }
+.income-report-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .income-report-metric > strong { overflow-wrap: anywhere; font-family: inherit; font-size: clamp(16px, 1.7vw, 23px); font-weight: 600; }
+.sales-report-page { gap: 18px; }
+.sales-report-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sales-report-metric > strong { overflow-wrap: anywhere; font-family: inherit; font-size: clamp(16px, 1.7vw, 23px); font-weight: 600; }
 .income-report-table th:nth-child(n + 3),
 .income-report-table td:nth-child(n + 3) { min-width: 118px; text-align: right; }
 .income-report-table th:nth-child(2),
