@@ -24,9 +24,43 @@ const createProduct = async ({ name, description, category, price, stock, isActi
     });
 };
 
-const getProducts = async () => {
-    return Product.find()
+const buildProductFilter = ({ search, category, status, inStock } = {}) => {
+    const filter = {};
+
+    if (search && search.trim()) {
+        filter.name = { $regex: escapeRegExp(search.trim()), $options: 'i' };
+    }
+
+    if (category && category.trim()) {
+        filter.category = { $regex: `^${escapeRegExp(category.trim())}$`, $options: 'i' };
+    }
+
+    if (status === 'activo') filter.isActive = true;
+    if (status === 'inactivo') filter.isActive = false;
+
+    if (inStock === 'true') {
+        filter.stock = { $gt: 0 };
+    }
+
+    return filter;
+};
+
+const getProducts = async (filters) => {
+    return Product.find(buildProductFilter(filters))
         .sort({ name: 1 });
+};
+
+const getCategories = async ({ activeOnly = false } = {}) => {
+    const categories = await Product.distinct('category', activeOnly ? { isActive: true } : {});
+    const byName = new Map();
+
+    // La categoría es texto libre: "bebidas" y "Bebidas" son la misma opción de filtro.
+    categories.forEach(category => {
+        const key = category.toLocaleLowerCase('es');
+        if (!byName.has(key)) byName.set(key, category);
+    });
+
+    return [...byName.values()].sort((a, b) => a.localeCompare(b, 'es'));
 };
 
 const updateProduct = async (productId, changes) => {
@@ -94,5 +128,6 @@ const updateProduct = async (productId, changes) => {
 module.exports = {
     createProduct,
     getProducts,
+    getCategories,
     updateProduct
 };

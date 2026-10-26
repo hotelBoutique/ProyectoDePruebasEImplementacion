@@ -7,6 +7,7 @@ import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import OccupancyReportPage from './pages/OccupancyReportPage.jsx';
 import IncomeReportPage from './pages/IncomeReportPage.jsx';
+import ProductCatalogPage from './pages/ProductCatalogPage.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
 import SettlementHistoryPage from './pages/SettlementHistoryPage.jsx';
@@ -446,6 +447,15 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               listItemId="rooms-list"
               onNavigate={selectItem}
             />
+          ) : !isAdmin && activeItem === 'reception-rooms-list' ? (
+            <RoomsPage
+              token={token}
+              mode="list"
+              canCreate={false}
+              canManage={false}
+              listItemId="reception-rooms-list"
+              onNavigate={selectItem}
+            />
           ) : isAdmin && activeItem === 'rooms-availability' ? (
             <AvailabilityPage token={token} />
           ) : !isAdmin && activeItem === 'reception-rooms-availability' ? (
@@ -461,6 +471,10 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <ReservationsPage token={token} mode="cancellations" />
           ) : !isAdmin && activeItem === 'reception-reservations-cancellations' ? (
             <ReservationsPage token={token} mode="cancellations" />
+          ) : isAdmin && activeItem === 'consumptions-catalog' ? (
+            <ProductCatalogPage token={token} showInactive />
+          ) : !isAdmin && activeItem === 'reception-consumptions-catalog' ? (
+            <ProductCatalogPage token={token} />
           ) : isAdmin && activeItem === 'settlements-history' ? (
             <SettlementHistoryPage token={token} />
           ) : isAdmin && activeItem === 'reports-occupancy' ? (

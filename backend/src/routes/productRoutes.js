@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 
 const productController = require('../controllers/productController');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
@@ -12,7 +12,33 @@ router.use(protect);
 
 router.get('/',
     restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    query(['search', 'category', 'status', 'inStock'])
+        .optional()
+        .custom(value => typeof value === 'string')
+        .withMessage('Cada filtro admite un solo valor'),
+    query('search')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 100 })
+        .withMessage('La búsqueda no puede superar 100 caracteres'),
+    query('category')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 50 })
+        .withMessage('La categoría no puede superar 50 caracteres'),
+    query('status')
+        .optional({ checkFalsy: true })
+        .isIn(['activo', 'inactivo'])
+        .withMessage('El estado debe ser activo o inactivo'),
+    query('inStock')
+        .optional({ checkFalsy: true })
+        .isIn(['true', 'false'])
+        .withMessage('El filtro de stock debe ser true o false'),
+    validate,
     productController.getProducts
+);
+
+router.get('/categories',
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    productController.getCategories
 );
 
 router.post(

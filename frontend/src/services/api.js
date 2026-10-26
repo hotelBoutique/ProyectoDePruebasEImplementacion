@@ -209,8 +209,19 @@ export function checkOutReservation(token, reservationId, settlement) {
   });
 }
 
-export function getProducts(token) {
-  return apiRequest('/products', { token });
+export function getProducts(token, filters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([name, value]) => {
+    const text = String(value ?? '').trim();
+    if (text) params.set(name, text);
+  });
+  const query = params.toString();
+
+  return apiRequest(`/products${query ? `?${query}` : ''}`, { token });
+}
+
+export function getProductCategories(token) {
+  return apiRequest('/products/categories', { token });
 }
 
 export function addReservationConsumption(token, reservationId, consumption) {

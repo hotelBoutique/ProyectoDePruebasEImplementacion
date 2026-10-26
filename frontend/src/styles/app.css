@@ -885,6 +885,13 @@ h1 {
 .receptionist-status > span { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .receptionist-status-active { color: var(--color-success); background: #EAF0E9; border-color: #D7E2D5; }
 .receptionist-status-inactive { color: var(--color-danger); background: #F5E9E5; border-color: #EBD5CE; }
+.receptionist-status-warning { color: var(--color-warning); background: #F6EFE2; border-color: #E8DAC0; }
+.rooms-filters.catalog-filters { display: flex; flex-wrap: wrap; }
+.catalog-filters > .form-field { flex: 1 1 160px; }
+.catalog-filters > .form-field:first-child { flex-grow: 2; }
+.catalog-stock-toggle { min-height: 43px; display: inline-flex; align-items: center; gap: 8px; color: var(--color-primary); font-size: 11px; cursor: pointer; }
+.catalog-stock-toggle input { width: 16px; height: 16px; accent-color: var(--color-primary); }
+.catalog-table td:first-child { min-width: 200px; white-space: normal; }
 .receptionist-action-cell { text-align: right; }
 .receptionist-status-action { min-height: 32px; padding: 0 10px; color: var(--color-success); background: transparent; border: 1px solid #C9D8C8; border-radius: 5px; font-size: 9px; font-weight: 600; cursor: pointer; transition: background .18s, border-color .18s; }
 .receptionist-status-action:hover:not(:disabled) { background: #EAF0E9; border-color: #AFC5AE; }
@@ -1061,6 +1068,7 @@ h1 {
   .rooms-create-action { width: 100%; }
   .rooms-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rooms-filters-actions { grid-column: 1 / -1; }
+  .catalog-filters .rooms-filters-actions { flex: 1 1 100%; }
   .rooms-filters-actions .button-primary,
   .rooms-filters-actions .button-secondary { flex: 1; }
   .reservations-heading { align-items: flex-start; flex-direction: column; gap: 17px; }
