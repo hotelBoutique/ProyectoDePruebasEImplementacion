@@ -69,6 +69,25 @@ const getAvailableRooms = catchAsync(async (req, res) => {
     });
 });
 
+const getReservations = catchAsync(async (req, res) => {
+    const reservations = await reservationService.getReservations(req.query);
+
+    res.status(200).json({
+        status: 'success',
+        results: reservations.length,
+        data: { reservations }
+    });
+});
+
+const getReservationById = catchAsync(async (req, res) => {
+    const reservation = await reservationService.getReservationById(req.params.id);
+
+    res.status(200).json({
+        status: 'success',
+        data: { reservation }
+    });
+});
+
 const createReservation = catchAsync(async (req, res) => {
     const reservation = await reservationService.createReservation({
         ...req.body,
@@ -101,5 +120,7 @@ module.exports = {
     getPendingCheckOuts,
     checkOutReservation,
     getAvailableRooms,
+    getReservations,
+    getReservationById,
     createReservation
 };

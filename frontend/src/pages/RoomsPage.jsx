@@ -10,6 +10,8 @@ const EMPTY_FORM = {
   status: 'disponible',
 };
 
+const ROOM_TYPES = ['Sencilla', 'Doble', 'Triple', 'Familiar', 'Suite'];
+
 const ROOM_STATUSES = [
   { value: 'disponible', label: 'Disponible' },
   { value: 'ocupada', label: 'Ocupada' },
@@ -255,18 +257,18 @@ export default function RoomsPage({
 
           <label className="form-field" htmlFor="room-type">
             <span className="field-label">Tipo de habitación *</span>
-            <input
+            <select
               className="form-input"
               id="room-type"
               name="type"
-              type="text"
-              maxLength={50}
-              placeholder="Ej. Suite"
               value={form.type}
               onChange={updateField}
               required
               disabled={saving}
-            />
+            >
+              <option value="">Selecciona un tipo</option>
+              {ROOM_TYPES.map((type) => <option value={type} key={type}>{type}</option>)}
+            </select>
           </label>
 
           <label className="form-field" htmlFor="room-description">

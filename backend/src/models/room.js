@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const ROOM_TYPES = require('../constants/roomTypes');
 
 const roomSchema = new mongoose.Schema(
     {
@@ -12,6 +13,7 @@ const roomSchema = new mongoose.Schema(
         type: {
             type: String,
             required: [true, 'El tipo de habitación es obligatorio'],
+            enum: ROOM_TYPES,
             trim: true,
             maxlength: 50
         },

@@ -5,6 +5,7 @@ const roomController = require('../controllers/roomController');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validate');
 const { ROLES } = require('../constants/roles');
+const ROOM_TYPES = require('../constants/roomTypes');
 
 const router = express.Router();
 
@@ -63,8 +64,8 @@ router.post(
         .notEmpty()
         .withMessage('El tipo de habitación es obligatorio')
         .bail()
-        .isLength({ max: 50 })
-        .withMessage('El tipo de habitación no puede superar 50 caracteres'),
+        .isIn(ROOM_TYPES)
+        .withMessage('Selecciona un tipo de habitación válido'),
     body('price')
         .exists()
         .withMessage('El precio es obligatorio')
@@ -135,8 +136,8 @@ router.patch(
         .notEmpty()
         .withMessage('El tipo de habitación es obligatorio')
         .bail()
-        .isLength({ max: 50 })
-        .withMessage('El tipo de habitación no puede superar 50 caracteres'),
+        .isIn(ROOM_TYPES)
+        .withMessage('Selecciona un tipo de habitación válido'),
     body('description')
         .optional({ values: 'null' })
         .isString()
