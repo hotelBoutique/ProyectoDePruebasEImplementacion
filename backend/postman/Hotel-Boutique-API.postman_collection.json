@@ -37,6 +37,18 @@
     {
       "key": "runTag",
       "value": ""
+    },
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "tomorrow",
+      "value": ""
+    },
+    {
+      "key": "dayAfterTomorrow",
+      "value": ""
     }
   ],
   "item": [
@@ -64,6 +76,19 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "const qaRunStart = new Date();",
+                  "qaRunStart.setUTCHours(0, 0, 0, 0);",
+                  "const qaDateAtOffset = (offset) => { const date = new Date(qaRunStart); date.setUTCDate(date.getUTCDate() + offset); return date.toISOString().slice(0, 10); };",
+                  "const qaRunTag = Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 8).toUpperCase();",
+                  "pm.collectionVariables.set(\"runTag\", qaRunTag);",
+                  "pm.collectionVariables.set(\"today\", qaDateAtOffset(0));",
+                  "pm.collectionVariables.set(\"tomorrow\", qaDateAtOffset(1));",
+                  "pm.collectionVariables.set(\"dayAfterTomorrow\", qaDateAtOffset(2));",
+                  "pm.environment.set(\"runTag\", qaRunTag);",
+                  "pm.environment.set(\"today\", qaDateAtOffset(0));",
+                  "pm.environment.set(\"tomorrow\", qaDateAtOffset(1));",
+                  "pm.environment.set(\"dayAfterTomorrow\", qaDateAtOffset(2));",
+                  "[\"adminToken\", \"adminId\", \"receptionToken\", \"oldReceptionToken\", \"registeredReceptionId\", \"registeredReceptionEmail\", \"managedReceptionistId\", \"managedReceptionistEmail\", \"managedReceptionistToken\", \"createdAdminId\", \"roomId\", \"productId\", \"reservationId\", \"cancelReservationId\", \"consumptionId\", \"totalDue\"].forEach((key) => pm.environment.unset(key));",
                   "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
                   "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
                   "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.message).to.be.a(\"string\"); });"
