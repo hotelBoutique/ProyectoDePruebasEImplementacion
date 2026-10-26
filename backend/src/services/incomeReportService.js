@@ -23,7 +23,6 @@ const getIncomeReport = async (startDateValue, endDateValue) => {
         additionalCharges: 0,
         collected: 0
     };
-    const productTotals = new Map();
 
     const settlements = reservations.map(reservation => {
         const settlement = reservation.settlement || {};
@@ -36,16 +35,6 @@ const getIncomeReport = async (startDateValue, endDateValue) => {
         totals.products += productsCents;
         totals.additionalCharges += additionalChargesCents;
         totals.collected += collectedCents;
-
-        (settlement.consumptions || []).forEach(item => {
-            const description = typeof item.description === 'string'
-                ? item.description.trim()
-                : 'Consumo';
-            const current = productTotals.get(description) || { quantity: 0, totalCents: 0 };
-            current.quantity += Number(item.quantity || 0);
-            current.totalCents += toCents(item.subtotal ?? item.amount);
-            productTotals.set(description, current);
-        });
 
         return {
             id: String(reservation._id),
@@ -67,13 +56,6 @@ const getIncomeReport = async (startDateValue, endDateValue) => {
         totals: Object.fromEntries(
             Object.entries(totals).map(([key, value]) => [key, fromCents(value)])
         ),
-        products: [...productTotals.entries()]
-            .map(([description, values]) => ({
-                description,
-                quantity: values.quantity,
-                total: fromCents(values.totalCents)
-            }))
-            .sort((left, right) => right.total - left.total || left.description.localeCompare(right.description, 'es')),
         settlements
     };
 };
