@@ -22,7 +22,7 @@ function getErrorMessage(error) {
     : error.message || 'No fue posible completar el check-out.';
 }
 
-export default function CheckOutPage({ token }) {
+export default function CheckOutPage({ token, initialReservationId = '' }) {
   const [reservations, setReservations] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [additionalCharges, setAdditionalCharges] = useState([]);
@@ -70,14 +70,16 @@ export default function CheckOutPage({ token }) {
       setSelectedId((currentId) => (
         pending.some((reservation) => reservation._id === currentId)
           ? currentId
-          : pending[0]?._id || ''
+          : pending.find((reservation) => reservation._id === initialReservationId)?._id
+            || pending[0]?._id
+            || ''
       ));
     } catch (error) {
       setLoadError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [initialReservationId, token]);
 
   useEffect(() => {
     loadPendingCheckOuts();

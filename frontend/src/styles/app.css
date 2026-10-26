@@ -1160,3 +1160,80 @@ h1 {
   .receptionist-actions { width: 100%; justify-content: flex-end; }
   .reservation-room-option { align-items: flex-start; flex-direction: column; gap: 9px; }
 }
+
+/* Open accounts use the active check-out endpoint as their live source. */
+.open-accounts-page { gap: 18px; }
+.open-accounts-page .rooms-heading { align-items: flex-end; }
+.open-account-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.open-account-stat-card { min-height: 128px; }
+.open-account-stat-card strong { max-width: 100%; overflow-wrap: anywhere; font-size: clamp(25px, 3vw, 34px); }
+.open-account-filters { display: flex; flex-direction: column; gap: 17px; }
+.open-account-search { width: 100%; }
+.open-account-date-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+.open-account-date-filters .form-field { min-width: 0; gap: 7px; }
+.open-account-date-filters .form-input { min-width: 0; }
+.open-account-filter-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
+.open-account-filter-footer .button-secondary { min-height: 36px; padding: 0 12px; font-size: 9px; }
+.open-account-list .receptionist-list-heading { min-height: 72px; }
+.open-accounts-table { min-width: 1250px; }
+.open-accounts-table th,
+.open-accounts-table td { padding-right: 12px; padding-left: 12px; }
+.open-accounts-table td { vertical-align: middle; }
+.open-accounts-table td:nth-child(3) { min-width: 155px; white-space: normal; }
+.open-accounts-table td:nth-child(7),
+.open-accounts-table td:nth-child(8),
+.open-accounts-table td:nth-child(9) { text-align: right; }
+.open-accounts-table td:nth-child(9) { font-weight: 600; }
+.open-accounts-table .receptionist-action-cell { text-align: right; }
+.open-account-id { color: var(--color-text-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; }
+.open-account-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; color: var(--color-success); background: #EAF0E9; border: 1px solid #D7E2D5; border-radius: 999px; font-size: 9px; font-weight: 600; white-space: nowrap; }
+.open-account-status::before { width: 6px; height: 6px; content: ''; background: currentColor; border-radius: 50%; }
+.open-account-dialog { width: min(100%, 900px); }
+.open-account-detail-section { padding: 20px 0; border-bottom: 1px solid var(--color-border); }
+.open-account-section-heading { margin-bottom: 14px; }
+.open-account-section-heading .card-kicker { color: #9A7950; }
+.open-account-section-heading h3 { margin: 5px 0 0; color: var(--color-primary); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; line-height: 1.1; }
+.open-account-detail-grid { padding-top: 8px; }
+.open-account-detail-grid dd { font-size: 11px; }
+.open-account-accommodation-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 15px; background: #F7F5F0; border-radius: 6px; }
+.open-account-accommodation-summary > div { display: flex; flex-direction: column; gap: 6px; }
+.open-account-accommodation-summary dt,
+.open-account-balance-list dt { color: var(--color-text-muted); font-size: 9px; }
+.open-account-accommodation-summary dd,
+.open-account-balance-list dd { margin: 0; color: var(--color-primary); font-size: 11px; font-weight: 600; }
+.open-account-accommodation-summary .open-account-subtotal { padding-left: 15px; border-left: 1px solid var(--color-border); }
+.open-account-consumptions-wrap { border: 1px solid #ECE8DE; border-radius: 5px; }
+.open-account-consumptions-table { min-width: 590px; }
+.open-account-consumptions-table td:nth-child(n + 3),
+.open-account-consumptions-table th:nth-child(n + 3) { text-align: right; }
+.open-account-no-consumptions { margin: 0; padding: 17px; color: var(--color-text-muted); background: #F7F5F0; border-radius: 5px; font-size: 10px; text-align: center; }
+.open-account-consumptions-total { display: flex; justify-content: flex-end; gap: 24px; padding: 13px 3px 0; color: var(--color-text-muted); font-size: 10px; }
+.open-account-consumptions-total strong { color: var(--color-primary); font-size: 11px; }
+.open-account-balance { border-bottom: 0; }
+.open-account-balance-list { display: grid; gap: 11px; margin: 0; }
+.open-account-balance-list > div { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.open-account-balance-list .open-account-balance-total { margin-top: 3px; padding: 14px 15px; background: var(--color-primary); border-radius: 6px; }
+.open-account-balance-total dt,
+.open-account-balance-total dd { color: #FCFBF7; }
+.open-account-balance-total dd { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; }
+.open-account-detail-actions { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 17px; }
+.open-account-detail-actions p { max-width: 430px; margin: 0; color: var(--color-text-muted); font-size: 9px; line-height: 1.6; }
+.open-account-detail-actions .button-primary { min-height: 43px; flex: 0 0 auto; padding: 0 15px; font-size: 10px; }
+
+@media (max-width: 760px) {
+  .open-accounts-page .rooms-heading .button-secondary { width: 100%; }
+  .open-account-date-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .open-account-detail-actions { align-items: stretch; flex-direction: column; }
+  .open-account-detail-actions .button-primary { width: 100%; }
+}
+
+@media (max-width: 560px) {
+  .open-accounts-table { min-width: 0; }
+  .open-account-consumptions-table { min-width: 0; }
+  .open-account-id { overflow-wrap: anywhere; }
+  .open-account-stats { grid-template-columns: 1fr; }
+  .open-account-accommodation-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .open-account-accommodation-summary .open-account-subtotal { grid-column: 1 / -1; padding: 11px 0 0; border-top: 1px solid var(--color-border); border-left: 0; }
+  .open-account-consumptions-total { justify-content: space-between; gap: 12px; }
+  .open-account-balance-total dd { font-size: 20px; text-align: right; }
+}
