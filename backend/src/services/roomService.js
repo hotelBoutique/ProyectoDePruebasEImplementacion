@@ -1,10 +1,42 @@
 const Room = require('../models/room');
 const AppError = require('../utils/AppError');
 
-const getAllRooms = async () => {
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildRoomFilter = ({ status, type, minCapacity, minPrice, maxPrice } = {}) => {
+    const filter = {};
+
+    if (status) {
+        filter.status = status;
+    }
+
+    if (type && type.trim()) {
+        filter.type = new RegExp(`^${escapeRegex(type.trim())}$`, 'i');
+    }
+
+    if (minCapacity) {
+        filter.capacity = { $gte: Number(minCapacity) };
+    }
+
+    if (minPrice || maxPrice) {
+        filter.price = {};
+
+        if (minPrice) {
+            filter.price.$gte = Number(minPrice);
+        }
+
+        if (maxPrice) {
+            filter.price.$lte = Number(maxPrice);
+        }
+    }
+
+    return filter;
+};
+
+const getAllRooms = async (filters) => {
 
     return await Room
-        .find()
+        .find(buildRoomFilter(filters))
         .sort({ number: 1 });
 };
 

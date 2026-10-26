@@ -129,6 +129,28 @@ const settlementSchema = new mongoose.Schema(
     { _id: false }
 );
 
+const cancellationSchema = new mongoose.Schema(
+    {
+        reason: {
+            type: String,
+            required: true,
+            trim: true,
+            minlength: 3,
+            maxlength: 500
+        },
+        canceledAt: {
+            type: Date,
+            required: true
+        },
+        canceledBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        }
+    },
+    { _id: false }
+);
+
 const reservationSchema = new mongoose.Schema(
     {
         guest: {
@@ -189,6 +211,9 @@ const reservationSchema = new mongoose.Schema(
         },
         settlement: {
             type: settlementSchema
+        },
+        cancellation: {
+            type: cancellationSchema
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  cancelReservation as cancelReservationRequest,
   createReservation,
   getAvailableRooms,
   getReservation,
@@ -13,6 +14,11 @@ const EMPTY_RESERVATION_FILTERS = {
   roomId: '',
   roomType: '',
   status: '',
+};
+
+const PENDING_CANCELLATION_FILTERS = {
+  ...EMPTY_RESERVATION_FILTERS,
+  status: 'reservada',
 };
 
 const ROOM_TYPES = ['Sencilla', 'Doble', 'Triple', 'Familiar', 'Suite'];
@@ -61,6 +67,9 @@ function getErrorMessage(error, fallback) {
 export default function ReservationsPage({ token, mode = 'create', onNavigate, canCreate = true }) {
   if (mode === 'list') {
     return <ReservationListPage token={token} canCreate={canCreate} onNavigate={onNavigate} />;
+  }
+  if (mode === 'cancellations') {
+    return <ReservationListPage token={token} mode="cancellations" />;
   }
 
   return <ReservationCreationPage token={token} mode={mode} onNavigate={onNavigate} />;
@@ -444,10 +453,13 @@ function ReservationCreationPage({ token, mode = 'create', onNavigate }) {
   );
 }
 
-function ReservationListPage({ token, canCreate, onNavigate }) {
+function ReservationListPage({ token, canCreate, onNavigate, mode = 'list' }) {
+  const isCancellationMode = mode === 'cancellations';
+  const canCancel = isCancellationMode;
+  const initialFilters = isCancellationMode ? PENDING_CANCELLATION_FILTERS : EMPTY_RESERVATION_FILTERS;
   const [reservations, setReservations] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [filters, setFilters] = useState(EMPTY_RESERVATION_FILTERS);
+  const [filters, setFilters] = useState(() => ({ ...initialFilters }));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -458,7 +470,8 @@ function ReservationListPage({ token, canCreate, onNavigate }) {
 
   useEffect(() => {
     let isCurrent = true;
-    Promise.all([getReservations(token), getRooms(token)])
+    const defaultQuery = isCancellationMode ? PENDING_CANCELLATION_FILTERS : {};
+    Promise.all([getReservations(token, defaultQuery), getRooms(token)])
       .then(([reservationResponse, roomResponse]) => {
         if (!isCurrent) return;
         setReservations(reservationResponse.data?.reservations || []);
@@ -474,7 +487,7 @@ function ReservationListPage({ token, canCreate, onNavigate }) {
     return () => {
       isCurrent = false;
     };
-  }, [token]);
+  }, [token, isCancellationMode]);
 
   function updateFilter(event) {
     const { name, value } = event.target;
@@ -504,8 +517,9 @@ function ReservationListPage({ token, canCreate, onNavigate }) {
   }
 
   function clearFilters() {
-    setFilters(EMPTY_RESERVATION_FILTERS);
-    searchReservations(undefined, EMPTY_RESERVATION_FILTERS);
+    const nextFilters = { ...initialFilters };
+    setFilters(nextFilters);
+    searchReservations(undefined, nextFilters);
   }
 
   async function openDetails(reservationId) {
@@ -529,13 +543,38 @@ function ReservationListPage({ token, canCreate, onNavigate }) {
     setDetailError('');
   }
 
+  async function cancelSelectedReservation(reservationId, reason) {
+    const response = await cancelReservationRequest(token, reservationId, reason);
+    const updatedReservation = response.data?.reservation;
+    if (!updatedReservation) {
+      throw new Error('La reservación se canceló, pero no se recibió su actualización.');
+    }
+
+    setSelectedReservation(updatedReservation);
+    setReservations((current) => current
+      .map((reservation) => reservation._id === reservationId
+        ? { ...reservation, status: updatedReservation.status }
+        : reservation)
+      .filter((reservation) => !(
+        isCancellationMode
+        && filters.status === 'reservada'
+        && reservation._id === reservationId
+      )));
+
+    return updatedReservation;
+  }
+
   return (
     <section className="reservations-page" aria-labelledby="reservation-list-heading">
       <div className="reservations-heading">
         <div>
           <p className="eyebrow">GESTIÓN DE ESTADÍAS</p>
-          <h1 id="reservation-list-heading">Reservaciones</h1>
-          <p className="intro">Consulta las estadías registradas y filtra por fecha, habitación, tipo o estado.</p>
+          <h1 id="reservation-list-heading">{isCancellationMode ? 'Cancelaciones administrativas' : 'Reservaciones'}</h1>
+          <p className="intro">
+            {isCancellationMode
+              ? 'Consulta las reservaciones pendientes, revisa sus datos y cancélalas antes del check-in.'
+              : 'Consulta las estadías registradas y filtra por fecha, habitación, tipo o estado.'}
+          </p>
         </div>
         {canCreate && (
           <div className="reservation-heading-actions">
@@ -562,6 +601,9 @@ function ReservationListPage({ token, canCreate, onNavigate }) {
         onRefresh={() => searchReservations(undefined)}
         onOpenDetails={openDetails}
         onCloseDetails={closeDetails}
+        cancellationMode={isCancellationMode}
+        canCancel={canCancel}
+        onCancelReservation={cancelSelectedReservation}
       />
     </section>
   );
@@ -584,7 +626,62 @@ function ReservationListing({
   onRefresh,
   onOpenDetails,
   onCloseDetails,
+  cancellationMode,
+  canCancel,
+  onCancelReservation,
 }) {
+  const [cancellationFormOpen, setCancellationFormOpen] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+  const [cancellationNotice, setCancellationNotice] = useState(null);
+
+  function openReservationDetails(reservationId) {
+    setCancellationFormOpen(false);
+    setCancellationReason('');
+    setCancellationNotice(null);
+    onOpenDetails(reservationId);
+  }
+
+  function closeReservationDetails() {
+    setCancellationFormOpen(false);
+    setCancellationReason('');
+    setCancellationNotice(null);
+    onCloseDetails();
+  }
+
+  async function submitCancellation(event) {
+    event.preventDefault();
+    if (!selectedReservation) return;
+
+    const reason = cancellationReason.trim();
+    if (reason.length < 3 || reason.length > 500) {
+      setCancellationNotice({
+        tone: 'error',
+        text: 'El motivo debe tener entre 3 y 500 caracteres.',
+      });
+      return;
+    }
+
+    setCancelling(true);
+    setCancellationNotice(null);
+    try {
+      await onCancelReservation(selectedReservation._id, reason);
+      setCancellationFormOpen(false);
+      setCancellationReason('');
+      setCancellationNotice({
+        tone: 'success',
+        text: 'La reservación se canceló. La habitación quedó disponible para estas fechas.',
+      });
+    } catch (cancelError) {
+      setCancellationNotice({
+        tone: 'error',
+        text: getErrorMessage(cancelError, 'No fue posible cancelar la reservación.'),
+      });
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   return (
     <>
       <section className="reservation-filter-card" aria-labelledby="reservation-filters-title">
@@ -639,7 +736,7 @@ function ReservationListing({
         <div className="receptionist-list-heading">
           <div>
             <span className="card-kicker">ESTADÍAS REGISTRADAS</span>
-            <h2 id="reservation-list-title">Todas las reservaciones</h2>
+            <h2 id="reservation-list-title">{cancellationMode ? 'Pendientes de check-in' : 'Todas las reservaciones'}</h2>
           </div>
           <button className="button-secondary receptionist-refresh" type="button" onClick={onRefresh} disabled={loading}>
             {loading ? 'Actualizando…' : 'Actualizar listado'}
@@ -664,7 +761,7 @@ function ReservationListing({
                     <td data-label="Estado"><span className={`reservation-status-pill reservation-status-${reservation.status}`}>{RESERVATION_STATUS_LABELS[reservation.status] || reservation.status}</span></td>
                     <td data-label="Total">{formatCurrency(reservation.totalAmount)}</td>
                     <td className="receptionist-action-cell" data-label="Acciones">
-                      <button className="receptionist-status-action receptionist-edit-action" type="button" onClick={() => onOpenDetails(reservation._id)}>Ver detalles</button>
+                      <button className="receptionist-status-action receptionist-edit-action" type="button" onClick={() => openReservationDetails(reservation._id)}>Ver detalles</button>
                     </td>
                   </tr>
                 ))}
@@ -674,18 +771,18 @@ function ReservationListing({
         ) : (
           <div className="receptionist-empty-state reservation-empty-state">
             <span className="receptionist-empty-mark" aria-hidden="true">⌕</span>
-            <strong>No hay reservaciones para mostrar</strong>
-            <p>Prueba con otros filtros o registra una nueva reservación.</p>
+            <strong>{cancellationMode && filters.status === 'reservada' ? 'No hay reservaciones pendientes de check-in' : 'No hay reservaciones para mostrar'}</strong>
+            <p>{cancellationMode ? 'Cuando haya reservaciones pendientes, aparecerán aquí para consulta o cancelación.' : 'Prueba con otros filtros o registra una nueva reservación.'}</p>
           </div>
         )}
       </section>
 
       {detailsOpen && (
-        <div className="reservation-detail-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onCloseDetails(); }}>
+        <div className="reservation-detail-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeReservationDetails(); }}>
           <section className="reservation-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="reservation-detail-title">
             <div className="reservation-detail-heading">
               <div><span className="card-kicker">CONSULTA DE RESERVACIÓN</span><h2 id="reservation-detail-title">Detalle de la estadía</h2></div>
-              <button className="reservation-detail-close" type="button" onClick={onCloseDetails} aria-label="Cerrar detalle">×</button>
+              <button className="reservation-detail-close" type="button" onClick={closeReservationDetails} aria-label="Cerrar detalle">×</button>
             </div>
             {loadingDetail ? (
               <div className="reservation-list-message" role="status" aria-live="polite"><span className="button-spinner receptionist-loading-spinner" aria-hidden="true" /> Cargando detalle…</div>
@@ -705,8 +802,69 @@ function ReservationListing({
                 <div><dt>Noches</dt><dd>{selectedReservation.nights}</dd></div>
                 <div><dt>Tarifa por noche</dt><dd>{formatCurrency(selectedReservation.nightlyRate)}</dd></div>
                 <div className="reservation-detail-total"><dt>Total</dt><dd>{formatCurrency(selectedReservation.totalAmount)}</dd></div>
+                {selectedReservation.cancellation?.reason && (
+                  <div><dt>Motivo de cancelación</dt><dd>{selectedReservation.cancellation.reason}</dd></div>
+                )}
               </dl>
             ) : null}
+            {!loadingDetail && !detailError && selectedReservation && (
+              <>
+                {cancellationNotice && (
+                  <div className={`reservation-notice feedback-${cancellationNotice.tone}`} role="status" aria-live="polite">
+                    {cancellationNotice.text}
+                  </div>
+                )}
+                {canCancel && selectedReservation.status === 'reservada' && (
+                  <section className="reservation-cancellation-panel" aria-label="Cancelar reservación">
+                    {!cancellationFormOpen ? (
+                      <button
+                        className="button-secondary"
+                        type="button"
+                        onClick={() => {
+                          setCancellationFormOpen(true);
+                          setCancellationNotice(null);
+                        }}
+                      >
+                        Cancelar reservación
+                      </button>
+                    ) : (
+                      <form className="reservation-cancellation-form" onSubmit={submitCancellation}>
+                        <label className="form-field">
+                          <span className="field-label">Motivo de cancelación *</span>
+                          <textarea
+                            className="form-input room-description-input"
+                            value={cancellationReason}
+                            onChange={(event) => setCancellationReason(event.target.value)}
+                            minLength="3"
+                            maxLength="500"
+                            rows="4"
+                            required
+                            disabled={cancelling}
+                          />
+                        </label>
+                        <div className="receptionist-form-actions">
+                          <button
+                            className="button-secondary"
+                            type="button"
+                            onClick={() => {
+                              setCancellationFormOpen(false);
+                              setCancellationReason('');
+                              setCancellationNotice(null);
+                            }}
+                            disabled={cancelling}
+                          >
+                            Volver
+                          </button>
+                          <button className="button-primary" type="submit" disabled={cancelling}>
+                            {cancelling ? 'Cancelando…' : 'Confirmar cancelación'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </section>
+                )}
+              </>
+            )}
           </section>
         </div>
       )}

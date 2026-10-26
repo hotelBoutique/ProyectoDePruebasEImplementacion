@@ -114,8 +114,15 @@ export function createRoom(token, room) {
   });
 }
 
-export function getRooms(token) {
-  return apiRequest('/rooms', { token });
+export function getRooms(token, filters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([name, value]) => {
+    const text = String(value ?? '').trim();
+    if (text) params.set(name, text);
+  });
+  const query = params.toString();
+
+  return apiRequest(`/rooms${query ? `?${query}` : ''}`, { token });
 }
 
 export function updateRoom(token, roomId, changes) {
@@ -144,6 +151,14 @@ export function getReservations(token, filters = {}) {
 
 export function getReservation(token, reservationId) {
   return apiRequest(`/reservations/${encodeURIComponent(reservationId)}`, { token });
+}
+
+export function cancelReservation(token, reservationId, reason) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/cancel`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ reason }),
+  });
 }
 
 export function createReservation(token, reservation) {
