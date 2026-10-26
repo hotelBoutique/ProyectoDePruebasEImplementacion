@@ -5,9 +5,11 @@ const reservationController = require('../controllers/reservationController');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validate');
 const { ROLES } = require('../constants/roles');
+const ROOM_TYPES = require('../constants/roomTypes');
 const { isValidDateOnly } = require('../utils/reservationDates');
 
 const router = express.Router();
+const RESERVATION_STATUSES = ['reservada', 'ocupada', 'cancelada', 'finalizada'];
 const validateDate = (value, fieldName) => {
     if (!isValidDateOnly(value)) {
         throw new Error(`${fieldName} debe ser una fecha válida con formato AAAA-MM-DD`);
@@ -17,6 +19,35 @@ const validateDate = (value, fieldName) => {
 };
 
 router.use(protect);
+
+router.get(
+    '/',
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    query('checkInFrom')
+        .optional({ checkFalsy: true })
+        .custom(value => validateDate(value, 'La fecha inicial')),
+    query('checkInTo')
+        .optional({ checkFalsy: true })
+        .custom(value => validateDate(value, 'La fecha final')),
+    query('checkInTo')
+        .optional({ checkFalsy: true })
+        .custom((checkInTo, { req }) => !req.query.checkInFrom || checkInTo >= req.query.checkInFrom)
+        .withMessage('La fecha final debe ser igual o posterior a la fecha inicial'),
+    query('roomId')
+        .optional({ checkFalsy: true })
+        .isMongoId()
+        .withMessage('El identificador de habitación no es válido'),
+    query('roomType')
+        .optional({ checkFalsy: true })
+        .isIn(ROOM_TYPES)
+        .withMessage('El tipo de habitación no es válido'),
+    query('status')
+        .optional({ checkFalsy: true })
+        .isIn(RESERVATION_STATUSES)
+        .withMessage('El estado de la reservación no es válido'),
+    validate,
+    reservationController.getReservations
+);
 
 router.get(
     '/check-ins/pending',
@@ -49,6 +80,16 @@ router.get(
         .withMessage('La habitación seleccionada no es válida'),
     validate,
     reservationController.getAvailableRooms
+);
+
+router.get(
+    '/:id',
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('Identificador de reservación inválido'),
+    validate,
+    reservationController.getReservationById
 );
 
 router.post(
@@ -89,13 +130,49 @@ router.post(
         .trim()
         .isLength({ min: 2, max: 120 })
         .withMessage('El concepto del cargo debe tener entre 2 y 120 caracteres'),
+    body('additionalCharges.*.quantity')
+        .optional()
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('La cantidad del cargo debe ser un entero entre 1 y 1000')
+        .toInt(),
+    body('additionalCharges.*.unitPrice')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('El precio unitario del cargo debe ser un número mayor o igual a 0')
+        .toFloat(),
     body('additionalCharges.*.amount')
         .if(body('additionalCharges').exists())
+        .optional()
         .isFloat({ min: 0 })
-        .withMessage('El importe del cargo debe ser un número mayor o igual a 0')
+        .withMessage('El subtotal del cargo debe ser un número mayor o igual a 0')
         .toFloat(),
     validate,
     reservationController.checkOutReservation
+);
+
+router.post(
+    '/:id/consumptions',
+    restrictTo(ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    body('description')
+        .isString()
+        .withMessage('El concepto del consumo es obligatorio')
+        .bail()
+        .trim()
+        .isLength({ min: 2, max: 120 })
+        .withMessage('El concepto del consumo debe tener entre 2 y 120 caracteres'),
+    body('quantity')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('La cantidad debe ser un entero entre 1 y 1000')
+        .toInt(),
+    body('unitPrice')
+        .isFloat({ min: 0 })
+        .withMessage('El precio unitario debe ser un número mayor o igual a 0')
+        .toFloat(),
+    validate,
+    reservationController.addReservationConsumption
 );
 
 router.post(

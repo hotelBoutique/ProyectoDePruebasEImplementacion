@@ -90,11 +90,12 @@ describe('GET /api/v1/rooms', () => {
     it('rejects invalid filter values', async () => {
         const response = await request(app)
             .get('/api/v1/rooms')
-            .query({ status: 'perdida', minCapacity: '0', minPrice: '-5' });
+            .query({ status: 'perdida', type: 'Penthouse', minCapacity: '0', minPrice: '-5' });
 
         expect(response.status).toBe(400);
         expect(response.body.errors.map(({ msg }) => msg)).toEqual(expect.arrayContaining([
             'El estado no es válido',
+            'El tipo de habitación no es válido',
             'La capacidad mínima debe ser un número entero mayor o igual a 1',
             'El precio mínimo debe ser un número mayor o igual a 0'
         ]));

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Reservation = require('../models/reservation');
 const Room = require('../models/room');
 const AppError = require('../utils/AppError');
-const { getDateRange, getTodayDateOnly } = require('../utils/reservationDates');
+const { getDateRange, getTodayDateOnly, isValidDateOnly } = require('../utils/reservationDates');
 
 const ACTIVE_RESERVATION_STATUSES = ['reservada', 'ocupada'];
 const UNAVAILABLE_ROOM_STATUSES = [
@@ -44,23 +44,47 @@ const normalizeAdditionalCharges = charges => {
             : '';
         const hasAmount = typeof charge?.amount === 'number'
             || (typeof charge?.amount === 'string' && charge.amount.trim() !== '');
-        const amount = hasAmount ? Number(charge.amount) : Number.NaN;
+        const hasUnitPrice = typeof charge?.unitPrice === 'number'
+            || (typeof charge?.unitPrice === 'string' && charge.unitPrice.trim() !== '');
+        const rawQuantity = charge?.quantity === undefined && hasAmount
+            ? 1
+            : Number(charge?.quantity);
+        const rawUnitPrice = hasUnitPrice
+            ? Number(charge.unitPrice)
+            : hasAmount && rawQuantity === 1
+                ? Number(charge.amount)
+                : Number.NaN;
 
         if (description.length < 2 || description.length > 120) {
             throw new AppError(`El concepto del cargo ${index + 1} debe tener entre 2 y 120 caracteres`, 400);
         }
 
-        if (!Number.isFinite(amount) || amount < 0) {
-            throw new AppError(`El importe del cargo ${index + 1} debe ser un número mayor o igual a 0`, 400);
+        if (!Number.isInteger(rawQuantity) || rawQuantity < 1 || rawQuantity > 1000) {
+            throw new AppError(`La cantidad del cargo ${index + 1} debe ser un entero entre 1 y 1000`, 400);
         }
 
-        const amountCents = toCents(amount);
-        if (!Number.isSafeInteger(amountCents)) {
-            throw new AppError(`El importe del cargo ${index + 1} supera el límite permitido`, 400);
+        if (!Number.isFinite(rawUnitPrice) || rawUnitPrice < 0) {
+            throw new AppError(`El precio unitario del cargo ${index + 1} debe ser un número mayor o igual a 0`, 400);
         }
 
-        totalCents += amountCents;
-        return { description, amount: amountCents / 100 };
+        const unitPriceCents = toCents(rawUnitPrice);
+        const subtotalCents = unitPriceCents * rawQuantity;
+        if (!Number.isSafeInteger(unitPriceCents) || !Number.isSafeInteger(subtotalCents)) {
+            throw new AppError(`El subtotal del cargo ${index + 1} supera el límite permitido`, 400);
+        }
+
+        if (hasAmount && hasUnitPrice && toCents(Number(charge.amount)) !== subtotalCents) {
+            throw new AppError(`El subtotal del cargo ${index + 1} no coincide con la cantidad y el precio unitario`, 400);
+        }
+
+        totalCents += subtotalCents;
+        return {
+            description,
+            quantity: rawQuantity,
+            unitPrice: unitPriceCents / 100,
+            subtotal: subtotalCents / 100,
+            amount: subtotalCents / 100
+        };
     });
 
     if (!Number.isSafeInteger(totalCents)) {
@@ -68,6 +92,64 @@ const normalizeAdditionalCharges = charges => {
     }
 
     return { charges: normalized, totalCents };
+};
+
+const getStoredConsumptionsTotalCents = consumptions => {
+    if (!Array.isArray(consumptions)) {
+        throw new AppError('Los consumos registrados de la estancia tienen un formato inválido', 409);
+    }
+
+    return consumptions.reduce((totalCents, consumption, index) => {
+        const quantity = Number(consumption.quantity);
+        const unitPriceCents = toCents(Number(consumption.unitPrice));
+        const subtotalCents = toCents(Number(consumption.subtotal));
+        const calculatedSubtotalCents = unitPriceCents * quantity;
+
+        if (
+            typeof consumption.description !== 'string'
+            || consumption.description.trim().length < 2
+            || !Number.isInteger(quantity)
+            || quantity < 1
+            || !Number.isSafeInteger(unitPriceCents)
+            || unitPriceCents < 0
+            || !Number.isSafeInteger(subtotalCents)
+            || subtotalCents !== calculatedSubtotalCents
+        ) {
+            throw new AppError(
+                `El consumo ${index + 1} de la estancia tiene datos inconsistentes`,
+                409
+            );
+        }
+
+        const newTotal = totalCents + subtotalCents;
+        if (!Number.isSafeInteger(newTotal)) {
+            throw new AppError('El total de consumos supera el límite permitido', 409);
+        }
+        return newTotal;
+    }, 0);
+};
+
+const addReservationConsumption = async (reservationId, consumption) => {
+    const { charges } = normalizeAdditionalCharges([consumption]);
+    const updatedReservation = await Reservation.findOneAndUpdate(
+        { _id: reservationId, status: 'ocupada' },
+        { $push: { consumptions: charges[0] } },
+        { new: true, runValidators: true }
+    );
+
+    if (updatedReservation) {
+        return updatedReservation;
+    }
+
+    const reservation = await Reservation.findById(reservationId).select('status');
+    if (!reservation) {
+        throw new AppError('La reservación no existe', 404);
+    }
+
+    throw new AppError(
+        'Solo se pueden registrar consumos durante una estancia con check-in activo',
+        409
+    );
 };
 
 const checkOutReservation = async ({
@@ -150,7 +232,10 @@ const checkOutReservation = async ({
             const checkOutAt = new Date();
             const actualNights = getStayNights(reservation.checkInAt, checkOutAt);
             const roomSubtotalCents = toCents(reservation.nightlyRate) * actualNights;
-            const totalCents = roomSubtotalCents + additionalChargesCents;
+            const consumptionsCents = getStoredConsumptionsTotalCents(
+                reservation.consumptions || []
+            );
+            const totalCents = roomSubtotalCents + consumptionsCents + additionalChargesCents;
 
             if (!Number.isSafeInteger(totalCents)) {
                 throw new AppError('El total de la liquidación supera el límite permitido', 400);
@@ -197,6 +282,8 @@ const checkOutReservation = async ({
                             actualNights,
                             nightlyRate: reservation.nightlyRate,
                             roomSubtotal: roomSubtotalCents / 100,
+                            consumptions: reservation.consumptions || [],
+                            consumptionsTotal: consumptionsCents / 100,
                             additionalCharges: charges,
                             additionalChargesTotal: additionalChargesCents / 100,
                             totalAmount: totalCents / 100,
@@ -272,9 +359,16 @@ const getPendingCheckOuts = async () => {
 
         const actualNights = getStayNights(reservation.checkInAt, now);
         const roomSubtotalCents = toCents(reservation.nightlyRate) * actualNights;
-        if (!Number.isSafeInteger(roomSubtotalCents)) {
+        const consumptionsCents = getStoredConsumptionsTotalCents(
+            reservation.consumptions || []
+        );
+        const totalDueCents = roomSubtotalCents + consumptionsCents;
+        if (
+            !Number.isSafeInteger(roomSubtotalCents)
+            || !Number.isSafeInteger(totalDueCents)
+        ) {
             throw new AppError(
-                `El importe de la estancia de la habitación ${reservation.roomNumber} supera el límite permitido`,
+                `El importe de la liquidación de la habitación ${reservation.roomNumber} supera el límite permitido`,
                 400
             );
         }
@@ -285,6 +379,8 @@ const getPendingCheckOuts = async () => {
                 actualNights,
                 nightlyRate: reservation.nightlyRate,
                 roomSubtotal: roomSubtotalCents / 100,
+                consumptionsTotal: consumptionsCents / 100,
+                totalDue: totalDueCents / 100,
                 asOf: now
             }
         };
@@ -414,6 +510,14 @@ const checkInReservation = async reservationId => {
     }
 };
 
+const parseFilterDate = (value, fieldName) => {
+    if (!isValidDateOnly(value)) {
+        throw new AppError(`${fieldName} debe ser una fecha válida con formato AAAA-MM-DD`, 400);
+    }
+
+    return new Date(`${value}T00:00:00.000Z`);
+};
+
 const getAvailableRooms = async (checkInValue, checkOutValue, roomId) => {
     const { checkIn, checkOut } = getDateRange(checkInValue, checkOutValue);
     const roomFilter = {
@@ -442,6 +546,48 @@ const getAvailableRooms = async (checkInValue, checkOutValue, roomId) => {
     );
 
     return rooms.filter(room => !reservedRoomIds.has(String(room._id)));
+};
+
+const getReservations = async ({ checkInFrom, checkInTo, roomId, roomType, status } = {}) => {
+    const filters = {};
+
+    if (checkInFrom || checkInTo) {
+        const dateRange = {};
+
+        if (checkInFrom) {
+            dateRange.$gte = parseFilterDate(checkInFrom, 'La fecha inicial');
+        }
+
+        if (checkInTo) {
+            const endDate = parseFilterDate(checkInTo, 'La fecha final');
+            endDate.setUTCDate(endDate.getUTCDate() + 1);
+            dateRange.$lt = endDate;
+        }
+
+        if (dateRange.$gte && dateRange.$lt && dateRange.$gte >= dateRange.$lt) {
+            throw new AppError('La fecha final debe ser igual o posterior a la fecha inicial', 400);
+        }
+
+        filters.checkIn = dateRange;
+    }
+
+    if (roomId) filters.room = roomId;
+    if (roomType) filters.roomType = roomType;
+    if (status) filters.status = status;
+
+    return Reservation.find(filters)
+        .select('guest.fullName room roomNumber roomType checkIn checkOut nights status totalAmount')
+        .sort({ checkIn: 1, createdAt: -1 });
+};
+
+const getReservationById = async reservationId => {
+    const reservation = await Reservation.findById(reservationId);
+
+    if (!reservation) {
+        throw new AppError('No se encontró la reservación solicitada', 404);
+    }
+
+    return reservation;
 };
 
 const createReservation = async ({
@@ -541,10 +687,13 @@ const createReservation = async ({
 };
 
 module.exports = {
+    addReservationConsumption,
     getPendingCheckIns,
     checkInReservation,
     getPendingCheckOuts,
     checkOutReservation,
     getAvailableRooms,
+    getReservations,
+    getReservationById,
     createReservation
 };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import CheckInPage from './pages/CheckInPage.jsx';
 import CheckOutPage from './pages/CheckOutPage.jsx';
+import ConsumptionPage from './pages/ConsumptionPage.jsx';
 import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
@@ -444,12 +445,19 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <ReservationsPage token={token} mode="availability" />
           ) : !isAdmin && activeItem === 'reception-rooms-availability' ? (
             <ReservationsPage token={token} mode="availability" />
-          ) : !isAdmin && activeItem === 'reception-reservations-create' ? (
-            <ReservationsPage token={token} />
+          ) : (isAdmin && activeItem === 'reservations-list') || (!isAdmin && ['reception-reservations-list', 'reception-reservations-create'].includes(activeItem)) ? (
+            <ReservationsPage
+              token={token}
+              mode={activeItem === 'reception-reservations-create' ? 'create' : 'list'}
+              canCreate={!isAdmin}
+              onNavigate={selectItem}
+            />
           ) : !isAdmin && activeItem === 'reception-check-in' ? (
             <CheckInPage token={token} />
           ) : !isAdmin && activeItem === 'reception-check-out' ? (
             <CheckOutPage token={token} />
+          ) : !isAdmin && activeItem === 'reception-consumptions-create' ? (
+            <ConsumptionPage token={token} />
           ) : (
             <section className="module-placeholder" aria-labelledby="module-title">
               <span className="module-placeholder-mark" aria-hidden="true"><SidebarIcon name="home" /></span>

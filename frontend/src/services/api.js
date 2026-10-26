@@ -140,6 +140,19 @@ export function getAvailableRooms(token, { checkIn, checkOut, roomId }) {
   return apiRequest(`/reservations/availability?${params.toString()}`, { token });
 }
 
+export function getReservations(token, filters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([name, value]) => {
+    if (value) params.set(name, value);
+  });
+  const query = params.toString();
+  return apiRequest(`/reservations${query ? `?${query}` : ''}`, { token });
+}
+
+export function getReservation(token, reservationId) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}`, { token });
+}
+
 export function createReservation(token, reservation) {
   return apiRequest('/reservations', {
     method: 'POST',
@@ -168,5 +181,13 @@ export function checkOutReservation(token, reservationId, settlement) {
     method: 'POST',
     token,
     body: JSON.stringify(settlement),
+  });
+}
+
+export function addReservationConsumption(token, reservationId, consumption) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/consumptions`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify(consumption),
   });
 }

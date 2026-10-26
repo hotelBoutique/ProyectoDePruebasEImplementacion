@@ -1,5 +1,28 @@
-import { useState } from 'react';
-import { createReservation, getAvailableRooms } from '../services/api.js';
+import { useEffect, useState } from 'react';
+import {
+  createReservation,
+  getAvailableRooms,
+  getReservation,
+  getReservations,
+  getRooms,
+} from '../services/api.js';
+
+const EMPTY_RESERVATION_FILTERS = {
+  checkInFrom: '',
+  checkInTo: '',
+  roomId: '',
+  roomType: '',
+  status: '',
+};
+
+const ROOM_TYPES = ['Sencilla', 'Doble', 'Triple', 'Familiar', 'Suite'];
+
+const RESERVATION_STATUS_LABELS = {
+  reservada: 'Reservada',
+  ocupada: 'Ocupada',
+  cancelada: 'Cancelada',
+  finalizada: 'Finalizada',
+};
 
 function todayDateOnly() {
   return new Date().toISOString().slice(0, 10);
@@ -10,6 +33,15 @@ function nextDate(value) {
   const date = new Date(`${value}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() + 1);
   return date.toISOString().slice(0, 10);
+}
+
+function formatDate(dateValue) {
+  return new Intl.DateTimeFormat('es-CO', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(dateValue));
 }
 
 function formatCurrency(value) {
@@ -26,7 +58,15 @@ function getErrorMessage(error, fallback) {
     : error.message || fallback;
 }
 
-export default function ReservationsPage({ token, mode = 'create' }) {
+export default function ReservationsPage({ token, mode = 'create', onNavigate, canCreate = true }) {
+  if (mode === 'list') {
+    return <ReservationListPage token={token} canCreate={canCreate} onNavigate={onNavigate} />;
+  }
+
+  return <ReservationCreationPage token={token} mode={mode} onNavigate={onNavigate} />;
+}
+
+function ReservationCreationPage({ token, mode = 'create', onNavigate }) {
   const today = todayDateOnly();
   const [checkIn, setCheckIn] = useState(today);
   const [checkOut, setCheckOut] = useState(nextDate(today));
@@ -245,6 +285,13 @@ export default function ReservationsPage({ token, mode = 'create' }) {
               : 'Selecciona fechas y habitación; la disponibilidad se confirma nuevamente al guardar.'}
           </p>
         </div>
+        {!isAvailabilityOnly && (
+          <div className="reservation-heading-actions">
+            <button className="button-secondary" type="button" onClick={() => onNavigate?.('reception-reservations-list')}>
+              Consultar reservaciones
+            </button>
+          </div>
+        )}
       </div>
 
       {notice && (
@@ -394,5 +441,275 @@ export default function ReservationsPage({ token, mode = 'create' }) {
         )}
       </form>
     </section>
+  );
+}
+
+function ReservationListPage({ token, canCreate, onNavigate }) {
+  const [reservations, setReservations] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [filters, setFilters] = useState(EMPTY_RESERVATION_FILTERS);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState('');
+
+  useEffect(() => {
+    let isCurrent = true;
+    Promise.all([getReservations(token), getRooms(token)])
+      .then(([reservationResponse, roomResponse]) => {
+        if (!isCurrent) return;
+        setReservations(reservationResponse.data?.reservations || []);
+        setRooms(roomResponse.data?.rooms || []);
+      })
+      .catch((loadError) => {
+        if (isCurrent) setError(loadError.message || 'No fue posible cargar las reservaciones.');
+      })
+      .finally(() => {
+        if (isCurrent) setLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [token]);
+
+  function updateFilter(event) {
+    const { name, value } = event.target;
+    setFilters((current) => ({ ...current, [name]: value }));
+    setValidationError('');
+  }
+
+  async function searchReservations(event, nextFilters = filters) {
+    event?.preventDefault();
+    setValidationError('');
+
+    if (nextFilters.checkInFrom && nextFilters.checkInTo && nextFilters.checkInTo < nextFilters.checkInFrom) {
+      setValidationError('La fecha final debe ser igual o posterior a la fecha inicial.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      const response = await getReservations(token, nextFilters);
+      setReservations(response.data?.reservations || []);
+    } catch (loadError) {
+      setError(loadError.message || 'No fue posible consultar las reservaciones.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function clearFilters() {
+    setFilters(EMPTY_RESERVATION_FILTERS);
+    searchReservations(undefined, EMPTY_RESERVATION_FILTERS);
+  }
+
+  async function openDetails(reservationId) {
+    setDetailsOpen(true);
+    setSelectedReservation(null);
+    setLoadingDetail(true);
+    setDetailError('');
+    try {
+      const response = await getReservation(token, reservationId);
+      setSelectedReservation(response.data?.reservation || null);
+    } catch (loadError) {
+      setDetailError(loadError.message || 'No fue posible cargar el detalle de la reservación.');
+    } finally {
+      setLoadingDetail(false);
+    }
+  }
+
+  function closeDetails() {
+    setDetailsOpen(false);
+    setSelectedReservation(null);
+    setDetailError('');
+  }
+
+  return (
+    <section className="reservations-page" aria-labelledby="reservation-list-heading">
+      <div className="reservations-heading">
+        <div>
+          <p className="eyebrow">GESTIÓN DE ESTADÍAS</p>
+          <h1 id="reservation-list-heading">Reservaciones</h1>
+          <p className="intro">Consulta las estadías registradas y filtra por fecha, habitación, tipo o estado.</p>
+        </div>
+        {canCreate && (
+          <div className="reservation-heading-actions">
+            <button className="button-primary" type="button" onClick={() => onNavigate?.('reception-reservations-create')}>
+              ＋ Nueva reservación
+            </button>
+          </div>
+        )}
+      </div>
+      <ReservationListing
+        reservations={reservations}
+        rooms={rooms}
+        filters={filters}
+        loading={loading}
+        error={error}
+        validationError={validationError}
+        detailsOpen={detailsOpen}
+        selectedReservation={selectedReservation}
+        loadingDetail={loadingDetail}
+        detailError={detailError}
+        onFilterChange={updateFilter}
+        onSearch={searchReservations}
+        onClear={clearFilters}
+        onRefresh={() => searchReservations(undefined)}
+        onOpenDetails={openDetails}
+        onCloseDetails={closeDetails}
+      />
+    </section>
+  );
+}
+
+function ReservationListing({
+  reservations,
+  rooms,
+  filters,
+  loading,
+  error,
+  validationError,
+  detailsOpen,
+  selectedReservation,
+  loadingDetail,
+  detailError,
+  onFilterChange,
+  onSearch,
+  onClear,
+  onRefresh,
+  onOpenDetails,
+  onCloseDetails,
+}) {
+  return (
+    <>
+      <section className="reservation-filter-card" aria-labelledby="reservation-filters-title">
+        <div className="reservation-filter-heading">
+          <div>
+            <span className="card-kicker">BÚSQUEDA</span>
+            <h2 id="reservation-filters-title">Filtrar reservaciones</h2>
+          </div>
+          <span className="reservation-result-count" aria-live="polite">
+            {loading ? 'Consultando…' : `${reservations.length} ${reservations.length === 1 ? 'resultado' : 'resultados'}`}
+          </span>
+        </div>
+        <form className="reservation-filter-form" onSubmit={onSearch}>
+          <label className="form-field" htmlFor="reservation-filter-from">
+            <span className="field-label">Check-in desde</span>
+            <input className="form-input" id="reservation-filter-from" name="checkInFrom" type="date" value={filters.checkInFrom} onChange={onFilterChange} disabled={loading} />
+          </label>
+          <label className="form-field" htmlFor="reservation-filter-to">
+            <span className="field-label">Check-in hasta</span>
+            <input className="form-input" id="reservation-filter-to" name="checkInTo" type="date" value={filters.checkInTo} onChange={onFilterChange} disabled={loading} />
+          </label>
+          <label className="form-field" htmlFor="reservation-filter-room">
+            <span className="field-label">Habitación</span>
+            <select className="form-input" id="reservation-filter-room" name="roomId" value={filters.roomId} onChange={onFilterChange} disabled={loading}>
+              <option value="">Todas las habitaciones</option>
+              {rooms.map((room) => <option value={room._id} key={room._id}>{room.number} · {room.type}</option>)}
+            </select>
+          </label>
+          <label className="form-field" htmlFor="reservation-filter-room-type">
+            <span className="field-label">Tipo de habitación</span>
+            <select className="form-input" id="reservation-filter-room-type" name="roomType" value={filters.roomType} onChange={onFilterChange} disabled={loading}>
+              <option value="">Todos los tipos</option>
+              {ROOM_TYPES.map((roomType) => <option value={roomType} key={roomType}>{roomType}</option>)}
+            </select>
+          </label>
+          <label className="form-field" htmlFor="reservation-filter-status">
+            <span className="field-label">Estado</span>
+            <select className="form-input" id="reservation-filter-status" name="status" value={filters.status} onChange={onFilterChange} disabled={loading}>
+              <option value="">Todos los estados</option>
+              {Object.entries(RESERVATION_STATUS_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+            </select>
+          </label>
+          <div className="reservation-filter-actions">
+            <button className="button-secondary" type="button" onClick={onClear} disabled={loading}>Limpiar</button>
+            <button className="button-primary" type="submit" disabled={loading}>{loading ? 'Consultando…' : 'Aplicar filtros'}</button>
+          </div>
+        </form>
+        {validationError && <p className="reservation-inline-error" role="alert">{validationError}</p>}
+      </section>
+
+      <section className="receptionist-list-card reservation-list-card" aria-labelledby="reservation-list-title">
+        <div className="receptionist-list-heading">
+          <div>
+            <span className="card-kicker">ESTADÍAS REGISTRADAS</span>
+            <h2 id="reservation-list-title">Todas las reservaciones</h2>
+          </div>
+          <button className="button-secondary receptionist-refresh" type="button" onClick={onRefresh} disabled={loading}>
+            {loading ? 'Actualizando…' : 'Actualizar listado'}
+          </button>
+        </div>
+        {error ? (
+          <div className="reservation-list-message reservation-list-error" role="alert">{error}</div>
+        ) : loading ? (
+          <div className="reservation-list-message" role="status" aria-live="polite">
+            <span className="button-spinner receptionist-loading-spinner" aria-hidden="true" /> Cargando reservaciones…
+          </div>
+        ) : reservations.length ? (
+          <div className="receptionist-table-wrap">
+            <table className="receptionist-table reservations-table">
+              <thead><tr><th scope="col">Huésped</th><th scope="col">Habitación</th><th scope="col">Estadía</th><th scope="col">Estado</th><th scope="col">Total</th><th scope="col"><span className="sr-only">Acciones</span></th></tr></thead>
+              <tbody>
+                {reservations.map((reservation) => (
+                  <tr key={reservation._id}>
+                    <td data-label="Huésped"><div className="reservation-guest-cell"><strong>{reservation.guest?.fullName || 'Huésped'}</strong><span>{reservation._id}</span></div></td>
+                    <td data-label="Habitación">{reservation.roomNumber} · {reservation.roomType}</td>
+                    <td data-label="Estadía">{formatDate(reservation.checkIn)} – {formatDate(reservation.checkOut)}</td>
+                    <td data-label="Estado"><span className={`reservation-status-pill reservation-status-${reservation.status}`}>{RESERVATION_STATUS_LABELS[reservation.status] || reservation.status}</span></td>
+                    <td data-label="Total">{formatCurrency(reservation.totalAmount)}</td>
+                    <td className="receptionist-action-cell" data-label="Acciones">
+                      <button className="receptionist-status-action receptionist-edit-action" type="button" onClick={() => onOpenDetails(reservation._id)}>Ver detalles</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="receptionist-empty-state reservation-empty-state">
+            <span className="receptionist-empty-mark" aria-hidden="true">⌕</span>
+            <strong>No hay reservaciones para mostrar</strong>
+            <p>Prueba con otros filtros o registra una nueva reservación.</p>
+          </div>
+        )}
+      </section>
+
+      {detailsOpen && (
+        <div className="reservation-detail-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onCloseDetails(); }}>
+          <section className="reservation-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="reservation-detail-title">
+            <div className="reservation-detail-heading">
+              <div><span className="card-kicker">CONSULTA DE RESERVACIÓN</span><h2 id="reservation-detail-title">Detalle de la estadía</h2></div>
+              <button className="reservation-detail-close" type="button" onClick={onCloseDetails} aria-label="Cerrar detalle">×</button>
+            </div>
+            {loadingDetail ? (
+              <div className="reservation-list-message" role="status" aria-live="polite"><span className="button-spinner receptionist-loading-spinner" aria-hidden="true" /> Cargando detalle…</div>
+            ) : detailError ? (
+              <div className="reservation-list-message reservation-list-error" role="alert">{detailError}</div>
+            ) : selectedReservation ? (
+              <dl className="reservation-detail-grid">
+                <div><dt>Confirmación</dt><dd>{selectedReservation._id}</dd></div>
+                <div><dt>Estado</dt><dd>{RESERVATION_STATUS_LABELS[selectedReservation.status] || selectedReservation.status}</dd></div>
+                <div><dt>Huésped</dt><dd>{selectedReservation.guest?.fullName || '—'}</dd></div>
+                <div><dt>Identificación</dt><dd>{selectedReservation.guest?.identification || '—'}</dd></div>
+                <div><dt>Correo</dt><dd>{selectedReservation.guest?.email || '—'}</dd></div>
+                <div><dt>Teléfono</dt><dd>{selectedReservation.guest?.phone || '—'}</dd></div>
+                <div><dt>Habitación</dt><dd>{selectedReservation.roomNumber} · {selectedReservation.roomType}</dd></div>
+                <div><dt>Check-in</dt><dd>{formatDate(selectedReservation.checkIn)}</dd></div>
+                <div><dt>Check-out</dt><dd>{formatDate(selectedReservation.checkOut)}</dd></div>
+                <div><dt>Noches</dt><dd>{selectedReservation.nights}</dd></div>
+                <div><dt>Tarifa por noche</dt><dd>{formatCurrency(selectedReservation.nightlyRate)}</dd></div>
+                <div className="reservation-detail-total"><dt>Total</dt><dd>{formatCurrency(selectedReservation.totalAmount)}</dd></div>
+              </dl>
+            ) : null}
+          </section>
+        </div>
+      )}
+    </>
   );
 }

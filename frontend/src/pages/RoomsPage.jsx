@@ -10,6 +10,8 @@ const EMPTY_FORM = {
   status: 'disponible',
 };
 
+const ROOM_TYPES = ['Sencilla', 'Doble', 'Triple', 'Familiar', 'Suite'];
+
 const EMPTY_FILTERS = {
   status: '',
   type: '',
@@ -65,7 +67,6 @@ export default function RoomsPage({
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
   const [filterError, setFilterError] = useState('');
-  const [knownTypes, setKnownTypes] = useState([]);
   const [reloadKey, setReloadKey] = useState(0);
 
   const hasAppliedFilters = Object.values(appliedFilters).some((value) => value.trim());
@@ -79,13 +80,7 @@ export default function RoomsPage({
 
     getRooms(token, appliedFilters)
       .then((response) => {
-        if (!isCurrent) return;
-        const loadedRooms = response.data?.rooms || [];
-        setRooms(loadedRooms);
-        // Los tipos del filtro salen del inventario completo, no de un resultado ya filtrado.
-        if (!Object.values(appliedFilters).some((value) => value.trim())) {
-          setKnownTypes([...new Set(loadedRooms.map((room) => room.type))].sort((a, b) => a.localeCompare(b, 'es')));
-        }
+        if (isCurrent) setRooms(response.data?.rooms || []);
       })
       .catch((error) => {
         if (isCurrent) setLoadError(error.message || 'No fue posible cargar las habitaciones.');
@@ -312,18 +307,18 @@ export default function RoomsPage({
 
           <label className="form-field" htmlFor="room-type">
             <span className="field-label">Tipo de habitación *</span>
-            <input
+            <select
               className="form-input"
               id="room-type"
               name="type"
-              type="text"
-              maxLength={50}
-              placeholder="Ej. Suite"
               value={form.type}
               onChange={updateField}
               required
               disabled={saving}
-            />
+            >
+              <option value="">Selecciona un tipo</option>
+              {ROOM_TYPES.map((type) => <option value={type} key={type}>{type}</option>)}
+            </select>
           </label>
 
           <label className="form-field" htmlFor="room-description">
@@ -442,7 +437,7 @@ export default function RoomsPage({
                 onChange={updateFilter}
               >
                 <option value="">Todos</option>
-                {knownTypes.map((type) => (
+                {ROOM_TYPES.map((type) => (
                   <option value={type} key={type}>{type}</option>
                 ))}
               </select>
