@@ -911,16 +911,33 @@ h1 {
 .checkout-summary dd { margin: 0; color: var(--color-primary); font-size: 10px; font-weight: 600; }
 .checkout-charges-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 19px 0 12px; }
 .checkout-charges-heading h3 { margin: 0; color: var(--color-primary); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; }
-.checkout-charge-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, .55fr) auto; align-items: end; gap: 10px; margin: 0 0 12px; }
+.checkout-charge-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(80px, .45fr) minmax(120px, .7fr) auto; align-items: end; gap: 10px; margin: 0 0 12px; }
 .checkout-charge-row .form-field { gap: 6px; }
 .checkout-charge-row .form-input { min-width: 0; height: 40px; }
 .checkout-remove-charge { min-height: 40px; padding: 0 10px; }
+.checkout-charge-subtotal { grid-column: 1 / -1; margin: -3px 0 6px; color: var(--color-text-muted); font-size: 9px; text-align: right; }
 .checkout-payment-method { margin: 18px 0; }
 .checkout-payment-method .form-input { height: 42px; }
 .checkout-total-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 16px 0; border-top: 1px solid var(--color-border); color: var(--color-primary); font-size: 11px; }
 .checkout-total-row strong { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; }
 .checkout-form .receptionist-form-footer { align-items: flex-end; }
 .checkout-receipt { grid-column: 1 / -1; }
+.consumption-layout { display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.5fr); align-items: start; gap: 18px; }
+.consumption-entry-column { display: grid; gap: 18px; min-width: 0; }
+.consumption-form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(90px, .4fr) minmax(140px, .7fr); gap: 12px; padding: 20px 0; }
+.consumption-description { min-width: 0; }
+.consumption-form-grid .form-input { min-width: 0; height: 42px; }
+.consumption-history { padding: 20px 22px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; }
+.consumption-history h2,
+.checkout-consumption-breakdown h3 { margin: 0 0 14px; color: var(--color-primary); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; }
+.consumption-history-list { display: grid; }
+.consumption-history-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 0; border-top: 1px solid var(--color-border); }
+.consumption-history-row > span { display: flex; flex-direction: column; gap: 4px; }
+.consumption-history-row > span strong { color: var(--color-primary); font-size: 10px; }
+.consumption-history-row > span span { color: var(--color-text-muted); font-size: 9px; }
+.consumption-history-row > strong { flex: 0 0 auto; color: var(--color-primary); font-size: 10px; }
+.checkout-consumption-breakdown { margin: 0 0 18px; }
+.checkout-consumption-breakdown h3 { margin-bottom: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 760px) {
@@ -953,8 +970,14 @@ h1 {
   .check-in-card-footer { align-items: stretch; flex-direction: column; }
   .check-in-card-footer .button-primary { width: 100%; }
   .checkout-layout { grid-template-columns: 1fr; }
-  .checkout-charge-row { grid-template-columns: minmax(0, 1fr) minmax(110px, .6fr); }
+  .consumption-layout { grid-template-columns: 1fr; }
+  .consumption-form-grid { grid-template-columns: 1fr; gap: 14px; }
+  .consumption-page .receptionist-form-footer { align-items: stretch; }
+  .consumption-page .receptionist-form-footer .button-primary { width: 100%; }
+  .checkout-charge-row { grid-template-columns: minmax(0, 1fr) minmax(90px, .55fr); }
+  .checkout-charge-row .form-field:first-child { grid-column: 1 / -1; }
   .checkout-remove-charge { grid-column: 2; justify-self: end; }
+  .checkout-charge-subtotal { grid-row: 3; }
   .checkout-form .receptionist-form-footer { align-items: stretch; }
   .checkout-form .receptionist-form-footer .button-primary { width: 100%; }
 }

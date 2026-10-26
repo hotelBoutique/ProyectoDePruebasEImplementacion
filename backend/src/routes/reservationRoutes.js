@@ -89,13 +89,49 @@ router.post(
         .trim()
         .isLength({ min: 2, max: 120 })
         .withMessage('El concepto del cargo debe tener entre 2 y 120 caracteres'),
+    body('additionalCharges.*.quantity')
+        .optional()
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('La cantidad del cargo debe ser un entero entre 1 y 1000')
+        .toInt(),
+    body('additionalCharges.*.unitPrice')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('El precio unitario del cargo debe ser un número mayor o igual a 0')
+        .toFloat(),
     body('additionalCharges.*.amount')
         .if(body('additionalCharges').exists())
+        .optional()
         .isFloat({ min: 0 })
-        .withMessage('El importe del cargo debe ser un número mayor o igual a 0')
+        .withMessage('El subtotal del cargo debe ser un número mayor o igual a 0')
         .toFloat(),
     validate,
     reservationController.checkOutReservation
+);
+
+router.post(
+    '/:id/consumptions',
+    restrictTo(ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    body('description')
+        .isString()
+        .withMessage('El concepto del consumo es obligatorio')
+        .bail()
+        .trim()
+        .isLength({ min: 2, max: 120 })
+        .withMessage('El concepto del consumo debe tener entre 2 y 120 caracteres'),
+    body('quantity')
+        .isInt({ min: 1, max: 1000 })
+        .withMessage('La cantidad debe ser un entero entre 1 y 1000')
+        .toInt(),
+    body('unitPrice')
+        .isFloat({ min: 0 })
+        .withMessage('El precio unitario debe ser un número mayor o igual a 0')
+        .toFloat(),
+    validate,
+    reservationController.addReservationConsumption
 );
 
 router.post(
