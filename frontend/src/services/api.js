@@ -149,6 +149,10 @@ export function getReservations(token, filters = {}) {
   return apiRequest(`/reservations${query ? `?${query}` : ''}`, { token });
 }
 
+export function getSettlementHistory(token) {
+  return apiRequest('/reservations/settlements/history', { token });
+}
+
 export function getReservation(token, reservationId) {
   return apiRequest(`/reservations/${encodeURIComponent(reservationId)}`, { token });
 }
