@@ -92,6 +92,74 @@ router.get(
     reservationController.getReservationById
 );
 
+router.patch(
+    '/:id',
+    restrictTo(ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('Identificador de reservación inválido'),
+    body().custom((_, { req }) => {
+        if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+            throw new Error('Los datos de la reservación son inválidos');
+        }
+
+        const allowedFields = ['guest', 'roomId', 'checkIn', 'checkOut', 'nightlyRate'];
+        const fields = Object.keys(req.body);
+        const unexpectedFields = fields.filter(field => !allowedFields.includes(field));
+
+        if (!fields.length) {
+            throw new Error('Indica al menos un dato para actualizar');
+        }
+        if (unexpectedFields.length) {
+            throw new Error('La solicitud contiene datos de reservación no editables');
+        }
+        return true;
+    }),
+    body('guest')
+        .optional()
+        .isObject()
+        .withMessage('Los datos del huésped deben ser un objeto'),
+    body('guest.fullName')
+        .optional()
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('El nombre completo debe tener entre 2 y 100 caracteres'),
+    body('guest.email')
+        .optional()
+        .isEmail()
+        .withMessage('Ingresa un correo válido para el huésped')
+        .normalizeEmail(),
+    body('guest.phone')
+        .optional()
+        .isString()
+        .trim()
+        .isLength({ min: 7, max: 25 })
+        .withMessage('El teléfono debe tener entre 7 y 25 caracteres'),
+    body('guest.identification')
+        .optional()
+        .isString()
+        .trim()
+        .isLength({ min: 4, max: 30 })
+        .withMessage('La identificación debe tener entre 4 y 30 caracteres'),
+    body('roomId')
+        .optional()
+        .isMongoId()
+        .withMessage('Selecciona una habitación válida'),
+    body('checkIn')
+        .optional()
+        .custom(value => validateDate(value, 'El check-in')),
+    body('checkOut')
+        .optional()
+        .custom(value => validateDate(value, 'El check-out')),
+    body('nightlyRate')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('La tarifa aplicada debe ser un número mayor o igual a 0')
+        .toFloat(),
+    validate,
+    reservationController.updateReservation
+);
+
 router.post(
     '/:id/cancel',
     restrictTo(ROLES.ADMIN),
