@@ -187,6 +187,10 @@ const settlementSchema = new mongoose.Schema(
         paidAt: {
             type: Date,
             required: true
+        },
+        receiptNumber: {
+            type: String,
+            trim: true
         }
     },
     { _id: false }
@@ -292,5 +296,6 @@ const reservationSchema = new mongoose.Schema(
 
 reservationSchema.index({ room: 1, status: 1, checkIn: 1, checkOut: 1 });
 reservationSchema.index({ status: 1, 'settlement.status': 1, 'settlement.paidAt': -1 });
+reservationSchema.index({ 'settlement.receiptNumber': 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Reservation', reservationSchema);

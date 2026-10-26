@@ -27,7 +27,12 @@ jest.mock('../services/reservationService', () => ({
     cancelReservation: jest.fn(),
     getReservationConsumptions: jest.fn(),
     updateReservationConsumption: jest.fn(),
-    voidReservationConsumption: jest.fn()
+    voidReservationConsumption: jest.fn(),
+    getPayments: jest.fn()
+}));
+
+jest.mock('../services/receiptService', () => ({
+    getReceipt: jest.fn()
 }));
 
 jest.mock('../utils/logger', () => ({
@@ -37,6 +42,7 @@ jest.mock('../utils/logger', () => ({
 const express = require('express');
 const request = require('supertest');
 const reservationService = require('../services/reservationService');
+const receiptService = require('../services/receiptService');
 const reservationRoutes = require('./reservationRoutes');
 const errorHandler = require('../middlewares/errorHandler');
 
@@ -433,5 +439,77 @@ describe('/api/v1/reservations', () => {
             .send({ reason: 'Cambio de planes del huésped' });
         expect(invalidId.status).toBe(400);
         expect(reservationService.cancelReservation).not.toHaveBeenCalled();
+    });
+});
+
+describe('payment receipts', () => {
+    const reservationId = '507f1f77bcf86cd799439012';
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('lets receptionists and administrators get a receipt', async () => {
+        receiptService.getReceipt.mockResolvedValue({ receiptNumber: 'CP-000007' });
+
+        const reception = await request(app).get(`/api/v1/reservations/${reservationId}/receipt`);
+        const admin = await request(app)
+            .get(`/api/v1/reservations/${reservationId}/receipt`)
+            .set('x-role', 'ADMIN');
+
+        expect(reception.status).toBe(200);
+        expect(reception.body.message).toBe('Comprobante CP-000007 generado correctamente');
+        expect(reception.body.data.receipt.receiptNumber).toBe('CP-000007');
+        expect(admin.status).toBe(200);
+        expect(receiptService.getReceipt).toHaveBeenCalledWith(reservationId);
+    });
+
+    it('rejects an invalid reservation id', async () => {
+        const response = await request(app).get('/api/v1/reservations/no-es-un-id/receipt');
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg))
+            .toContain('El identificador de la reservación no es válido');
+        expect(receiptService.getReceipt).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 when the stay has not been paid', async () => {
+        const AppError = require('../utils/AppError');
+        receiptService.getReceipt.mockRejectedValue(
+            new AppError('Solo se emite comprobante para estancias finalizadas y pagadas', 404)
+        );
+
+        const response = await request(app).get(`/api/v1/reservations/${reservationId}/receipt`);
+
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('Solo se emite comprobante para estancias finalizadas y pagadas');
+    });
+
+    it('lets receptionists search receipts while payments stay restricted to administrators', async () => {
+        reservationService.getPayments.mockResolvedValue({ payments: [], pagination: {}, summary: {} });
+
+        const receipts = await request(app)
+            .get('/api/v1/reservations/receipts')
+            .query({ q: 'CP-0000', paymentMethod: 'efectivo' });
+        const payments = await request(app).get('/api/v1/reservations/payments');
+
+        expect(receipts.status).toBe(200);
+        expect(reservationService.getPayments).toHaveBeenCalledWith(
+            expect.objectContaining({ q: 'CP-0000', paymentMethod: 'efectivo' })
+        );
+        expect(payments.status).toBe(403);
+    });
+
+    it('validates receipt search filters', async () => {
+        const response = await request(app)
+            .get('/api/v1/reservations/receipts')
+            .query({ paymentMethod: 'cheque', startDate: '2026-10-20', endDate: '2026-10-01' });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg)).toEqual(expect.arrayContaining([
+            'El método de pago no es válido',
+            'La fecha final debe ser igual o posterior a la fecha inicial'
+        ]));
+        expect(reservationService.getPayments).not.toHaveBeenCalled();
     });
 });

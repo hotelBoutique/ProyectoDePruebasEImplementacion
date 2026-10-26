@@ -18,6 +18,7 @@ import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
 import SettlementHistoryPage from './pages/SettlementHistoryPage.jsx';
 import PaymentsPage from './pages/PaymentsPage.jsx';
+import ReceiptsPage from './pages/ReceiptsPage.jsx';
 import {
   getAdminDashboard,
   getCurrentUser,
@@ -488,6 +489,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <SettlementHistoryPage token={token} />
           ) : isAdmin && activeItem === 'settlements-payments' ? (
             <PaymentsPage token={token} />
+          ) : !isAdmin && activeItem === 'reception-receipts' ? (
+            <ReceiptsPage token={token} />
           ) : !isAdmin && activeItem === 'reception-settlements-open' ? (
             <OpenAccountsPage token={token} onNavigate={selectItem} />
           ) : isAdmin && activeItem === 'reports-occupancy' ? (

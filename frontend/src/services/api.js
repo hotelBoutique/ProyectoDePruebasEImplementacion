@@ -206,6 +206,20 @@ export function getPaymentDetails(token, reservationId) {
   return apiRequest(`/reservations/payments/${encodeURIComponent(reservationId)}`, { token });
 }
 
+export function getReceipts(token, filters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([name, value]) => {
+    const text = String(value ?? '').trim();
+    if (text) params.set(name, text);
+  });
+  const query = params.toString();
+  return apiRequest(`/reservations/receipts${query ? `?${query}` : ''}`, { token });
+}
+
+export function getReceipt(token, reservationId) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/receipt`, { token });
+}
+
 export function getReservation(token, reservationId) {
   return apiRequest(`/reservations/${encodeURIComponent(reservationId)}`, { token });
 }

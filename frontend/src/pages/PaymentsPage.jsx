@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ReceiptDialog } from '../components/PaymentReceipt.jsx';
 import { getPaymentDetails, getPayments } from '../services/api.js';
 
 const EMPTY_FILTERS = {
@@ -148,6 +149,7 @@ function PaymentDetails({ payment, loading, error }) {
 }
 
 export default function PaymentsPage({ token }) {
+  const [receiptReservationId, setReceiptReservationId] = useState('');
   const [payments, setPayments] = useState([]);
   const [summary, setSummary] = useState({ totalPayments: 0, totalCollected: 0, todayPayments: 0 });
   const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, totalPages: 0 });
@@ -408,11 +410,27 @@ export default function PaymentsPage({ token }) {
                 <span className="card-kicker">DETALLE DEL PAGO</span>
                 <h2 id="payment-detail-title">{selectedPayment?.guest?.fullName ? `Pago de ${selectedPayment.guest.fullName}` : 'Pago realizado'}</h2>
               </div>
-              <button className="reservation-detail-close" type="button" onClick={() => setSelectedPaymentId('')} aria-label="Cerrar detalle del pago">×</button>
+              <div className="receipt-dialog-buttons">
+                <button
+                  className="button-secondary"
+                  type="button"
+                  onClick={() => {
+                    setReceiptReservationId(selectedPaymentId);
+                    setSelectedPaymentId('');
+                  }}
+                >
+                  Comprobante
+                </button>
+                <button className="reservation-detail-close" type="button" onClick={() => setSelectedPaymentId('')} aria-label="Cerrar detalle del pago">×</button>
+              </div>
             </div>
             <PaymentDetails payment={selectedPayment} loading={detailLoading} error={detailError} />
           </section>
         </div>
+      )}
+
+      {receiptReservationId && (
+        <ReceiptDialog token={token} reservationId={receiptReservationId} onClose={() => setReceiptReservationId('')} />
       )}
     </section>
   );

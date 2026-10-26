@@ -55,9 +55,7 @@ router.get(
     reservationController.getSettlementHistory
 );
 
-router.get(
-    '/payments',
-    restrictTo(ROLES.ADMIN),
+const paymentSearchValidators = [
     query('q')
         .optional({ checkFalsy: true })
         .isString()
@@ -94,8 +92,32 @@ router.get(
         .isInt({ min: 1, max: 100 })
         .withMessage('El límite debe ser un entero entre 1 y 100')
         .toInt(),
-    validate,
+    validate
+];
+
+router.get(
+    '/payments',
+    restrictTo(ROLES.ADMIN),
+    paymentSearchValidators,
     reservationController.getPayments
+);
+
+// Recepción busca comprobantes sobre los mismos pagos que el administrador consulta en "Pagos realizados".
+router.get(
+    '/receipts',
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    paymentSearchValidators,
+    reservationController.getPayments
+);
+
+router.get(
+    '/:id/receipt',
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    validate,
+    reservationController.getReceipt
 );
 
 router.get(

@@ -1277,3 +1277,59 @@ h1 {
   .open-account-consumptions-total { justify-content: space-between; gap: 12px; }
   .open-account-balance-total dd { font-size: 20px; text-align: right; }
 }
+
+/* Comprobante de pago */
+.receipt-dialog { width: min(100%, 760px); }
+.receipt-dialog-buttons { display: flex; align-items: center; gap: 10px; }
+.receipt-dialog-buttons .button-primary,
+.receipt-dialog-buttons .button-secondary { min-height: 38px; padding: 0 14px; font-size: 10px; }
+.receipt-print-area { padding-top: 20px; }
+.checkout-receipt .reservation-receipt-heading { flex-wrap: wrap; }
+.checkout-receipt-action { min-height: 40px; margin-left: auto; padding: 0 15px; }
+.receipts-pending-number { color: var(--color-text-muted); font-size: 9px; font-style: italic; }
+.payment-receipt { color: var(--color-primary); font-size: 11px; line-height: 1.5; }
+.payment-receipt-header { display: flex; justify-content: space-between; gap: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--color-primary); }
+.payment-receipt-header > div { display: flex; flex-direction: column; gap: 3px; }
+.payment-receipt-header span { color: var(--color-text-muted); font-size: 9px; letter-spacing: .06em; }
+.payment-receipt-hotel { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; line-height: 1.1; }
+.payment-receipt-number { align-items: flex-end; text-align: right; }
+.payment-receipt-number strong { font-size: 19px; letter-spacing: .04em; }
+.payment-receipt-parties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 16px 0; border-bottom: 1px solid var(--color-border); }
+.payment-receipt-parties dt { margin-bottom: 5px; color: var(--color-text-muted); font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.payment-receipt-parties dd { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+.payment-receipt-parties dd span { color: var(--color-text-muted); font-size: 10px; }
+.payment-receipt-lines { width: 100%; margin: 14px 0; border-collapse: collapse; }
+.payment-receipt-lines th { padding: 8px 6px; color: var(--color-text-muted); background: #F7F5F0; font-size: 8px; font-weight: 700; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
+.payment-receipt-lines td { padding: 9px 6px; border-bottom: 1px solid #ECE8DE; vertical-align: top; }
+.payment-receipt-lines th:nth-child(n + 2),
+.payment-receipt-lines td:nth-child(n + 2) { text-align: right; white-space: nowrap; }
+.payment-receipt-category { display: block; color: var(--color-text-muted); font-size: 8px; letter-spacing: .06em; text-transform: uppercase; }
+.payment-receipt-totals { width: min(100%, 320px); margin: 0 0 0 auto; }
+.payment-receipt-totals > div { display: flex; justify-content: space-between; gap: 16px; padding: 4px 0; }
+.payment-receipt-totals dt { color: var(--color-text-muted); }
+.payment-receipt-totals dd { margin: 0; font-weight: 600; }
+.payment-receipt-grand-total { margin-top: 4px; padding-top: 8px !important; border-top: 2px solid var(--color-primary); font-size: 14px; }
+.payment-receipt-grand-total dt { color: var(--color-primary); font-weight: 700; }
+.payment-receipt-footer { margin-top: 20px; padding-top: 12px; color: var(--color-text-muted); border-top: 1px solid var(--color-border); font-size: 9px; text-align: center; }
+
+@media (max-width: 560px) {
+  .payment-receipt-header,
+  .receipt-dialog-actions { flex-direction: column; }
+  .payment-receipt-number { align-items: flex-start; text-align: left; }
+  .payment-receipt-parties { grid-template-columns: 1fr; }
+  .checkout-receipt-action { width: 100%; margin-left: 0; }
+}
+
+/* Al imprimir solo sale el comprobante, en blanco y negro y sin el resto de la aplicación. */
+@media print {
+  body * { visibility: hidden; }
+  .receipt-print-area,
+  .receipt-print-area * { visibility: visible; }
+  .receipt-print-area { position: absolute; top: 0; left: 0; width: 100%; padding: 0; }
+  .receipt-dialog-backdrop { position: static; background: none; }
+  .receipt-dialog { max-height: none; overflow: visible; border: 0; box-shadow: none; }
+  .payment-receipt,
+  .payment-receipt * { color: #000 !important; }
+  .payment-receipt-lines th { background: none; }
+  @page { margin: 16mm; }
+}

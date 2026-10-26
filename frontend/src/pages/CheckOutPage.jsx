@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ReceiptDialog } from '../components/PaymentReceipt.jsx';
 import { checkOutReservation, getPendingCheckOuts } from '../services/api.js';
 
 function formatCurrency(value) {
@@ -32,6 +33,7 @@ export default function CheckOutPage({ token, initialReservationId = '' }) {
   const [loadError, setLoadError] = useState('');
   const [notice, setNotice] = useState(null);
   const [receipt, setReceipt] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const selectedReservation = reservations.find((item) => item._id === selectedId);
   const estimate = selectedReservation?.settlementEstimate;
@@ -208,6 +210,9 @@ export default function CheckOutPage({ token, initialReservationId = '' }) {
               <h2 id="checkout-receipt-title">Salida confirmada</h2>
               <p>La habitación {receipt.roomNumber} quedó disponible · {formatDateTime(receipt.checkOutAt)}</p>
             </div>
+            <button className="button-primary checkout-receipt-action" type="button" onClick={() => setShowReceipt(true)}>
+              Ver comprobante{receipt.settlement.receiptNumber ? ` ${receipt.settlement.receiptNumber}` : ''}
+            </button>
           </div>
           <dl className="reservation-receipt-grid">
             <div><dt>Huésped</dt><dd>{receipt.guest.fullName}</dd></div>
@@ -419,6 +424,10 @@ export default function CheckOutPage({ token, initialReservationId = '' }) {
           No hay huéspedes con una estancia activa para procesar el check-out.
         </div>
       ) : null}
+
+      {showReceipt && receipt && (
+        <ReceiptDialog token={token} reservationId={receipt.reservationId} onClose={() => setShowReceipt(false)} />
+      )}
     </section>
   );
 }

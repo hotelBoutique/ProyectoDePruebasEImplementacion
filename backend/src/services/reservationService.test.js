@@ -17,6 +17,10 @@ jest.mock('../models/product', () => ({
     updateOne: jest.fn()
 }));
 
+jest.mock('../models/counter', () => ({
+    findOneAndUpdate: jest.fn().mockResolvedValue({ seq: 42 })
+}));
+
 jest.mock('mongoose', () => ({
     ...jest.requireActual('mongoose'),
     startSession: jest.fn()
@@ -26,6 +30,7 @@ const mongoose = require('mongoose');
 const Reservation = require('../models/reservation');
 const Room = require('../models/room');
 const Product = require('../models/product');
+const Counter = require('../models/counter');
 const {
     addReservationConsumption,
     checkInReservation,
@@ -623,11 +628,17 @@ describe('reservationService', () => {
                         totalAmount: 250,
                         paidAmount: 250,
                         paymentMethod: 'tarjeta',
-                        paidAt: expect.any(Date)
+                        paidAt: expect.any(Date),
+                        receiptNumber: 'CP-000042'
                     })
                 })
             },
             expect.objectContaining({ new: true, runValidators: true, session })
+        );
+        expect(Counter.findOneAndUpdate).toHaveBeenCalledWith(
+            { _id: 'paymentReceipt' },
+            { $inc: { seq: 1 } },
+            expect.objectContaining({ upsert: true, session })
         );
         expect(session.endSession).toHaveBeenCalled();
     });
