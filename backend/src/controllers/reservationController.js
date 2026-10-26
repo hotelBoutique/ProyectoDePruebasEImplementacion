@@ -146,6 +146,25 @@ const getSettlementHistory = catchAsync(async (req, res) => {
     });
 });
 
+const getPayments = catchAsync(async (req, res) => {
+    const result = await reservationService.getPayments(req.query);
+
+    res.status(200).json({
+        status: 'success',
+        results: result.payments.length,
+        data: result
+    });
+});
+
+const getPaymentById = catchAsync(async (req, res) => {
+    const payment = await reservationService.getPaymentById(req.params.id);
+
+    res.status(200).json({
+        status: 'success',
+        data: { payment }
+    });
+});
+
 const getReservationById = catchAsync(async (req, res) => {
     const reservation = await reservationService.getReservationById(req.params.id);
 
@@ -220,6 +239,8 @@ module.exports = {
     getAvailableRooms,
     getReservations,
     getSettlementHistory,
+    getPayments,
+    getPaymentById,
     getReservationById,
     createReservation,
     updateReservation,

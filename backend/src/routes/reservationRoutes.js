@@ -56,6 +56,59 @@ router.get(
 );
 
 router.get(
+    '/payments',
+    restrictTo(ROLES.ADMIN),
+    query('q')
+        .optional({ checkFalsy: true })
+        .isString()
+        .withMessage('La búsqueda debe ser texto')
+        .bail()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('La búsqueda no puede superar 100 caracteres'),
+    query('startDate')
+        .optional({ checkFalsy: true })
+        .custom(value => validateDate(value, 'La fecha inicial')),
+    query('endDate')
+        .optional({ checkFalsy: true })
+        .custom(value => validateDate(value, 'La fecha final')),
+    query('endDate')
+        .optional({ checkFalsy: true })
+        .custom((endDate, { req }) => !req.query.startDate || endDate >= req.query.startDate)
+        .withMessage('La fecha final debe ser igual o posterior a la fecha inicial'),
+    query('paymentMethod')
+        .optional({ checkFalsy: true })
+        .isIn(['efectivo', 'tarjeta', 'transferencia'])
+        .withMessage('El método de pago no es válido'),
+    query('status')
+        .optional({ checkFalsy: true })
+        .isIn(['pagada'])
+        .withMessage('El estado del pago no es válido'),
+    query('page')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('La página debe ser un entero mayor o igual a 1')
+        .toInt(),
+    query('limit')
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage('El límite debe ser un entero entre 1 y 100')
+        .toInt(),
+    validate,
+    reservationController.getPayments
+);
+
+router.get(
+    '/payments/:id',
+    restrictTo(ROLES.ADMIN),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador del pago no es válido'),
+    validate,
+    reservationController.getPaymentById
+);
+
+router.get(
     '/check-ins/pending',
     restrictTo(ROLES.RECEPCIONISTA),
     reservationController.getPendingCheckIns

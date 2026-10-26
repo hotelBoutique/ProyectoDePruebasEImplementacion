@@ -291,5 +291,6 @@ const reservationSchema = new mongoose.Schema(
 );
 
 reservationSchema.index({ room: 1, status: 1, checkIn: 1, checkOut: 1 });
+reservationSchema.index({ status: 1, 'settlement.status': 1, 'settlement.paidAt': -1 });
 
 module.exports = mongoose.model('Reservation', reservationSchema);
