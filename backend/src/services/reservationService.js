@@ -733,6 +733,13 @@ const getReservations = async ({ checkInFrom, checkInTo, roomId, roomType, statu
         .sort({ checkIn: 1, createdAt: -1 });
 };
 
+const getSettlementHistory = async () => Reservation.find({
+    status: 'finalizada',
+    'settlement.status': 'pagada'
+})
+    .select('guest.fullName guest.identification guest.email guest.phone roomNumber roomType checkIn checkOut checkInAt checkOutAt settlement')
+    .sort({ 'settlement.paidAt': -1, createdAt: -1 });
+
 const getReservationById = async reservationId => {
     const reservation = await Reservation.findById(reservationId);
 
@@ -892,12 +899,9 @@ module.exports = {
     checkOutReservation,
     getAvailableRooms,
     getReservations,
+    getSettlementHistory,
     getReservationById,
-<<<<<<< HEAD
     createReservation,
-    updateReservation
-=======
+    updateReservation,
     cancelReservation,
-    createReservation
->>>>>>> b53d91ca52762dce2e45ec3a2948f608e37e3ad2
 };

@@ -6,6 +6,7 @@ import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
+import SettlementHistoryPage from './pages/SettlementHistoryPage.jsx';
 import {
   getAdminDashboard,
   getCurrentUser,
@@ -454,6 +455,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             />
           ) : isAdmin && activeItem === 'reservations-cancellations' ? (
             <ReservationsPage token={token} mode="cancellations" />
+          ) : isAdmin && activeItem === 'settlements-history' ? (
+            <SettlementHistoryPage token={token} />
           ) : !isAdmin && activeItem === 'reception-check-in' ? (
             <CheckInPage token={token} />
           ) : !isAdmin && activeItem === 'reception-check-out' ? (

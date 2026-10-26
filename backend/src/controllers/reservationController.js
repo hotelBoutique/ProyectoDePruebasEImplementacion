@@ -92,6 +92,16 @@ const getReservations = catchAsync(async (req, res) => {
     });
 });
 
+const getSettlementHistory = catchAsync(async (req, res) => {
+    const settlements = await reservationService.getSettlementHistory();
+
+    res.status(200).json({
+        status: 'success',
+        results: settlements.length,
+        data: { settlements }
+    });
+});
+
 const getReservationById = catchAsync(async (req, res) => {
     const reservation = await reservationService.getReservationById(req.params.id);
 
@@ -101,27 +111,29 @@ const getReservationById = catchAsync(async (req, res) => {
     });
 });
 
-<<<<<<< HEAD
 const updateReservation = catchAsync(async (req, res) => {
     const reservation = await reservationService.updateReservation(
         req.params.id,
         req.body
-=======
+    );
+
+    res.status(200).json({
+        status: 'success',
+        message: 'La reservación se actualizó correctamente',
+        data: { reservation }
+    });
+});
+
 const cancelReservation = catchAsync(async (req, res) => {
     const reservation = await reservationService.cancelReservation(
         req.params.id,
         req.body.reason,
         req.user._id
->>>>>>> b53d91ca52762dce2e45ec3a2948f608e37e3ad2
     );
 
     res.status(200).json({
         status: 'success',
-<<<<<<< HEAD
-        message: 'La reservación se actualizó correctamente',
-=======
         message: 'La reservación se canceló y sus fechas quedaron disponibles',
->>>>>>> b53d91ca52762dce2e45ec3a2948f608e37e3ad2
         data: { reservation }
     });
 });
@@ -160,12 +172,9 @@ module.exports = {
     addReservationConsumption,
     getAvailableRooms,
     getReservations,
+    getSettlementHistory,
     getReservationById,
-<<<<<<< HEAD
     createReservation,
-    updateReservation
-=======
+    updateReservation,
     cancelReservation,
-    createReservation
->>>>>>> b53d91ca52762dce2e45ec3a2948f608e37e3ad2
 };
