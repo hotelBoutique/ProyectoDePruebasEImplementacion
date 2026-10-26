@@ -3,7 +3,6 @@ import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
-import ReservationsPage from './pages/ReservationsPage.jsx';
 import {
   getAdminDashboard,
   getCurrentUser,
