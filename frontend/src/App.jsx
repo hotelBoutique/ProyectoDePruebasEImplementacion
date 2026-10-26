@@ -14,6 +14,7 @@ import OpenAccountsPage from './pages/OpenAccountsPage.jsx';
 import IncomeReportPage from './pages/IncomeReportPage.jsx';
 import ProductCatalogPage from './pages/ProductCatalogPage.jsx';
 import SalesReportPage from './pages/SalesReportPage.jsx';
+import DashboardHome from './components/DashboardHome.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
 import SettlementHistoryPage from './pages/SettlementHistoryPage.jsx';
@@ -378,62 +379,7 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
 
         <main className="dashboard-main">
           {isHome ? (
-            <>
-              <section className="dashboard-heading" aria-labelledby="dashboard-title">
-                <div>
-                  <p className="eyebrow">{isAdmin ? 'ESPACIO DE ADMINISTRACIÓN' : 'ESPACIO DE RECEPCIÓN'}</p>
-                  <h1 id="dashboard-title">Hola, {firstName}.</h1>
-                  <p className="intro">
-                    {isAdmin
-                      ? 'Tu sesión está activa y tienes acceso a las funciones administrativas.'
-                      : 'Tu sesión está activa y tienes acceso a las funciones de recepción.'}
-                  </p>
-                </div>
-                <span className="role-badge"><span aria-hidden="true">✦</span> {roleLabel}</span>
-              </section>
-
-              <section className="dashboard-cards" aria-label="Estado de la cuenta">
-                <article className="summary-card summary-card-primary">
-                  <div className="summary-card-topline">
-                    <span className="card-kicker">ESTADO DE ACCESO</span>
-                    <span className="summary-icon" aria-hidden="true">✓</span>
-                  </div>
-                  <strong>Verificado</strong>
-                  <p>La API confirmó tus credenciales y los permisos de {isAdmin ? 'administración' : 'recepción'}.</p>
-                </article>
-
-                <article className="summary-card">
-                  <span className="card-kicker">CUENTA ACTIVA</span>
-                  <strong className="account-email">{user?.email || 'Correo no disponible'}</strong>
-                  <p>Esta cuenta tiene el rol {roleLabel.toLowerCase()} y acceso a sus rutas autorizadas.</p>
-                </article>
-
-                <article className="summary-card">
-                  <span className="card-kicker">SESIÓN</span>
-                  <strong className="session-state"><span className="session-dot" /> Activa</strong>
-                  <p>La sesión está vinculada a esta pestaña del navegador.</p>
-                </article>
-              </section>
-
-              <section className="security-panel" aria-labelledby="security-title">
-                <div className="security-panel-heading">
-                  <div>
-                    <p className="eyebrow">SEGURIDAD</p>
-                    <h2 id="security-title">Tu acceso está protegido.</h2>
-                  </div>
-                  <span className="status-badge"><span className="session-dot" /> Sesión segura</span>
-                </div>
-                <p>
-                  Cada solicitud vuelve a validar tu sesión y tus permisos para las rutas de
-                  {isAdmin ? ' administración y recepción' : ' recepción'}. Al cerrar sesión, el backend
-                  invalida los tokens activos de esta cuenta.
-                </p>
-                <div className="security-panel-footer">
-                  <span>Autenticación</span>
-                  <span>JWT verificado · Rol {roleLabel.toLowerCase()}</span>
-                </div>
-              </section>
-            </>
+            <DashboardHome user={user} isAdmin={isAdmin} token={token} onNavigate={selectItem} />
           ) : accountActive ? (
             <ProfilePage
               user={user}
