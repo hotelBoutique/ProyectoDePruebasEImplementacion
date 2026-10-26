@@ -510,6 +510,159 @@ const checkInReservation = async reservationId => {
     }
 };
 
+const updateReservation = async (reservationId, changes) => {
+    if (!changes || typeof changes !== 'object' || Array.isArray(changes)) {
+        throw new AppError('Los datos de la reservación son inválidos', 400);
+    }
+
+    const allowedFields = ['guest', 'roomId', 'checkIn', 'checkOut', 'nightlyRate'];
+    const fields = Object.keys(changes);
+    if (!fields.length) {
+        throw new AppError('Indica al menos un dato para actualizar', 400);
+    }
+
+    const unexpectedFields = fields.filter(field => !allowedFields.includes(field));
+    if (unexpectedFields.length) {
+        throw new AppError('La solicitud contiene datos de reservación no editables', 400);
+    }
+
+    const session = await mongoose.startSession();
+    let updatedReservation;
+
+    try {
+        await session.withTransaction(async () => {
+            const reservation = await Reservation.findById(reservationId).session(session);
+
+            if (!reservation) {
+                throw new AppError('La reservación no existe', 404);
+            }
+            if (reservation.status !== 'reservada') {
+                throw new AppError(
+                    reservation.status === 'ocupada'
+                        ? 'No se puede modificar una reservación después de registrar el check-in'
+                        : `No se puede modificar una reservación en estado ${reservation.status}`,
+                    409
+                );
+            }
+
+            const checkInValue = changes.checkIn ?? reservation.checkIn.toISOString().slice(0, 10);
+            const checkOutValue = changes.checkOut ?? reservation.checkOut.toISOString().slice(0, 10);
+            const { checkIn, checkOut, nights } = getDateRange(checkInValue, checkOutValue);
+
+            const roomId = changes.roomId ?? reservation.room.toString();
+            const room = await Room.findById(roomId).session(session);
+            if (!room) {
+                throw new AppError('La habitación seleccionada no existe', 404);
+            }
+            if (UNAVAILABLE_ROOM_STATUSES.includes(room.status)) {
+                throw new AppError('La habitación no está disponible para el periodo seleccionado', 409);
+            }
+
+            const conflict = await Reservation.findOne({
+                _id: { $ne: reservationId },
+                room: room._id,
+                status: { $in: ACTIVE_RESERVATION_STATUSES },
+                checkIn: { $lt: checkOut },
+                checkOut: { $gt: checkIn }
+            }).session(session);
+
+            if (conflict) {
+                throw new AppError('La habitación no está disponible para el periodo seleccionado', 409);
+            }
+
+            let rate = reservation.nightlyRate;
+            if (changes.nightlyRate !== undefined) {
+                const hasRate = typeof changes.nightlyRate === 'number'
+                    || (typeof changes.nightlyRate === 'string' && changes.nightlyRate.trim() !== '');
+                rate = hasRate ? Number(changes.nightlyRate) : Number.NaN;
+            } else if (changes.roomId && String(changes.roomId) !== String(reservation.room)) {
+                rate = room.price;
+            }
+
+            if (!Number.isFinite(rate) || rate < 0) {
+                throw new AppError('La tarifa aplicada debe ser un número mayor o igual a 0', 400);
+            }
+
+            const totalInCents = Math.round(rate * nights * 100);
+            if (!Number.isSafeInteger(totalInCents)) {
+                throw new AppError('El total de la reservación supera el límite permitido', 400);
+            }
+
+            let guestChanges = {};
+            if (changes.guest !== undefined) {
+                if (!changes.guest || typeof changes.guest !== 'object' || Array.isArray(changes.guest)) {
+                    throw new AppError('Los datos del huésped deben ser un objeto', 400);
+                }
+
+                guestChanges = changes.guest;
+                const guestFields = ['fullName', 'email', 'phone', 'identification'];
+                const guestUpdateFields = Object.keys(guestChanges);
+                if (!guestUpdateFields.length) {
+                    throw new AppError('Indica al menos un dato del huésped para actualizar', 400);
+                }
+                if (guestUpdateFields.some(field => !guestFields.includes(field))) {
+                    throw new AppError('La solicitud contiene datos del huésped no editables', 400);
+                }
+            }
+
+            const guest = {
+                fullName: guestChanges.fullName ?? reservation.guest.fullName,
+                email: guestChanges.email ?? reservation.guest.email,
+                phone: guestChanges.phone ?? reservation.guest.phone,
+                identification: guestChanges.identification ?? reservation.guest.identification
+            };
+
+            updatedReservation = await Reservation.findOneAndUpdate(
+                { _id: reservationId, status: 'reservada' },
+                {
+                    $set: {
+                        guest,
+                        room: room._id,
+                        roomNumber: room.number,
+                        roomType: room.type,
+                        checkIn,
+                        checkOut,
+                        nights,
+                        nightlyRate: rate,
+                        totalAmount: totalInCents / 100
+                    }
+                },
+                { new: true, runValidators: true, session }
+            );
+
+            if (!updatedReservation) {
+                throw new AppError('La reservación cambió de estado; actualice e intente nuevamente', 409);
+            }
+
+            if (String(room._id) !== String(reservation.room)) {
+                const roomLock = await Room.updateOne(
+                    { _id: room._id, status: room.status },
+                    { $inc: { availabilityRevision: 1 } },
+                    { session }
+                );
+                if (roomLock.matchedCount === 0) {
+                    throw new AppError('La habitación cambió de estado; actualice e intente nuevamente', 409);
+                }
+            }
+        });
+
+        return updatedReservation;
+    } catch (error) {
+        if (
+            error.code === 20
+            && /transaction|replica set|mongos/i.test(error.message || '')
+        ) {
+            throw new AppError(
+                'MongoDB debe ejecutarse como replica set para modificar reservaciones de forma segura',
+                503
+            );
+        }
+        throw error;
+    } finally {
+        await session.endSession();
+    }
+};
+
 const parseFilterDate = (value, fieldName) => {
     if (!isValidDateOnly(value)) {
         throw new AppError(`${fieldName} debe ser una fecha válida con formato AAAA-MM-DD`, 400);
@@ -695,5 +848,6 @@ module.exports = {
     getAvailableRooms,
     getReservations,
     getReservationById,
-    createReservation
+    createReservation,
+    updateReservation
 };

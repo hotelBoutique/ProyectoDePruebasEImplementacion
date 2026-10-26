@@ -27,7 +27,8 @@ const {
     createReservation,
     getAvailableRooms,
     getPendingCheckOuts,
-    getPendingCheckIns
+    getPendingCheckIns,
+    updateReservation
 } = require('./reservationService');
 
 const getFutureDates = () => {
@@ -54,6 +55,85 @@ const createSessionMock = () => {
 describe('reservationService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+    });
+
+    it('blocks modification of a reservation that was not found', async () => {
+        createSessionMock();
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue(null)
+        });
+
+        await expect(updateReservation('reservation-id', { checkIn: '2030-01-10' }))
+            .rejects.toMatchObject({ statusCode: 404, message: 'La reservación no existe' });
+    });
+
+    it('blocks modification after check-in', async () => {
+        createSessionMock();
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                _id: 'reservation-id',
+                status: 'ocupada'
+            })
+        });
+
+        await expect(updateReservation('reservation-id', { nightlyRate: 200 }))
+            .rejects.toMatchObject({
+                statusCode: 409,
+                message: expect.stringContaining('después de registrar el check-in')
+            });
+    });
+
+    it('updates a reserved stay and recalculates dates and total', async () => {
+        createSessionMock();
+        const reservation = {
+            _id: 'reservation-id',
+            status: 'reservada',
+            room: { toString: () => '507f1f77bcf86cd799439011' },
+            guest: {
+                fullName: 'Ana Ruiz',
+                email: 'ana@example.com',
+                phone: '3001234567',
+                identification: '12345678'
+            },
+            checkIn: new Date('2030-01-10T00:00:00.000Z'),
+            checkOut: new Date('2030-01-12T00:00:00.000Z'),
+            nightlyRate: 100
+        };
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue(reservation)
+        });
+        Room.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                _id: { toString: () => '507f1f77bcf86cd799439011' },
+                number: '102',
+                type: 'Doble',
+                status: 'disponible',
+                price: 150
+            })
+        });
+        Reservation.findOne.mockReturnValue({
+            session: jest.fn().mockResolvedValue(null)
+        });
+        Reservation.findOneAndUpdate.mockResolvedValue({
+            _id: 'reservation-id',
+            status: 'reservada',
+            nights: 3,
+            totalAmount: 450
+        });
+
+        await expect(updateReservation('reservation-id', {
+            checkIn: '2030-01-10',
+            checkOut: '2030-01-13',
+            nightlyRate: 150
+        })).resolves.toMatchObject({ nights: 3, totalAmount: 450 });
+
+        expect(Reservation.findOneAndUpdate).toHaveBeenCalledWith(
+            { _id: 'reservation-id', status: 'reservada' },
+            expect.objectContaining({
+                $set: expect.objectContaining({ nights: 3, nightlyRate: 150, totalAmount: 450 })
+            }),
+            expect.objectContaining({ new: true, runValidators: true })
+        );
     });
 
     it('filters out rooms with an active overlapping reservation', async () => {

@@ -22,7 +22,8 @@ jest.mock('../services/reservationService', () => ({
     checkInReservation: jest.fn(),
     getPendingCheckOuts: jest.fn(),
     checkOutReservation: jest.fn(),
-    addReservationConsumption: jest.fn()
+    addReservationConsumption: jest.fn(),
+    updateReservation: jest.fn()
 }));
 
 jest.mock('../utils/logger', () => ({

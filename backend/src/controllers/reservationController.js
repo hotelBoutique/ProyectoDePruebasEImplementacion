@@ -101,6 +101,19 @@ const getReservationById = catchAsync(async (req, res) => {
     });
 });
 
+const updateReservation = catchAsync(async (req, res) => {
+    const reservation = await reservationService.updateReservation(
+        req.params.id,
+        req.body
+    );
+
+    res.status(200).json({
+        status: 'success',
+        message: 'La reservación se actualizó correctamente',
+        data: { reservation }
+    });
+});
+
 const createReservation = catchAsync(async (req, res) => {
     const reservation = await reservationService.createReservation({
         ...req.body,
@@ -136,5 +149,6 @@ module.exports = {
     getAvailableRooms,
     getReservations,
     getReservationById,
-    createReservation
+    createReservation,
+    updateReservation
 };
