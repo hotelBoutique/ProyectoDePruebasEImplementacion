@@ -151,3 +151,15 @@ export function checkInReservation(token, reservationId) {
     token,
   });
 }
+
+export function getPendingCheckOuts(token) {
+  return apiRequest('/reservations/check-outs/pending', { token });
+}
+
+export function checkOutReservation(token, reservationId, settlement) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/check-out`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify(settlement),
+  });
+}

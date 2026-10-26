@@ -13,6 +13,231 @@ const UNAVAILABLE_ROOM_STATUSES = [
     'limpieza',
     'desinfeccion'
 ];
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+const PAYMENT_METHODS = ['efectivo', 'tarjeta', 'transferencia'];
+
+const toCents = value => Math.round(value * 100);
+
+const getStayNights = (checkInAt, checkOutAt = new Date()) => {
+    const elapsed = checkOutAt.getTime() - checkInAt.getTime();
+
+    if (!Number.isFinite(elapsed) || elapsed < 0) {
+        throw new AppError('La fecha y hora de ingreso no es válida para liquidar la estancia', 409);
+    }
+
+    return Math.max(1, Math.ceil(elapsed / MILLISECONDS_PER_DAY));
+};
+
+const normalizeAdditionalCharges = charges => {
+    if (!Array.isArray(charges)) {
+        throw new AppError('Los cargos adicionales deben enviarse como una lista', 400);
+    }
+
+    if (charges.length > 20) {
+        throw new AppError('No se permiten más de 20 cargos adicionales por liquidación', 400);
+    }
+
+    let totalCents = 0;
+    const normalized = charges.map((charge, index) => {
+        const description = typeof charge?.description === 'string'
+            ? charge.description.trim()
+            : '';
+        const hasAmount = typeof charge?.amount === 'number'
+            || (typeof charge?.amount === 'string' && charge.amount.trim() !== '');
+        const amount = hasAmount ? Number(charge.amount) : Number.NaN;
+
+        if (description.length < 2 || description.length > 120) {
+            throw new AppError(`El concepto del cargo ${index + 1} debe tener entre 2 y 120 caracteres`, 400);
+        }
+
+        if (!Number.isFinite(amount) || amount < 0) {
+            throw new AppError(`El importe del cargo ${index + 1} debe ser un número mayor o igual a 0`, 400);
+        }
+
+        const amountCents = toCents(amount);
+        if (!Number.isSafeInteger(amountCents)) {
+            throw new AppError(`El importe del cargo ${index + 1} supera el límite permitido`, 400);
+        }
+
+        totalCents += amountCents;
+        return { description, amount: amountCents / 100 };
+    });
+
+    if (!Number.isSafeInteger(totalCents)) {
+        throw new AppError('El total de cargos adicionales supera el límite permitido', 400);
+    }
+
+    return { charges: normalized, totalCents };
+};
+
+const checkOutReservation = async ({
+    reservationId,
+    additionalCharges = [],
+    paidAmount,
+    paymentMethod
+}) => {
+    if (!PAYMENT_METHODS.includes(paymentMethod)) {
+        throw new AppError('Selecciona un método de pago válido', 400);
+    }
+
+    const hasPaidAmount = typeof paidAmount === 'number'
+        || (typeof paidAmount === 'string' && paidAmount.trim() !== '');
+    const paidAmountNumber = hasPaidAmount ? Number(paidAmount) : Number.NaN;
+
+    if (!Number.isFinite(paidAmountNumber) || paidAmountNumber < 0) {
+        throw new AppError('El importe pagado debe ser un número mayor o igual a 0', 400);
+    }
+
+    const paidAmountCents = toCents(paidAmountNumber);
+    if (!Number.isSafeInteger(paidAmountCents)) {
+        throw new AppError('El importe pagado supera el límite permitido', 400);
+    }
+
+    const { charges, totalCents: additionalChargesCents } =
+        normalizeAdditionalCharges(additionalCharges);
+    const session = await mongoose.startSession();
+    let finalizedReservation;
+
+    try {
+        await session.withTransaction(async () => {
+            const reservation = await Reservation.findById(reservationId).session(session);
+
+            if (!reservation) {
+                throw new AppError('La reservación no existe', 404);
+            }
+
+            if (reservation.status === 'finalizada') {
+                throw new AppError('La estancia ya fue finalizada y liquidada', 409);
+            }
+
+            if (reservation.status !== 'ocupada') {
+                throw new AppError(
+                    reservation.status === 'cancelada'
+                        ? 'No se puede hacer check-out: la reservación está cancelada'
+                        : 'No se puede hacer check-out: la estancia no tiene un check-in activo',
+                    409
+                );
+            }
+
+            if (
+                !reservation.checkInAt
+                || Number.isNaN(reservation.checkInAt.getTime())
+                || reservation.checkInAt > new Date()
+            ) {
+                throw new AppError('La fecha y hora de ingreso de la estancia no es válida', 409);
+            }
+
+            if (
+                !reservation.checkOut
+                || Number.isNaN(reservation.checkOut.getTime())
+                || reservation.checkOut <= reservation.checkInAt
+            ) {
+                throw new AppError('La fecha programada de salida no es válida para esta estancia', 409);
+            }
+
+            const room = await Room.findById(reservation.room).session(session);
+            if (!room) {
+                throw new AppError('La habitación asignada a la estancia ya no existe', 409);
+            }
+
+            if (room.status !== 'ocupada') {
+                throw new AppError(
+                    `No se puede finalizar la estancia: la habitación tiene estado "${room.status}" y no está ocupada`,
+                    409
+                );
+            }
+
+            const checkOutAt = new Date();
+            const actualNights = getStayNights(reservation.checkInAt, checkOutAt);
+            const roomSubtotalCents = toCents(reservation.nightlyRate) * actualNights;
+            const totalCents = roomSubtotalCents + additionalChargesCents;
+
+            if (!Number.isSafeInteger(totalCents)) {
+                throw new AppError('El total de la liquidación supera el límite permitido', 400);
+            }
+
+            if (paidAmountCents < totalCents) {
+                throw new AppError(
+                    `No se puede finalizar la estancia: saldo pendiente de ${((totalCents - paidAmountCents) / 100).toFixed(2)}`,
+                    400
+                );
+            }
+
+            if (paidAmountCents > totalCents) {
+                throw new AppError(
+                    `El importe recibido supera el total de la liquidación en ${((paidAmountCents - totalCents) / 100).toFixed(2)}`,
+                    400
+                );
+            }
+
+            const roomUpdate = await Room.updateOne(
+                { _id: room._id, status: 'ocupada' },
+                {
+                    $set: { status: 'disponible' },
+                    $inc: { availabilityRevision: 1 }
+                },
+                { session }
+            );
+
+            if (roomUpdate.matchedCount === 0) {
+                throw new AppError(
+                    'La habitación cambió de estado; actualice e intente nuevamente',
+                    409
+                );
+            }
+
+            finalizedReservation = await Reservation.findOneAndUpdate(
+                { _id: reservation._id, status: 'ocupada' },
+                {
+                    $set: {
+                        status: 'finalizada',
+                        checkOutAt,
+                        settlement: {
+                            status: 'pagada',
+                            actualNights,
+                            nightlyRate: reservation.nightlyRate,
+                            roomSubtotal: roomSubtotalCents / 100,
+                            additionalCharges: charges,
+                            additionalChargesTotal: additionalChargesCents / 100,
+                            totalAmount: totalCents / 100,
+                            paidAmount: paidAmountCents / 100,
+                            paymentMethod,
+                            paidAt: checkOutAt
+                        }
+                    }
+                },
+                {
+                    new: true,
+                    runValidators: true,
+                    session
+                }
+            );
+
+            if (!finalizedReservation) {
+                throw new AppError(
+                    'La estancia cambió de estado; actualice e intente nuevamente',
+                    409
+                );
+            }
+        });
+
+        return finalizedReservation;
+    } catch (error) {
+        if (
+            error.code === 20
+            && /transaction|replica set|mongos/i.test(error.message || '')
+        ) {
+            throw new AppError(
+                'MongoDB debe ejecutarse como replica set para registrar el pago y liberar la habitación de forma segura',
+                503
+            );
+        }
+
+        throw error;
+    } finally {
+        await session.endSession();
+    }
+};
 
 const getPendingCheckIns = async () => {
     const today = getTodayDateOnly();
@@ -28,6 +253,42 @@ const getPendingCheckIns = async () => {
     })
         .sort({ checkIn: 1 })
         .populate('room', 'number status');
+};
+
+const getPendingCheckOuts = async () => {
+    const reservations = await Reservation.find({ status: 'ocupada' })
+        .sort({ checkInAt: 1 })
+        .populate('room', 'number status');
+    const now = new Date();
+
+    return reservations.map(reservation => {
+        const reservationData = reservation.toObject();
+        if (!reservation.checkInAt) {
+            return {
+                ...reservationData,
+                settlementEstimate: null
+            };
+        }
+
+        const actualNights = getStayNights(reservation.checkInAt, now);
+        const roomSubtotalCents = toCents(reservation.nightlyRate) * actualNights;
+        if (!Number.isSafeInteger(roomSubtotalCents)) {
+            throw new AppError(
+                `El importe de la estancia de la habitación ${reservation.roomNumber} supera el límite permitido`,
+                400
+            );
+        }
+
+        return {
+            ...reservationData,
+            settlementEstimate: {
+                actualNights,
+                nightlyRate: reservation.nightlyRate,
+                roomSubtotal: roomSubtotalCents / 100,
+                asOf: now
+            }
+        };
+    });
 };
 
 const checkInReservation = async reservationId => {
@@ -282,6 +543,8 @@ const createReservation = async ({
 module.exports = {
     getPendingCheckIns,
     checkInReservation,
+    getPendingCheckOuts,
+    checkOutReservation,
     getAvailableRooms,
     createReservation
 };
