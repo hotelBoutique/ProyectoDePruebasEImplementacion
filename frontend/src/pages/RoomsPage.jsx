@@ -17,6 +17,8 @@ const ROOM_STATUSES = [
   { value: 'ocupada', label: 'Ocupada' },
   { value: 'mantenimiento', label: 'Mantenimiento' },
   { value: 'fuera de servicio', label: 'Fuera de servicio' },
+  { value: 'limpieza', label: 'En limpieza' },
+  { value: 'desinfeccion', label: 'En desinfección' },
 ];
 
 export default function RoomsPage({

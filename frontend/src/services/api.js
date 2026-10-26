@@ -153,3 +153,26 @@ export function createReservation(token, reservation) {
     body: JSON.stringify(reservation),
   });
 }
+
+export function getPendingCheckIns(token) {
+  return apiRequest('/reservations/check-ins/pending', { token });
+}
+
+export function checkInReservation(token, reservationId) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/check-in`, {
+    method: 'POST',
+    token,
+  });
+}
+
+export function getPendingCheckOuts(token) {
+  return apiRequest('/reservations/check-outs/pending', { token });
+}
+
+export function checkOutReservation(token, reservationId, settlement) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/check-out`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify(settlement),
+  });
+}
