@@ -78,6 +78,27 @@ export function getReceptionDashboard(token) {
   return apiRequest('/reception/dashboard', { token });
 }
 
+function getReceptionReport(token, report, date) {
+  const query = date ? `?${new URLSearchParams({ date }).toString()}` : '';
+  return apiRequest(`/reception/reports/${report}${query}`, { token });
+}
+
+export function getDailyReport(token, date) {
+  return getReceptionReport(token, 'daily', date);
+}
+
+export function getArrivalsReport(token, date) {
+  return getReceptionReport(token, 'arrivals', date);
+}
+
+export function getDeparturesReport(token, date) {
+  return getReceptionReport(token, 'departures', date);
+}
+
+export function getCurrentOccupancyReport(token) {
+  return getReceptionReport(token, 'occupancy');
+}
+
 export function getReceptionists(token) {
   return apiRequest('/users', { token });
 }

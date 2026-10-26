@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
+import ArrivalsReportPage from './pages/ArrivalsReportPage.jsx';
 import AvailabilityPage from './pages/AvailabilityPage.jsx';
 import CheckInPage from './pages/CheckInPage.jsx';
 import CheckOutPage from './pages/CheckOutPage.jsx';
 import ConsumptionPage from './pages/ConsumptionPage.jsx';
+import CurrentOccupancyPage from './pages/CurrentOccupancyPage.jsx';
+import DailyReportPage from './pages/DailyReportPage.jsx';
+import DeparturesReportPage from './pages/DeparturesReportPage.jsx';
 import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import OccupancyReportPage from './pages/OccupancyReportPage.jsx';
@@ -482,6 +486,14 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <OccupancyReportPage token={token} />
           ) : isAdmin && activeItem === 'reports-income' ? (
             <IncomeReportPage token={token} />
+          ) : !isAdmin && activeItem === 'reception-reports-daily' ? (
+            <DailyReportPage token={token} onNavigate={selectItem} />
+          ) : !isAdmin && activeItem === 'reception-reports-arrivals' ? (
+            <ArrivalsReportPage token={token} onNavigate={selectItem} />
+          ) : !isAdmin && activeItem === 'reception-reports-departures' ? (
+            <DeparturesReportPage token={token} onNavigate={selectItem} />
+          ) : !isAdmin && activeItem === 'reception-reports-occupancy' ? (
+            <CurrentOccupancyPage token={token} />
           ) : isAdmin && activeItem === 'reports-sales' ? (
             <SalesReportPage token={token} />
           ) : !isAdmin && activeItem === 'reception-check-in' ? (
