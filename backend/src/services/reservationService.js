@@ -100,6 +100,10 @@ const getStoredConsumptionsTotalCents = consumptions => {
     }
 
     return consumptions.reduce((totalCents, consumption, index) => {
+        if (consumption.status === 'anulado') {
+            return totalCents;
+        }
+
         const quantity = Number(consumption.quantity);
         const unitPriceCents = toCents(Number(consumption.unitPrice));
         const subtotalCents = toCents(Number(consumption.subtotal));
@@ -129,8 +133,136 @@ const getStoredConsumptionsTotalCents = consumptions => {
     }, 0);
 };
 
+const getReservationConsumptions = async reservationId => {
+    const reservation = await Reservation.findById(reservationId)
+        .select('status roomNumber consumptions');
+
+    if (!reservation) {
+        throw new AppError('La reservación no existe', 404);
+    }
+
+    if (!['ocupada', 'finalizada'].includes(reservation.status)) {
+        throw new AppError('Solo se pueden consultar consumos de una estancia ocupada o finalizada', 409);
+    }
+
+    const consumptions = (reservation.consumptions || []).map(item => {
+        const data = item.toObject ? item.toObject() : { ...item };
+        return data;
+    });
+
+    return {
+        reservationId,
+        roomNumber: reservation.roomNumber,
+        status: reservation.status,
+        consumptions,
+        activeConsumptions: consumptions.filter(item => item.status !== 'anulado'),
+        voidedConsumptions: consumptions.filter(item => item.status === 'anulado'),
+        total: consumptions
+            .filter(item => item.status !== 'anulado')
+            .reduce((total, item) => total + Number(item.subtotal || 0), 0)
+    };
+};
+
+const updateReservationConsumption = async (reservationId, consumptionId, changes) => {
+    if (!changes || typeof changes !== 'object' || Array.isArray(changes)) {
+        throw new AppError('Los datos del consumo son inválidos', 400);
+    }
+
+    const allowedFields = ['description', 'quantity', 'unitPrice'];
+    const fields = Object.keys(changes);
+    if (!fields.length) {
+        throw new AppError('Indica al menos un dato para corregir', 400);
+    }
+    if (fields.some(field => !allowedFields.includes(field))) {
+        throw new AppError('La solicitud contiene datos de consumo no editables', 400);
+    }
+
+    const reservation = await Reservation.findById(reservationId);
+    if (!reservation) {
+        throw new AppError('La reservación no existe', 404);
+    }
+    if (reservation.status !== 'ocupada') {
+        throw new AppError('Solo se pueden corregir consumos antes de cerrar la cuenta', 409);
+    }
+
+    const consumption = reservation.consumptions.id(consumptionId);
+    if (!consumption) {
+        throw new AppError('El consumo no existe en esta reservación', 404);
+    }
+    if (consumption.status === 'anulado') {
+        throw new AppError('No se puede corregir un consumo anulado', 409);
+    }
+
+    const description = changes.description === undefined
+        ? consumption.description
+        : changes.description.trim();
+    const quantity = changes.quantity === undefined
+        ? Number(consumption.quantity)
+        : Number(changes.quantity);
+    const unitPrice = changes.unitPrice === undefined
+        ? Number(consumption.unitPrice)
+        : Number(changes.unitPrice);
+
+    if (description.length < 2 || description.length > 120) {
+        throw new AppError('El concepto debe tener entre 2 y 120 caracteres', 400);
+    }
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
+        throw new AppError('La cantidad debe ser un entero entre 1 y 1000', 400);
+    }
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+        throw new AppError('El precio unitario debe ser un número mayor o igual a 0', 400);
+    }
+
+    const unitPriceCents = toCents(unitPrice);
+    const subtotalCents = unitPriceCents * quantity;
+    if (!Number.isSafeInteger(unitPriceCents) || !Number.isSafeInteger(subtotalCents)) {
+        throw new AppError('El subtotal del consumo supera el límite permitido', 400);
+    }
+
+    consumption.description = description;
+    consumption.quantity = quantity;
+    consumption.unitPrice = unitPriceCents / 100;
+    consumption.subtotal = subtotalCents / 100;
+    consumption.amount = subtotalCents / 100;
+
+    await reservation.save();
+    return reservation;
+};
+
+const voidReservationConsumption = async (reservationId, consumptionId, reason, voidedBy) => {
+    const normalizedReason = typeof reason === 'string' ? reason.trim() : '';
+    if (normalizedReason.length < 3 || normalizedReason.length > 500) {
+        throw new AppError('El motivo de anulación debe tener entre 3 y 500 caracteres', 400);
+    }
+
+    const reservation = await Reservation.findById(reservationId);
+    if (!reservation) {
+        throw new AppError('La reservación no existe', 404);
+    }
+    if (reservation.status !== 'ocupada') {
+        throw new AppError('Solo se pueden anular consumos antes de cerrar la cuenta', 409);
+    }
+
+    const consumption = reservation.consumptions.id(consumptionId);
+    if (!consumption) {
+        throw new AppError('El consumo no existe en esta reservación', 404);
+    }
+    if (consumption.status === 'anulado') {
+        throw new AppError('El consumo ya fue anulado', 409);
+    }
+
+    consumption.status = 'anulado';
+    consumption.voidReason = normalizedReason;
+    consumption.voidedAt = new Date();
+    consumption.voidedBy = voidedBy;
+
+    await reservation.save();
+    return reservation;
+};
+
 const addReservationConsumption = async (reservationId, consumption) => {
     const { charges } = normalizeAdditionalCharges([consumption]);
+    charges[0].status = 'registrado';
     const updatedReservation = await Reservation.findOneAndUpdate(
         { _id: reservationId, status: 'ocupada' },
         { $push: { consumptions: charges[0] } },
@@ -282,7 +414,9 @@ const checkOutReservation = async ({
                             actualNights,
                             nightlyRate: reservation.nightlyRate,
                             roomSubtotal: roomSubtotalCents / 100,
-                            consumptions: reservation.consumptions || [],
+                            consumptions: (reservation.consumptions || []).filter(
+                                consumption => consumption.status !== 'anulado'
+                            ),
                             consumptionsTotal: consumptionsCents / 100,
                             additionalCharges: charges,
                             additionalChargesTotal: additionalChargesCents / 100,
@@ -904,4 +1038,7 @@ module.exports = {
     createReservation,
     updateReservation,
     cancelReservation,
+    getReservationConsumptions,
+    updateReservationConsumption,
+    voidReservationConsumption
 };

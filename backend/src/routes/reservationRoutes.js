@@ -241,6 +241,64 @@ router.post(
     reservationController.checkOutReservation
 );
 
+router.get(
+    '/:id/consumptions',
+    restrictTo(ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    validate,
+    reservationController.getReservationConsumptions
+);
+
+router.patch(
+    '/:id/consumptions/:consumptionId',
+    restrictTo(ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    param('consumptionId')
+        .isMongoId()
+        .withMessage('El identificador del consumo no es válido'),
+    body().custom((_, { req }) => {
+        if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+            throw new Error('Los datos del consumo son inválidos');
+        }
+        const allowed = ['description', 'quantity', 'unitPrice'];
+        const fields = Object.keys(req.body);
+        if (!fields.length) throw new Error('Indica al menos un dato para corregir');
+        if (fields.some(field => !allowed.includes(field))) {
+            throw new Error('La solicitud contiene datos de consumo no editables');
+        }
+        return true;
+    }),
+    body('description').optional().trim().isLength({ min: 2, max: 120 }),
+    body('quantity').optional().isInt({ min: 1, max: 1000 }).toInt(),
+    body('unitPrice').optional().isFloat({ min: 0 }).toFloat(),
+    validate,
+    reservationController.updateReservationConsumption
+);
+
+router.post(
+    '/:id/consumptions/:consumptionId/void',
+    restrictTo(ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    param('consumptionId')
+        .isMongoId()
+        .withMessage('El identificador del consumo no es válido'),
+    body('reason')
+        .isString()
+        .withMessage('El motivo de anulación es obligatorio')
+        .bail()
+        .trim()
+        .isLength({ min: 3, max: 500 })
+        .withMessage('El motivo de anulación debe tener entre 3 y 500 caracteres'),
+    validate,
+    reservationController.voidReservationConsumption
+);
+
 router.post(
     '/:id/consumptions',
     restrictTo(ROLES.RECEPCIONISTA),

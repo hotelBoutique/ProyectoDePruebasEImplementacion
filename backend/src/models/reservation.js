@@ -65,6 +65,65 @@ const additionalChargeSchema = new mongoose.Schema(
     { _id: false }
 );
 
+const consumptionSchema = new mongoose.Schema(
+    {
+        description: {
+            type: String,
+            required: true,
+            trim: true,
+            minlength: 2,
+            maxlength: 120
+        },
+        amount: {
+            type: Number,
+            min: 0
+        },
+        quantity: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+        unitPrice: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        subtotal: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        status: {
+            type: String,
+            enum: ['registrado', 'anulado'],
+            default: 'registrado',
+            required: true
+        },
+        correctionReason: {
+            type: String,
+            trim: true,
+            maxlength: 500
+        },
+        voidedAt: Date,
+        voidedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        voidReason: {
+            type: String,
+            trim: true,
+            maxlength: 500
+        }
+    },
+    { timestamps: true }
+);
+
+consumptionSchema.pre('validate', function normalizeConsumptionAmount() {
+    if (this.amount == null && this.subtotal != null) {
+        this.amount = this.subtotal;
+    }
+});
+
 const settlementSchema = new mongoose.Schema(
     {
         status: {
@@ -203,7 +262,7 @@ const reservationSchema = new mongoose.Schema(
             type: Date
         },
         consumptions: {
-            type: [additionalChargeSchema],
+            type: [consumptionSchema],
             default: []
         },
         checkOutAt: {

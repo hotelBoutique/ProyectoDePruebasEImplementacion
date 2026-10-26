@@ -234,7 +234,8 @@ describe('reservationService', () => {
                         quantity: 3,
                         unitPrice: 12.5,
                         subtotal: 37.5,
-                        amount: 37.5
+                        amount: 37.5,
+                        status: 'registrado'
                     }
                 }
             },

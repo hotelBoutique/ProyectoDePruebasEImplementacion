@@ -55,6 +55,45 @@ const checkOutReservation = catchAsync(async (req, res) => {
     });
 });
 
+const getReservationConsumptions = catchAsync(async (req, res) => {
+    const result = await reservationService.getReservationConsumptions(req.params.id);
+
+    res.status(200).json({
+        status: 'success',
+        results: result.consumptions.length,
+        data: result
+    });
+});
+
+const updateReservationConsumption = catchAsync(async (req, res) => {
+    const reservation = await reservationService.updateReservationConsumption(
+        req.params.id,
+        req.params.consumptionId,
+        req.body
+    );
+
+    res.status(200).json({
+        status: 'success',
+        message: 'El consumo se corrigió correctamente',
+        data: { reservation }
+    });
+});
+
+const voidReservationConsumption = catchAsync(async (req, res) => {
+    const reservation = await reservationService.voidReservationConsumption(
+        req.params.id,
+        req.params.consumptionId,
+        req.body.reason,
+        req.user._id
+    );
+
+    res.status(200).json({
+        status: 'success',
+        message: 'El consumo se anuló correctamente',
+        data: { reservation }
+    });
+});
+
 const addReservationConsumption = catchAsync(async (req, res) => {
     const reservation = await reservationService.addReservationConsumption(
         req.params.id,
@@ -170,11 +209,14 @@ module.exports = {
     getPendingCheckOuts,
     checkOutReservation,
     addReservationConsumption,
+    getReservationConsumptions,
+    updateReservationConsumption,
+    voidReservationConsumption,
     getAvailableRooms,
     getReservations,
     getSettlementHistory,
     getReservationById,
     createReservation,
     updateReservation,
-    cancelReservation,
+    cancelReservation
 };
