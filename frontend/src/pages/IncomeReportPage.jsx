@@ -72,7 +72,7 @@ export default function IncomeReportPage({ token }) {
   const totals = report?.totals || {};
   const summary = report ? [
     { label: 'Alojamiento', value: totals.accommodation, detail: 'Ingresos por estancias finalizadas' },
-    { label: 'Venta de productos', value: totals.products, detail: 'Consumos registrados en las estancias' },
+    { label: 'Consumos', value: totals.products, detail: 'Productos registrados en las estancias' },
     { label: 'Cargos adicionales', value: totals.additionalCharges, detail: 'Otros cargos incluidos al cierre' },
     { label: 'Total recaudado', value: totals.collected, detail: `${report.settlementCount} ${report.settlementCount === 1 ? 'liquidación pagada' : 'liquidaciones pagadas'}` },
   ] : [];
@@ -129,7 +129,7 @@ export default function IncomeReportPage({ token }) {
             Periodo del {formatDate(report.startDate)} al {formatDate(report.endDate)} · {report.settlementCount} {report.settlementCount === 1 ? 'liquidación pagada' : 'liquidaciones pagadas'}
           </div>
 
-          <section className="occupancy-report-summary" aria-label="Resumen de ingresos">
+      <section className="occupancy-report-summary income-report-summary" aria-label="Resumen de ingresos">
             {summary.map((item) => (
               <article className="occupancy-report-metric income-report-metric" key={item.label}>
                 <span className="card-kicker">{item.label.toUpperCase()}</span>
@@ -189,40 +189,6 @@ export default function IncomeReportPage({ token }) {
             )}
           </section>
 
-          <section className="receptionist-list-card reservation-list-card occupancy-report-list" aria-label="Productos vendidos">
-            <div className="receptionist-list-heading">
-              <div>
-                <span className="card-kicker">DETALLE DE CONSUMOS</span>
-                <h2>Productos vendidos</h2>
-              </div>
-              <span className="reservation-result-count">{report.products.length} {report.products.length === 1 ? 'producto' : 'productos'}</span>
-            </div>
-
-            {report.products.length ? (
-              <div className="receptionist-table-wrap">
-                <table className="receptionist-table reservations-table occupancy-report-table income-report-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Producto</th>
-                      <th scope="col">Cantidad</th>
-                      <th scope="col">Ingresos</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.products.map((product) => (
-                      <tr key={product.description}>
-                        <td data-label="Producto"><strong>{product.description}</strong></td>
-                        <td data-label="Cantidad">{product.quantity}</td>
-                        <td data-label="Ingresos"><strong>{formatCurrency(product.total)}</strong></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="occupancy-report-empty">No se registraron consumos de productos en este periodo.</p>
-            )}
-          </section>
         </>
       )}
     </section>

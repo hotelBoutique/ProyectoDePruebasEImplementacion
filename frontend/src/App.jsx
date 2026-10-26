@@ -7,6 +7,7 @@ import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import OccupancyReportPage from './pages/OccupancyReportPage.jsx';
 import IncomeReportPage from './pages/IncomeReportPage.jsx';
+import SalesReportPage from './pages/SalesReportPage.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
 import SettlementHistoryPage from './pages/SettlementHistoryPage.jsx';
@@ -467,6 +468,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <OccupancyReportPage token={token} />
           ) : isAdmin && activeItem === 'reports-income' ? (
             <IncomeReportPage token={token} />
+          ) : isAdmin && activeItem === 'reports-sales' ? (
+            <SalesReportPage token={token} />
           ) : !isAdmin && activeItem === 'reception-check-in' ? (
             <CheckInPage token={token} />
           ) : !isAdmin && activeItem === 'reception-check-out' ? (
