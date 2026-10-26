@@ -140,3 +140,14 @@ export function createReservation(token, reservation) {
     body: JSON.stringify(reservation),
   });
 }
+
+export function getPendingCheckIns(token) {
+  return apiRequest('/reservations/check-ins/pending', { token });
+}
+
+export function checkInReservation(token, reservationId) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/check-in`, {
+    method: 'POST',
+    token,
+  });
+}

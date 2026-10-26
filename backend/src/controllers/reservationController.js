@@ -1,6 +1,26 @@
 const reservationService = require('../services/reservationService');
 const catchAsync = require('../utils/catchAsync');
 
+const getPendingCheckIns = catchAsync(async (req, res) => {
+    const reservations = await reservationService.getPendingCheckIns();
+
+    res.status(200).json({
+        status: 'success',
+        results: reservations.length,
+        data: { reservations }
+    });
+});
+
+const checkInReservation = catchAsync(async (req, res) => {
+    const reservation = await reservationService.checkInReservation(req.params.id);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'El check-in se registró correctamente y la habitación ahora está ocupada',
+        data: { reservation }
+    });
+});
+
 const getAvailableRooms = catchAsync(async (req, res) => {
     const rooms = await reservationService.getAvailableRooms(
         req.query.checkIn,
@@ -42,6 +62,8 @@ const createReservation = catchAsync(async (req, res) => {
 });
 
 module.exports = {
+    getPendingCheckIns,
+    checkInReservation,
     getAvailableRooms,
     createReservation
 };

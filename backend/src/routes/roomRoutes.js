@@ -8,7 +8,14 @@ const { ROLES } = require('../constants/roles');
 
 const router = express.Router();
 
-const ROOM_STATUSES = ['disponible', 'ocupada', 'mantenimiento', 'fuera de servicio'];
+const ROOM_STATUSES = [
+    'disponible',
+    'ocupada',
+    'mantenimiento',
+    'fuera de servicio',
+    'limpieza',
+    'desinfeccion'
+];
 const ROOM_FIELDS = ['number', 'type', 'description', 'capacity', 'price', 'status'];
 
 const requireObjectBody = (req, res, next) => {

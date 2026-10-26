@@ -882,6 +882,19 @@ h1 {
 .reservation-receipt dl > div { display: flex; flex-direction: column; gap: 4px; }
 .reservation-receipt dt { color: var(--color-text-muted); font-size: 9px; }
 .reservation-receipt dd { margin: 0; color: var(--color-primary); font-size: 11px; font-weight: 600; }
+.check-in-list { display: grid; gap: 14px; }
+.check-in-card { padding: 23px 25px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; box-shadow: 0 10px 24px rgba(26, 46, 59, .04); }
+.check-in-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.check-in-card-heading .eyebrow { margin: 0 0 6px; }
+.check-in-card-heading h2 { margin: 0; color: var(--color-primary); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; }
+.check-in-card-heading p:last-child { margin: 5px 0 0; color: var(--color-text-muted); font-size: 10px; }
+.check-in-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 22px; margin: 20px 0; padding: 17px 0; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+.check-in-details > div { min-width: 0; }
+.check-in-details dt { margin-bottom: 5px; color: var(--color-text-muted); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+.check-in-details dd { margin: 0; overflow-wrap: anywhere; color: var(--color-primary); font-size: 11px; font-weight: 600; }
+.check-in-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.check-in-card-footer p { max-width: 390px; margin: 0; color: var(--color-text-muted); font-size: 9px; line-height: 1.6; }
+.check-in-empty-state { padding: 25px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; text-align: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 760px) {
@@ -909,6 +922,10 @@ h1 {
   .reservation-search-footer { align-items: stretch; }
   .reservation-search-footer p { margin-right: 0; }
   .reservation-receipt dl { grid-template-columns: 1fr; }
+  .check-in-card-heading { flex-direction: column; }
+  .check-in-details { grid-template-columns: 1fr; }
+  .check-in-card-footer { align-items: stretch; flex-direction: column; }
+  .check-in-card-footer .button-primary { width: 100%; }
 }
 
 @media (max-width: 560px) {

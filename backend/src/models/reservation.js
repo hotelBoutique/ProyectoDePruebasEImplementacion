@@ -80,6 +80,9 @@ const reservationSchema = new mongoose.Schema(
             default: 'reservada',
             required: true
         },
+        checkInAt: {
+            type: Date
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
