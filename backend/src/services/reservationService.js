@@ -590,6 +590,51 @@ const getReservationById = async reservationId => {
     return reservation;
 };
 
+const cancelReservation = async (reservationId, reason, canceledBy) => {
+    const normalizedReason = typeof reason === 'string' ? reason.trim() : '';
+    if (normalizedReason.length < 3 || normalizedReason.length > 500) {
+        throw new AppError('El motivo de cancelación debe tener entre 3 y 500 caracteres', 400);
+    }
+
+    const reservation = await Reservation.findOneAndUpdate(
+        {
+            _id: reservationId,
+            status: 'reservada',
+            checkInAt: { $exists: false }
+        },
+        {
+            $set: {
+                status: 'cancelada',
+                cancellation: {
+                    reason: normalizedReason,
+                    canceledAt: new Date(),
+                    canceledBy
+                }
+            }
+        },
+        { new: true, runValidators: true }
+    );
+
+    if (reservation) {
+        return reservation;
+    }
+
+    const existingReservation = await Reservation.findById(reservationId).select('status checkInAt');
+    if (!existingReservation) {
+        throw new AppError('La reservación no existe', 404);
+    }
+
+    if (existingReservation.status === 'cancelada') {
+        throw new AppError('La reservación ya fue cancelada', 409);
+    }
+
+    if (existingReservation.status === 'ocupada' || existingReservation.checkInAt) {
+        throw new AppError('No se puede cancelar: ya se registró el check-in', 409);
+    }
+
+    throw new AppError('Solo se pueden cancelar reservaciones pendientes de check-in', 409);
+};
+
 const createReservation = async ({
     guest,
     roomId,
@@ -695,5 +740,6 @@ module.exports = {
     getAvailableRooms,
     getReservations,
     getReservationById,
+    cancelReservation,
     createReservation
 };

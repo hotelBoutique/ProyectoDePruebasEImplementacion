@@ -101,6 +101,20 @@ const getReservationById = catchAsync(async (req, res) => {
     });
 });
 
+const cancelReservation = catchAsync(async (req, res) => {
+    const reservation = await reservationService.cancelReservation(
+        req.params.id,
+        req.body.reason,
+        req.user._id
+    );
+
+    res.status(200).json({
+        status: 'success',
+        message: 'La reservación se canceló y sus fechas quedaron disponibles',
+        data: { reservation }
+    });
+});
+
 const createReservation = catchAsync(async (req, res) => {
     const reservation = await reservationService.createReservation({
         ...req.body,
@@ -136,5 +150,6 @@ module.exports = {
     getAvailableRooms,
     getReservations,
     getReservationById,
+    cancelReservation,
     createReservation
 };
