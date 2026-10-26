@@ -37,6 +37,18 @@
     {
       "key": "runTag",
       "value": ""
+    },
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "tomorrow",
+      "value": ""
+    },
+    {
+      "key": "dayAfterTomorrow",
+      "value": ""
     }
   ],
   "item": [
@@ -59,6 +71,20 @@
             }
           },
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Identificador único y fechas UTC para esta ejecución; las siguientes solicitudes dependen de ellos.",
+                  "const utcDate = (offsetDays) => new Date(Date.now() + offsetDays * 86400000).toISOString().slice(0, 10);",
+                  "pm.collectionVariables.set(\"runTag\", String(Date.now()));",
+                  "pm.collectionVariables.set(\"today\", utcDate(0));",
+                  "pm.collectionVariables.set(\"tomorrow\", utcDate(1));",
+                  "pm.collectionVariables.set(\"dayAfterTomorrow\", utcDate(2));"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {

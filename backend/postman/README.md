@@ -27,6 +27,10 @@ npx --yes newman run backend/postman/Hotel-Boutique-API.postman_collection.json 
 
 Para Newman, crea una copia local del archivo de entorno de ejemplo, rellena las credenciales en esa copia y evita guardar secretos o tokens en Git.
 
+## Integración continua
+
+El workflow `.github/workflows/ci.yml` ejecuta la colección con Newman en cada push y pull request a `main`, después de que pasen los tests de Jest. Levanta MongoDB como replica set en el runner, crea el administrador con `npm run seed:admin` (lee `ADMIN_EMAIL` y `ADMIN_PASSWORD`) e inicia la API antes de correr la colección. El reporte JUnit queda como artefacto `newman-resultados` de la ejecución.
+
 ## Qué valida
 
 - Códigos HTTP esperados y estructuras de respuesta JSON para cada ruta.
