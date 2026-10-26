@@ -12,6 +12,11 @@ jest.mock('../models/room', () => ({
     updateOne: jest.fn()
 }));
 
+jest.mock('../models/product', () => ({
+    findOne: jest.fn(),
+    updateOne: jest.fn()
+}));
+
 jest.mock('mongoose', () => ({
     ...jest.requireActual('mongoose'),
     startSession: jest.fn()
@@ -20,6 +25,7 @@ jest.mock('mongoose', () => ({
 const mongoose = require('mongoose');
 const Reservation = require('../models/reservation');
 const Room = require('../models/room');
+const Product = require('../models/product');
 const {
     addReservationConsumption,
     checkInReservation,
@@ -133,6 +139,57 @@ describe('reservationService', () => {
                 $set: expect.objectContaining({ nights: 3, nightlyRate: 150, totalAmount: 450 })
             }),
             expect.objectContaining({ new: true, runValidators: true })
+        );
+    });
+
+    it('registers a catalog product, subtracts stock and calculates subtotal', async () => {
+        const session = createSessionMock();
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                _id: 'reservation-id',
+                status: 'ocupada'
+            })
+        });
+        Product.findOne.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                _id: '507f1f77bcf86cd799439011',
+                name: 'Agua mineral',
+                price: 2500,
+                stock: 5,
+                isActive: true
+            })
+        });
+        Product.updateOne.mockResolvedValue({ matchedCount: 1 });
+        Reservation.findOneAndUpdate.mockResolvedValue({
+            _id: 'reservation-id',
+            consumptions: [{ description: 'Agua mineral', quantity: 2, subtotal: 5000 }]
+        });
+
+        await expect(addReservationConsumption('reservation-id', {
+            productId: '507f1f77bcf86cd799439011',
+            quantity: 2
+        })).resolves.toMatchObject({
+            consumptions: [{ description: 'Agua mineral', quantity: 2, subtotal: 5000 }]
+        });
+
+        expect(Product.updateOne).toHaveBeenCalledWith(
+            expect.objectContaining({ stock: { $gte: 2 } }),
+            { $inc: { stock: -2 } },
+            { session }
+        );
+        expect(Reservation.findOneAndUpdate).toHaveBeenCalledWith(
+            { _id: 'reservation-id', status: 'ocupada' },
+            expect.objectContaining({
+                $push: {
+                    consumptions: expect.objectContaining({
+                        description: 'Agua mineral',
+                        quantity: 2,
+                        unitPrice: 2500,
+                        subtotal: 5000
+                    })
+                }
+            }),
+            expect.objectContaining({ runValidators: true, session })
         );
     });
 

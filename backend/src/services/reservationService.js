@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const Reservation = require('../models/reservation');
 const Room = require('../models/room');
+const Product = require('../models/product');
 const AppError = require('../utils/AppError');
 const { getDateRange, getTodayDateOnly, isValidDateOnly } = require('../utils/reservationDates');
 
@@ -261,6 +262,80 @@ const voidReservationConsumption = async (reservationId, consumptionId, reason, 
 };
 
 const addReservationConsumption = async (reservationId, consumption) => {
+    if (consumption?.productId) {
+        if (!mongoose.isValidObjectId(consumption.productId)) {
+            throw new AppError('El producto seleccionado no es válido', 400);
+        }
+        const quantity = Number(consumption.quantity);
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
+            throw new AppError('La cantidad debe ser un entero entre 1 y 1000', 400);
+        }
+
+        const session = await mongoose.startSession();
+        let updatedReservation;
+        try {
+            await session.withTransaction(async () => {
+                const reservation = await Reservation.findById(reservationId).session(session);
+                if (!reservation) {
+                    throw new AppError('La reservación no existe', 404);
+                }
+                if (reservation.status !== 'ocupada') {
+                    throw new AppError('Solo se pueden registrar consumos durante una estancia activa', 409);
+                }
+
+                const product = await Product.findOne({
+                    _id: consumption.productId,
+                    isActive: true
+                }).session(session);
+                if (!product) {
+                    throw new AppError('El producto no existe o está desactivado', 404);
+                }
+                if (!Number.isInteger(product.stock) || product.stock < quantity) {
+                    throw new AppError('No hay stock suficiente para registrar este consumo', 409);
+                }
+
+                const unitPriceCents = toCents(product.price);
+                const subtotalCents = unitPriceCents * quantity;
+                if (!Number.isSafeInteger(unitPriceCents) || !Number.isSafeInteger(subtotalCents)) {
+                    throw new AppError('El subtotal del consumo supera el límite permitido', 400);
+                }
+
+                const stockUpdate = await Product.updateOne(
+                    { _id: product._id, isActive: true, stock: { $gte: quantity } },
+                    { $inc: { stock: -quantity } },
+                    { session }
+                );
+                if (stockUpdate.matchedCount === 0) {
+                    throw new AppError('El stock cambió; actualice y vuelva a intentar', 409);
+                }
+
+                updatedReservation = await Reservation.findOneAndUpdate(
+                    { _id: reservationId, status: 'ocupada' },
+                    {
+                        $push: {
+                            consumptions: {
+                                product: product._id,
+                                description: product.name,
+                                quantity,
+                                unitPrice: unitPriceCents / 100,
+                                subtotal: subtotalCents / 100,
+                                amount: subtotalCents / 100,
+                                status: 'registrado'
+                            }
+                        }
+                    },
+                    { new: true, runValidators: true, session }
+                );
+                if (!updatedReservation) {
+                    throw new AppError('La reservación cambió de estado; actualice e intente nuevamente', 409);
+                }
+            });
+            return updatedReservation;
+        } finally {
+            await session.endSession();
+        }
+    }
+
     const { charges } = normalizeAdditionalCharges([consumption]);
     charges[0].status = 'registrado';
     const updatedReservation = await Reservation.findOneAndUpdate(

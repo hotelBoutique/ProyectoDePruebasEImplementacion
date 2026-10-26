@@ -305,7 +305,12 @@ router.post(
     param('id')
         .isMongoId()
         .withMessage('El identificador de la reservación no es válido'),
+    body('productId')
+        .optional()
+        .isMongoId()
+        .withMessage('El producto seleccionado no es válido'),
     body('description')
+        .if(body('productId').not().exists())
         .isString()
         .withMessage('El concepto del consumo es obligatorio')
         .bail()
@@ -317,6 +322,7 @@ router.post(
         .withMessage('La cantidad debe ser un entero entre 1 y 1000')
         .toInt(),
     body('unitPrice')
+        .if(body('productId').not().exists())
         .isFloat({ min: 0 })
         .withMessage('El precio unitario debe ser un número mayor o igual a 0')
         .toFloat(),
