@@ -5,6 +5,7 @@ const Room = require('../models/room');
 const Product = require('../models/product');
 const AppError = require('../utils/AppError');
 const { getDateRange, getTodayDateOnly, isValidDateOnly } = require('../utils/reservationDates');
+const { getNextReceiptNumber } = require('./receiptService');
 
 const ACTIVE_RESERVATION_STATUSES = ['reservada', 'ocupada'];
 const UNAVAILABLE_ROOM_STATUSES = [
@@ -478,6 +479,8 @@ const checkOutReservation = async ({
                 );
             }
 
+            const receiptNumber = await getNextReceiptNumber(session);
+
             finalizedReservation = await Reservation.findOneAndUpdate(
                 { _id: reservation._id, status: 'ocupada' },
                 {
@@ -498,7 +501,8 @@ const checkOutReservation = async ({
                             totalAmount: totalCents / 100,
                             paidAmount: paidAmountCents / 100,
                             paymentMethod,
-                            paidAt: checkOutAt
+                            paidAt: checkOutAt,
+                            receiptNumber
                         }
                     }
                 },
@@ -1054,6 +1058,7 @@ const getPayments = async ({
             $or: [
                 { 'guest.fullName': { $regex: searchPattern, $options: 'i' } },
                 { roomNumber: { $regex: searchPattern, $options: 'i' } },
+                { 'settlement.receiptNumber': { $regex: searchPattern, $options: 'i' } },
                 {
                     $expr: {
                         $regexMatch: {

@@ -1,4 +1,5 @@
 const reservationService = require('../services/reservationService');
+const receiptService = require('../services/receiptService');
 const catchAsync = require('../utils/catchAsync');
 
 const getPendingCheckIns = catchAsync(async (req, res) => {
@@ -156,6 +157,16 @@ const getPayments = catchAsync(async (req, res) => {
     });
 });
 
+const getReceipt = catchAsync(async (req, res) => {
+    const receipt = await receiptService.getReceipt(req.params.id);
+
+    res.status(200).json({
+        status: 'success',
+        message: `Comprobante ${receipt.receiptNumber} generado correctamente`,
+        data: { receipt }
+    });
+});
+
 const getPaymentById = catchAsync(async (req, res) => {
     const payment = await reservationService.getPaymentById(req.params.id);
 
@@ -241,6 +252,7 @@ module.exports = {
     getSettlementHistory,
     getPayments,
     getPaymentById,
+    getReceipt,
     getReservationById,
     createReservation,
     updateReservation,
