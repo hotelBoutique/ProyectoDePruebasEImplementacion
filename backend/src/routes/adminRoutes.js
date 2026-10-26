@@ -5,6 +5,7 @@ const {protect, restrictTo} = require('../middlewares/authMiddleware');
 const { ROLES } = require('../constants/roles');
 const validate = require('../middlewares/validate');
 const occupancyReportController = require('../controllers/occupancyReportController');
+const incomeReportController = require('../controllers/incomeReportController');
 const { isValidDateOnly } = require('../utils/reservationDates');
 
 const router = express.Router();
@@ -33,6 +34,30 @@ router.get(
         .withMessage('La fecha final debe ser igual o posterior a la fecha inicial'),
     validate,
     occupancyReportController.getOccupancyReport
+);
+
+router.get(
+    '/reports/income',
+    query(['startDate', 'endDate'])
+        .custom(value => typeof value === 'string')
+        .withMessage('Cada fecha admite un solo valor'),
+    query('startDate')
+        .notEmpty()
+        .withMessage('La fecha inicial es obligatoria')
+        .bail()
+        .custom(isValidDateOnly)
+        .withMessage('La fecha inicial debe tener formato AAAA-MM-DD y ser válida'),
+    query('endDate')
+        .notEmpty()
+        .withMessage('La fecha final es obligatoria')
+        .bail()
+        .custom(isValidDateOnly)
+        .withMessage('La fecha final debe tener formato AAAA-MM-DD y ser válida')
+        .bail()
+        .custom((endDate, { req }) => !isValidDateOnly(req.query.startDate) || endDate >= req.query.startDate)
+        .withMessage('La fecha final debe ser igual o posterior a la fecha inicial'),
+    validate,
+    incomeReportController.getIncomeReport
 );
 
 router.get('/dashboard', (req, res) => {

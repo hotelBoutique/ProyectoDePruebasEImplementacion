@@ -1035,6 +1035,13 @@ h1 {
 .occupancy-report-table td:nth-child(3),
 .occupancy-report-table td:nth-child(4) { min-width: 155px; white-space: normal; }
 .occupancy-report-empty { margin: 0; padding: 20px; color: var(--color-text-muted); font-size: 11px; }
+.income-report-page { gap: 18px; }
+.income-report-metric > strong { overflow-wrap: anywhere; font-family: inherit; font-size: clamp(16px, 1.7vw, 23px); font-weight: 600; }
+.income-report-table th:nth-child(n + 3),
+.income-report-table td:nth-child(n + 3) { min-width: 118px; text-align: right; }
+.income-report-table th:nth-child(2),
+.income-report-table td:nth-child(2) { min-width: 180px; }
+.income-report-table td:last-child { color: var(--color-primary); }
 .checkout-consumption-breakdown { margin: 0 0 18px; }
 .checkout-consumption-breakdown h3 { margin-bottom: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
