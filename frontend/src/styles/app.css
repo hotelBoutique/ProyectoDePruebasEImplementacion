@@ -1050,6 +1050,20 @@ h1 {
 .sales-report-page { gap: 18px; }
 .sales-report-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .sales-report-metric > strong { overflow-wrap: anywhere; font-family: inherit; font-size: clamp(16px, 1.7vw, 23px); font-weight: 600; }
+.daily-report-page { gap: 18px; }
+.daily-report-filter { grid-template-columns: minmax(0, 260px) auto auto; justify-content: start; }
+.daily-report-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.daily-report-metric > strong { overflow-wrap: anywhere; font-family: inherit; font-size: clamp(18px, 1.9vw, 26px); font-weight: 600; }
+.daily-report-metric > p::first-letter { text-transform: uppercase; }
+.daily-report-methods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--color-border); border-bottom: 1px solid var(--color-border); }
+.daily-report-methods > div { padding: 13px 20px; background: var(--color-surface); }
+.daily-report-methods dt { color: var(--color-text-muted); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.daily-report-methods dd { margin: 5px 0 0; color: var(--color-primary); font-size: 13px; font-weight: 600; }
+.daily-report-table td:first-child { color: var(--color-primary); font-weight: 600; }
+.daily-report-reason { min-width: 220px; white-space: normal; }
+.daily-report-metric-link { margin-top: 10px; padding: 0; color: var(--color-primary); background: none; border: 0; font-size: 10px; font-weight: 600; cursor: pointer; }
+.daily-report-metric-link:hover { text-decoration: underline; }
+.current-occupancy-toolbar { grid-template-columns: minmax(0, 260px) auto; justify-content: start; }
 .income-report-table th:nth-child(n + 3),
 .income-report-table td:nth-child(n + 3) { min-width: 118px; text-align: right; }
 .income-report-table th:nth-child(2),
@@ -1069,6 +1083,10 @@ h1 {
   .occupancy-report-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .occupancy-report-submit { grid-column: 1 / -1; }
   .occupancy-report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .daily-report-filter { grid-template-columns: 1fr 1fr; }
+  .daily-report-filter .form-field { grid-column: 1 / -1; }
+  .daily-report-methods { grid-template-columns: 1fr; }
+  .current-occupancy-toolbar { grid-template-columns: 1fr; }
   .rooms-create-action { width: 100%; }
   .rooms-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rooms-filters-actions { grid-column: 1 / -1; }
