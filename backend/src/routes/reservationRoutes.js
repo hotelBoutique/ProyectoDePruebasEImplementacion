@@ -168,7 +168,7 @@ router.patch(
 
 router.post(
     '/:id/cancel',
-    restrictTo(ROLES.ADMIN),
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
     param('id')
         .isMongoId()
         .withMessage('El identificador de la reservación no es válido'),

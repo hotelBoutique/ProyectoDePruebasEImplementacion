@@ -60,6 +60,7 @@ const RECEPTION_NAV_GROUPS = [
   { title: 'Reservaciones', icon: 'reservations', items: [
     { id: 'reception-reservations-list', label: 'Consultar reservaciones' },
     { id: 'reception-reservations-create', label: 'Nueva reservación' },
+    { id: 'reception-reservations-cancellations', label: 'Cancelar reservaciones' },
     { id: 'reception-check-in', label: 'Registrar check-in' },
   ] },
   { title: 'Consumos', icon: 'consumptions', items: [
@@ -454,6 +455,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               onNavigate={selectItem}
             />
           ) : isAdmin && activeItem === 'reservations-cancellations' ? (
+            <ReservationsPage token={token} mode="cancellations" />
+          ) : !isAdmin && activeItem === 'reception-reservations-cancellations' ? (
             <ReservationsPage token={token} mode="cancellations" />
           ) : isAdmin && activeItem === 'settlements-history' ? (
             <SettlementHistoryPage token={token} />

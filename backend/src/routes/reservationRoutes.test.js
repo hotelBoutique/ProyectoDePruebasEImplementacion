@@ -348,4 +348,42 @@ describe('/api/v1/reservations', () => {
         expect(unknown.status).toBe(400);
         expect(reservationService.updateReservationConsumption).not.toHaveBeenCalled();
     });
+
+    it('allows reception and administration to cancel reservations before check-in', async () => {
+        reservationService.cancelReservation.mockResolvedValue({
+            _id: '507f1f77bcf86cd799439012',
+            status: 'cancelada'
+        });
+
+        const receptionist = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/cancel')
+            .send({ reason: 'Huésped canceló su viaje' });
+        expect(receptionist.status).toBe(200);
+        expect(reservationService.cancelReservation).toHaveBeenCalledWith(
+            '507f1f77bcf86cd799439012',
+            'Huésped canceló su viaje',
+            '507f1f77bcf86cd799439011'
+        );
+
+        reservationService.cancelReservation.mockClear();
+        const admin = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/cancel')
+            .set('x-role', 'ADMIN')
+            .send({ reason: 'Cambio administrativo del viaje' });
+        expect(admin.status).toBe(200);
+        expect(reservationService.cancelReservation).toHaveBeenCalled();
+    });
+
+    it('validates cancellation reason and identifier', async () => {
+        const invalidReason = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/cancel')
+            .send({ reason: 'x' });
+        expect(invalidReason.status).toBe(400);
+
+        const invalidId = await request(app)
+            .post('/api/v1/reservations/invalid/cancel')
+            .send({ reason: 'Cambio de planes del huésped' });
+        expect(invalidId.status).toBe(400);
+        expect(reservationService.cancelReservation).not.toHaveBeenCalled();
+    });
 });
