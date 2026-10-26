@@ -7,7 +7,8 @@
     "dev": "cross-env NODE_ENV=development nodemon src/server.js",
     "start": "node src/server.js",
     "migrate:roles": "node src/scripts/migrateUserRoles.js",
-    "test": "cross-env NODE_ENV=test jest --detectOpenHandles"
+    "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
+    "test:unit": "cross-env NODE_ENV=test jest --config jest.unit.config.js --runInBand"
   },
   "keywords": [],
   "author": "",
