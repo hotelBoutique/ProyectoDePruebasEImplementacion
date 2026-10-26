@@ -8,12 +8,16 @@ const { ROLES } = require('../constants/roles');
 
 const router = express.Router();
 
-router.use(protect, restrictTo(ROLES.ADMIN));
+router.use(protect);
 
-router.get('/', productController.getProducts);
+router.get('/',
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    productController.getProducts
+);
 
 router.post(
     '/',
+    restrictTo(ROLES.ADMIN),
     body('name')
         .trim()
         .isLength({ min: 2, max: 100 })
@@ -50,6 +54,7 @@ const PRODUCT_FIELDS = ['name', 'description', 'category', 'price', 'stock', 'is
 
 router.patch(
     '/:id',
+    restrictTo(ROLES.ADMIN),
     param('id')
         .isMongoId()
         .withMessage('Identificador de producto inválido'),

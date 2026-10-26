@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { addReservationConsumption, getPendingCheckOuts } from '../services/api.js';
+import { addReservationConsumption, getPendingCheckOuts, getProducts } from '../services/api.js';
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('es-CO', {
@@ -18,21 +18,22 @@ function getErrorMessage(error) {
 export default function ConsumptionPage({ token }) {
   const [reservations, setReservations] = useState([]);
   const [selectedId, setSelectedId] = useState('');
-  const [description, setDescription] = useState('');
+  const [products, setProducts] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState('');
   const [quantity, setQuantity] = useState('1');
-  const [unitPrice, setUnitPrice] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [notice, setNotice] = useState(null);
 
   const selectedReservation = reservations.find((item) => item._id === selectedId);
+  const selectedProduct = products.find((product) => product._id === selectedProductId);
   const quantityValue = Number(quantity);
-  const unitPriceValue = Number(unitPrice);
-  const lineTotal = Number.isInteger(quantityValue)
+  const unitPriceValue = selectedProduct ? Number(selectedProduct.price) : Number.NaN;
+  const lineTotal = selectedProduct
+    && Number.isInteger(quantityValue)
     && quantityValue >= 1
-    && Number.isFinite(unitPriceValue)
-    && unitPriceValue >= 0
+    && quantityValue <= Number(selectedProduct.stock)
     ? Math.round(unitPriceValue * 100) * quantityValue / 100
     : null;
 
@@ -40,8 +41,18 @@ export default function ConsumptionPage({ token }) {
     setLoading(true);
     setLoadError('');
     try {
-      const response = await getPendingCheckOuts(token);
-      const activeReservations = response.data?.reservations || [];
+      const [reservationResponse, productResponse] = await Promise.all([
+        getPendingCheckOuts(token),
+        getProducts(token)
+      ]);
+      const activeReservations = reservationResponse.data?.reservations || [];
+      const activeProducts = (productResponse.data?.products || []).filter((product) => product.isActive);
+      setProducts(activeProducts);
+      setSelectedProductId((currentId) => (
+        activeProducts.some((product) => product._id === currentId)
+          ? currentId
+          : activeProducts[0]?._id || ''
+      ));
       setReservations(activeReservations);
       setSelectedId((currentId) => (
         activeReservations.some((reservation) => reservation._id === currentId)
@@ -66,27 +77,25 @@ export default function ConsumptionPage({ token }) {
       setNotice({ tone: 'error', text: 'Selecciona una estancia activa.' });
       return;
     }
-    if (description.trim().length < 2 || description.trim().length > 120) {
-      setNotice({ tone: 'error', text: 'El concepto debe tener entre 2 y 120 caracteres.' });
+    if (!selectedProduct) {
+      setNotice({ tone: 'error', text: 'Selecciona un producto del catálogo.' });
       return;
     }
     if (!Number.isInteger(quantityValue) || quantityValue < 1 || quantityValue > 1000) {
       setNotice({ tone: 'error', text: 'La cantidad debe ser un entero entre 1 y 1000.' });
       return;
     }
-    if (unitPrice === '' || !Number.isFinite(unitPriceValue) || unitPriceValue < 0) {
-      setNotice({ tone: 'error', text: 'El precio unitario debe ser un número mayor o igual a 0.' });
+    if (quantityValue > Number(selectedProduct.stock)) {
+      setNotice({ tone: 'error', text: 'No hay stock suficiente para esta cantidad.' });
       return;
     }
 
     setSaving(true);
     try {
       const response = await addReservationConsumption(token, selectedReservation._id, {
-        description: description.trim(),
+        productId: selectedProduct._id,
         quantity: quantityValue,
-        unitPrice: unitPriceValue,
       });
-      setDescription('');
       setQuantity('1');
       setUnitPrice('');
       setNotice({
@@ -171,16 +180,20 @@ export default function ConsumptionPage({ token }) {
                 </div>
                 <div className="consumption-form-grid">
                   <label className="form-field consumption-description">
-                    <span className="field-label">Concepto *</span>
-                    <input
+                    <span className="field-label">Producto *</span>
+                    <select
                       className="form-input"
-                      value={description}
-                      onChange={(event) => setDescription(event.target.value)}
-                      placeholder="Minibar, lavandería, restaurante…"
-                      minLength="2"
-                      maxLength="120"
+                      value={selectedProductId}
+                      onChange={(event) => setSelectedProductId(event.target.value)}
                       required
-                    />
+                    >
+                      <option value="">Selecciona un producto</option>
+                      {products.map((product) => (
+                        <option value={product._id} key={product._id}>
+                          {product.name} · {formatCurrency(product.price)} · Stock {product.stock}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                   <label className="form-field">
                     <span className="field-label">Cantidad *</span>
@@ -195,18 +208,15 @@ export default function ConsumptionPage({ token }) {
                       required
                     />
                   </label>
-                  <label className="form-field">
-                    <span className="field-label">Precio unitario (COP) *</span>
+                  <div className="form-field">
+                    <span className="field-label">Precio unitario</span>
                     <input
                       className="form-input"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={unitPrice}
-                      onChange={(event) => setUnitPrice(event.target.value)}
-                      required
+                      type="text"
+                      value={selectedProduct ? formatCurrency(selectedProduct.price) : '—'}
+                      readOnly
                     />
-                  </label>
+                  </div>
                 </div>
                 <div className="checkout-total-row">
                   <span>Subtotal del consumo</span>

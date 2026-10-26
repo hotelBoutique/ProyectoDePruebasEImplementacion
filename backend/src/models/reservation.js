@@ -67,6 +67,10 @@ const additionalChargeSchema = new mongoose.Schema(
 
 const consumptionSchema = new mongoose.Schema(
     {
+        product: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product'
+        },
         description: {
             type: String,
             required: true,

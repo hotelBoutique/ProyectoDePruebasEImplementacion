@@ -196,6 +196,10 @@ export function checkOutReservation(token, reservationId, settlement) {
   });
 }
 
+export function getProducts(token) {
+  return apiRequest('/products', { token });
+}
+
 export function addReservationConsumption(token, reservationId, consumption) {
   return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/consumptions`, {
     method: 'POST',
