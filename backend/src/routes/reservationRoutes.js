@@ -93,6 +93,23 @@ router.get(
 );
 
 router.post(
+    '/:id/cancel',
+    restrictTo(ROLES.ADMIN),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    body('reason')
+        .isString()
+        .withMessage('El motivo de cancelación es obligatorio')
+        .bail()
+        .trim()
+        .isLength({ min: 3, max: 500 })
+        .withMessage('El motivo de cancelación debe tener entre 3 y 500 caracteres'),
+    validate,
+    reservationController.cancelReservation
+);
+
+router.post(
     '/:id/check-in',
     restrictTo(ROLES.RECEPCIONISTA),
     param('id')

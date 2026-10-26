@@ -146,6 +146,14 @@ export function getReservation(token, reservationId) {
   return apiRequest(`/reservations/${encodeURIComponent(reservationId)}`, { token });
 }
 
+export function cancelReservation(token, reservationId, reason) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/cancel`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ reason }),
+  });
+}
+
 export function createReservation(token, reservation) {
   return apiRequest('/reservations', {
     method: 'POST',

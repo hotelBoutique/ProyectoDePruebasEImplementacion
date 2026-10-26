@@ -844,6 +844,12 @@ h1 {
 .reservation-detail-grid dd { margin: 0; overflow-wrap: anywhere; color: var(--color-primary); font-size: 11px; font-weight: 600; line-height: 1.5; }
 .reservation-detail-grid .reservation-detail-total { padding-top: 13px; border-top: 1px solid var(--color-border); }
 .reservation-detail-total dd { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; }
+.reservation-detail-dialog > .reservation-notice { margin-top: 18px; }
+.reservation-cancellation-panel { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--color-border); }
+.reservation-cancellation-form { display: flex; flex-direction: column; gap: 15px; margin-top: 14px; }
+.reservation-cancellation-form .receptionist-form-actions { justify-content: flex-end; }
+.reservation-cancellation-form .button-primary,
+.reservation-cancellation-form .button-secondary { min-height: 42px; }
 
 .receptionist-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
 .receptionist-stat-card { min-height: 123px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 18px 19px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 7px; box-shadow: 0 8px 20px rgba(26, 46, 59, .035); }

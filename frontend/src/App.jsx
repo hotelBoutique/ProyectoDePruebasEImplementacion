@@ -452,6 +452,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               canCreate={!isAdmin}
               onNavigate={selectItem}
             />
+          ) : isAdmin && activeItem === 'reservations-cancellations' ? (
+            <ReservationsPage token={token} mode="cancellations" />
           ) : !isAdmin && activeItem === 'reception-check-in' ? (
             <CheckInPage token={token} />
           ) : !isAdmin && activeItem === 'reception-check-out' ? (
