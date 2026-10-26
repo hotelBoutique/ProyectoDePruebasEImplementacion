@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import CheckInPage from './pages/CheckInPage.jsx';
 import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
@@ -444,6 +445,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <ReservationsPage token={token} mode="availability" />
           ) : !isAdmin && activeItem === 'reception-reservations-create' ? (
             <ReservationsPage token={token} />
+          ) : !isAdmin && activeItem === 'reception-check-in' ? (
+            <CheckInPage token={token} />
           ) : (
             <section className="module-placeholder" aria-labelledby="module-title">
               <span className="module-placeholder-mark" aria-hidden="true"><SidebarIcon name="home" /></span>

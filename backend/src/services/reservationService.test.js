@@ -1,7 +1,9 @@
 jest.mock('../models/reservation', () => ({
     find: jest.fn(),
     findOne: jest.fn(),
-    create: jest.fn()
+    create: jest.fn(),
+    findById: jest.fn(),
+    findOneAndUpdate: jest.fn()
 }));
 
 jest.mock('../models/room', () => ({
@@ -18,7 +20,12 @@ jest.mock('mongoose', () => ({
 const mongoose = require('mongoose');
 const Reservation = require('../models/reservation');
 const Room = require('../models/room');
-const { createReservation, getAvailableRooms } = require('./reservationService');
+const {
+    checkInReservation,
+    createReservation,
+    getAvailableRooms,
+    getPendingCheckIns
+} = require('./reservationService');
 
 const getFutureDates = () => {
     const checkIn = new Date();
@@ -63,6 +70,29 @@ describe('reservationService', () => {
             checkIn: { $lt: new Date(`${dates.checkOut}T00:00:00.000Z`) },
             checkOut: { $gt: new Date(`${dates.checkIn}T00:00:00.000Z`) }
         }));
+    });
+
+    it('returns only reservations scheduled for check-in today', async () => {
+        const reservations = [{ _id: 'reservation-id' }];
+        const query = {
+            sort: jest.fn().mockReturnThis(),
+            populate: jest.fn().mockResolvedValue(reservations)
+        };
+        Reservation.find.mockReturnValue(query);
+
+        await expect(getPendingCheckIns()).resolves.toBe(reservations);
+
+        const today = new Date().toISOString().slice(0, 10);
+        const tomorrow = new Date(`${today}T00:00:00.000Z`);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        expect(Reservation.find).toHaveBeenCalledWith({
+            status: 'reservada',
+            checkIn: {
+                $gte: new Date(`${today}T00:00:00.000Z`),
+                $lt: tomorrow
+            }
+        });
+        expect(query.populate).toHaveBeenCalledWith('room', 'number status');
     });
 
     it('creates a reservation atomically with a calculated total', async () => {
@@ -169,5 +199,103 @@ describe('reservationService', () => {
             nightlyRate: '',
             createdBy: 'user-id'
         })).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('checks in a guest and marks the room occupied in one transaction', async () => {
+        const session = createSessionMock();
+        const scheduledCheckIn = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
+        const reservation = {
+            _id: 'reservation-id',
+            room: 'room-id',
+            status: 'reservada',
+            checkIn: scheduledCheckIn
+        };
+        const checkedInReservation = {
+            ...reservation,
+            status: 'ocupada',
+            checkInAt: new Date()
+        };
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue(reservation)
+        });
+        Room.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                _id: 'room-id',
+                status: 'disponible'
+            })
+        });
+        Room.updateOne.mockResolvedValue({ matchedCount: 1 });
+        Reservation.findOneAndUpdate.mockResolvedValue(checkedInReservation);
+
+        await expect(checkInReservation(reservation._id)).resolves.toBe(checkedInReservation);
+
+        expect(Room.updateOne).toHaveBeenCalledWith(
+            { _id: 'room-id', status: 'disponible' },
+            {
+                $set: { status: 'ocupada' },
+                $inc: { availabilityRevision: 1 }
+            },
+            { session }
+        );
+        expect(Reservation.findOneAndUpdate).toHaveBeenCalledWith(
+            { _id: reservation._id, status: 'reservada' },
+            {
+                $set: expect.objectContaining({
+                    status: 'ocupada',
+                    checkInAt: expect.any(Date)
+                })
+            },
+            expect.objectContaining({ new: true, runValidators: true, session })
+        );
+        expect(session.endSession).toHaveBeenCalled();
+    });
+
+    it.each([
+        ['cancelled reservation', { status: 'cancelada' }, null, 'reservación está cancelada'],
+        ['already checked-in reservation', { status: 'ocupada' }, null, 'ya fue registrado'],
+        ['future check-in date', { status: 'reservada', checkIn: new Date(Date.now() + 86400000) }, null, 'antes de la fecha programada'],
+        ['missed check-in date', { status: 'reservada', checkIn: new Date('2000-01-01T00:00:00.000Z') }, null, 'fecha programada de ingreso ya pasó'],
+        ['room in maintenance', { status: 'reservada', checkIn: new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`) }, { status: 'mantenimiento' }, 'habitación está mantenimiento'],
+        ['room out of service', { status: 'reservada', checkIn: new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`) }, { status: 'fuera de servicio' }, 'habitación está fuera de servicio'],
+        ['room being cleaned', { status: 'reservada', checkIn: new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`) }, { status: 'limpieza' }, 'habitación está en limpieza'],
+        ['room being disinfected', { status: 'reservada', checkIn: new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`) }, { status: 'desinfeccion' }, 'habitación está en desinfección']
+    ])('rejects check-in for %s without changing room state', async (scenario, reservationOverrides, room, message) => {
+        createSessionMock();
+        const reservation = {
+            _id: 'reservation-id',
+            room: 'room-id',
+            status: 'reservada',
+            checkIn: new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`),
+            ...reservationOverrides
+        };
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue(reservation)
+        });
+        if (room) {
+            Room.findById.mockReturnValue({ session: jest.fn().mockResolvedValue(room) });
+        }
+
+        await expect(checkInReservation(reservation._id)).rejects.toMatchObject({
+            statusCode: 409,
+            message: expect.stringContaining(message)
+        });
+
+        expect(Room.updateOne).not.toHaveBeenCalled();
+        expect(Reservation.findOneAndUpdate).not.toHaveBeenCalled();
+    });
+
+    it('returns a clear error when check-in transactions are not supported', async () => {
+        const session = createSessionMock();
+        session.withTransaction.mockRejectedValue(
+            Object.assign(new Error('Transaction numbers are only allowed on a replica set member or mongos'), {
+                code: 20
+            })
+        );
+
+        await expect(checkInReservation('reservation-id')).rejects.toMatchObject({
+            statusCode: 503,
+            message: expect.stringContaining('MongoDB debe ejecutarse como replica set')
+        });
+        expect(session.endSession).toHaveBeenCalled();
     });
 });

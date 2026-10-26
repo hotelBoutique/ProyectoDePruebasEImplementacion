@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, query } = require('express-validator');
+const { body, param, query } = require('express-validator');
 
 const reservationController = require('../controllers/reservationController');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
@@ -17,6 +17,12 @@ const validateDate = (value, fieldName) => {
 };
 
 router.use(protect);
+
+router.get(
+    '/check-ins/pending',
+    restrictTo(ROLES.RECEPCIONISTA),
+    reservationController.getPendingCheckIns
+);
 
 router.get(
     '/availability',
@@ -37,6 +43,16 @@ router.get(
         .withMessage('La habitación seleccionada no es válida'),
     validate,
     reservationController.getAvailableRooms
+);
+
+router.post(
+    '/:id/check-in',
+    restrictTo(ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('El identificador de la reservación no es válido'),
+    validate,
+    reservationController.checkInReservation
 );
 
 router.post(
