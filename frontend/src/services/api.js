@@ -64,6 +64,11 @@ export function getOccupancyReport(token, { startDate, endDate }) {
   return apiRequest(`/admin/reports/occupancy?${params.toString()}`, { token });
 }
 
+export function getIncomeReport(token, { startDate, endDate }) {
+  const params = new URLSearchParams({ startDate, endDate });
+  return apiRequest(`/admin/reports/income?${params.toString()}`, { token });
+}
+
 export function getReceptionDashboard(token) {
   return apiRequest('/reception/dashboard', { token });
 }
