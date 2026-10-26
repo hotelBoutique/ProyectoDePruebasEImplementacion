@@ -1027,6 +1027,22 @@ h1 {
 .settlement-history-payment dd { margin: 0; overflow-wrap: anywhere; color: var(--color-primary); font-size: 11px; font-weight: 600; }
 .settlement-history-payment .settlement-history-total { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-top: 15px; border-top: 1px solid var(--color-border); }
 .settlement-history-payment .settlement-history-total dd { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 25px; }
+.payments-page { gap: 18px; }
+.payments-reference-note { max-width: 760px; margin: 10px 0 0; color: var(--color-text-muted); font-size: 10px; line-height: 1.6; }
+.payments-summary .receptionist-stat-card > strong { max-width: 100%; overflow-wrap: anywhere; font-size: clamp(22px, 2.4vw, 31px); }
+.payments-filter-form { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.payments-search-field { grid-column: span 2; }
+.payments-table td:first-child { min-width: 230px; white-space: normal; }
+.payments-table td:nth-child(2) { min-width: 160px; }
+.payments-table td:nth-child(3) { min-width: 100px; }
+.payments-table td:nth-child(4) { min-width: 145px; }
+.payments-table td:nth-child(5) { min-width: 110px; }
+.payments-table td:nth-child(6) { min-width: 125px; }
+.payments-reference { display: inline-block; max-width: 230px; color: var(--color-primary); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; overflow-wrap: anywhere; white-space: normal; }
+.payments-pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px; border-top: 1px solid var(--color-border); }
+.payments-pagination > span { color: var(--color-text-muted); font-size: 10px; }
+.payments-pagination .button-secondary { min-height: 36px; padding: 0 13px; font-size: 9px; }
+.payments-table .reservation-status-pill { color: var(--color-success); background: #EAF0E9; border-color: #D7E2D5; }
 .occupancy-report-filter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; align-items: end; gap: 15px; }
 .occupancy-report-filter .form-field { gap: 7px; }
 .occupancy-report-filter .form-input { height: 42px; }
@@ -1066,6 +1082,8 @@ h1 {
   .settlement-history-filter { align-items: stretch; flex-direction: column; }
   .settlement-history-filter .form-field { width: 100%; }
   .settlement-history-filter .reservation-result-count { align-self: flex-end; }
+  .payments-filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .payments-search-field { grid-column: 1 / -1; }
   .occupancy-report-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .occupancy-report-submit { grid-column: 1 / -1; }
   .occupancy-report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1129,6 +1147,8 @@ h1 {
   .receptionist-form-heading { flex-direction: column; }
   .reservation-receipt-grid { grid-template-columns: 1fr; gap: 15px; }
   .reservation-filter-card { padding: 17px; }
+  .payments-filter-form { grid-template-columns: 1fr; }
+  .payments-search-field { grid-column: 1; }
   .reservation-filter-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
   .reservation-filter-form { grid-template-columns: 1fr; gap: 14px; }
   .reservation-filter-actions { flex-direction: column-reverse; }
@@ -1141,6 +1161,8 @@ h1 {
   .reservation-detail-grid { grid-template-columns: 1fr; gap: 14px; }
   .settlement-history-payment { grid-template-columns: 1fr; }
   .settlement-history-payment .settlement-history-total { grid-column: 1; }
+  .payments-pagination { flex-wrap: wrap; gap: 10px; padding: 14px; }
+  .payments-pagination .button-secondary { flex: 1 1 110px; }
   .receptionist-table thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .receptionist-table,
   .receptionist-table tbody,

@@ -961,6 +961,168 @@ const getSettlementHistory = async () => Reservation.find({
     .select('guest.fullName guest.identification guest.email guest.phone roomNumber roomType checkIn checkOut checkInAt checkOutAt settlement')
     .sort({ 'settlement.paidAt': -1, createdAt: -1 });
 
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const getTimeZoneOffset = (date, timeZone) => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23'
+    }).formatToParts(date).reduce((values, part) => {
+        if (part.type !== 'literal') values[part.type] = Number(part.value);
+        return values;
+    }, {});
+
+    return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second) - date.getTime();
+};
+
+const getDateRangeForTimeZone = (dateOnly, timeZone) => {
+    const [year, month, day] = dateOnly.split('-').map(Number);
+    const utcMidnight = new Date(Date.UTC(year, month - 1, day));
+    const start = new Date(utcMidnight.getTime() - getTimeZoneOffset(utcMidnight, timeZone));
+    const nextUtcMidnight = new Date(utcMidnight.getTime() + MILLISECONDS_PER_DAY);
+    const end = new Date(nextUtcMidnight.getTime() - getTimeZoneOffset(nextUtcMidnight, timeZone));
+
+    return { start, end };
+};
+
+const getTodayInTimeZone = timeZone => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).formatToParts(new Date()).reduce((values, part) => {
+        if (part.type !== 'literal') values[part.type] = part.value;
+        return values;
+    }, {});
+
+    return `${parts.year}-${parts.month}-${parts.day}`;
+};
+
+const getPayments = async ({
+    q = '',
+    startDate = '',
+    endDate = '',
+    paymentMethod = '',
+    status = '',
+    page = 1,
+    limit = 25
+} = {}) => {
+    const filterConditions = [
+        { status: 'finalizada' },
+        { 'settlement.status': 'pagada' }
+    ];
+
+    if (paymentMethod) {
+        if (!PAYMENT_METHODS.includes(paymentMethod)) {
+            throw new AppError('El método de pago no es válido', 400);
+        }
+        filterConditions.push({ 'settlement.paymentMethod': paymentMethod });
+    }
+
+    if (status && status !== 'pagada') {
+        throw new AppError('El estado del pago no es válido', 400);
+    }
+
+    if (startDate && !isValidDateOnly(startDate)) {
+        throw new AppError('La fecha inicial no es válida', 400);
+    }
+    if (endDate && !isValidDateOnly(endDate)) {
+        throw new AppError('La fecha final no es válida', 400);
+    }
+    if (startDate && endDate && endDate < startDate) {
+        throw new AppError('La fecha final debe ser igual o posterior a la fecha inicial', 400);
+    }
+
+    if (startDate || endDate) {
+        const paidAt = {};
+        if (startDate) paidAt.$gte = getDateRangeForTimeZone(startDate, 'America/Bogota').start;
+        if (endDate) paidAt.$lt = getDateRangeForTimeZone(endDate, 'America/Bogota').end;
+        filterConditions.push({ 'settlement.paidAt': paidAt });
+    }
+
+    const normalizedSearch = typeof q === 'string' ? q.trim() : '';
+    if (normalizedSearch) {
+        const searchPattern = escapeRegex(normalizedSearch);
+        filterConditions.push({
+            $or: [
+                { 'guest.fullName': { $regex: searchPattern, $options: 'i' } },
+                { roomNumber: { $regex: searchPattern, $options: 'i' } },
+                {
+                    $expr: {
+                        $regexMatch: {
+                            input: { $toString: '$_id' },
+                            regex: searchPattern,
+                            options: 'i'
+                        }
+                    }
+                }
+            ]
+        });
+    }
+
+    const filters = { $and: filterConditions };
+    const normalizedPage = Math.max(1, Number(page) || 1);
+    const normalizedLimit = Math.min(100, Math.max(1, Number(limit) || 25));
+    const skip = (normalizedPage - 1) * normalizedLimit;
+    const todayRange = getDateRangeForTimeZone(getTodayInTimeZone('America/Bogota'), 'America/Bogota');
+    const todayFilters = {
+        $and: [filters, { 'settlement.paidAt': { $gte: todayRange.start, $lt: todayRange.end } }]
+    };
+
+    const [payments, totalPayments, collectedResult, todayPayments] = await Promise.all([
+        Reservation.find(filters)
+            .select('guest.fullName guest.identification guest.email guest.phone roomNumber roomType checkIn checkOut nights checkInAt checkOutAt settlement')
+            .sort({ 'settlement.paidAt': -1, createdAt: -1 })
+            .skip(skip)
+            .limit(normalizedLimit)
+            .lean(),
+        Reservation.countDocuments(filters),
+        Reservation.aggregate([
+            { $match: filters },
+            { $group: { _id: null, total: { $sum: '$settlement.paidAmount' } } }
+        ]),
+        Reservation.countDocuments(todayFilters)
+    ]);
+
+    return {
+        payments,
+        pagination: {
+            page: normalizedPage,
+            limit: normalizedLimit,
+            total: totalPayments,
+            totalPages: Math.ceil(totalPayments / normalizedLimit)
+        },
+        summary: {
+            totalPayments,
+            totalCollected: Math.round((collectedResult[0]?.total || 0) * 100) / 100,
+            todayPayments
+        }
+    };
+};
+
+const getPaymentById = async reservationId => {
+    const payment = await Reservation.findOne({
+        _id: reservationId,
+        status: 'finalizada',
+        'settlement.status': 'pagada'
+    })
+        .select('guest.fullName guest.identification guest.email guest.phone roomNumber roomType checkIn checkOut nights checkInAt checkOutAt settlement')
+        .lean();
+
+    if (!payment) {
+        throw new AppError('No se encontró un pago para la reservación indicada', 404);
+    }
+
+    return payment;
+};
+
 const getReservationById = async reservationId => {
     const reservation = await Reservation.findById(reservationId);
 
@@ -1121,6 +1283,8 @@ module.exports = {
     getAvailableRooms,
     getReservations,
     getSettlementHistory,
+    getPayments,
+    getPaymentById,
     getReservationById,
     createReservation,
     updateReservation,
