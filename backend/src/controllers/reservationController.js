@@ -111,7 +111,12 @@ const getAvailableRooms = catchAsync(async (req, res) => {
     const rooms = await reservationService.getAvailableRooms(
         req.query.checkIn,
         req.query.checkOut,
-        req.query.roomId
+        req.query.roomId,
+        {
+            type: req.query.type,
+            guests: req.query.guests,
+            maxPrice: req.query.maxPrice
+        }
     );
 
     res.status(200).json({

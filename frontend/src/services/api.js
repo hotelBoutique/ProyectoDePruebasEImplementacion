@@ -143,9 +143,12 @@ export function updateRoom(token, roomId, changes) {
   });
 }
 
-export function getAvailableRooms(token, { checkIn, checkOut, roomId }) {
+export function getAvailableRooms(token, { checkIn, checkOut, roomId, type, guests, maxPrice }) {
   const params = new URLSearchParams({ checkIn, checkOut });
-  if (roomId) params.set('roomId', roomId);
+  Object.entries({ roomId, type, guests, maxPrice }).forEach(([name, value]) => {
+    const text = String(value ?? '').trim();
+    if (text) params.set(name, text);
+  });
 
   return apiRequest(`/reservations/availability?${params.toString()}`, { token });
 }

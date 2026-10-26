@@ -72,10 +72,10 @@ export default function ReservationsPage({ token, mode = 'create', onNavigate, c
     return <ReservationListPage token={token} mode="cancellations" />;
   }
 
-  return <ReservationCreationPage token={token} mode={mode} onNavigate={onNavigate} />;
+  return <ReservationCreationPage token={token} onNavigate={onNavigate} />;
 }
 
-function ReservationCreationPage({ token, mode = 'create', onNavigate }) {
+function ReservationCreationPage({ token, onNavigate }) {
   const today = todayDateOnly();
   const [checkIn, setCheckIn] = useState(today);
   const [checkOut, setCheckOut] = useState(nextDate(today));
@@ -93,7 +93,6 @@ function ReservationCreationPage({ token, mode = 'create', onNavigate }) {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState(null);
   const [receipt, setReceipt] = useState(null);
-  const isAvailabilityOnly = mode === 'availability';
   const rangeKey = `${checkIn}|${checkOut}`;
   const selectedRoom = rooms.find((room) => room._id === selectedRoomId);
 
@@ -286,21 +285,17 @@ function ReservationCreationPage({ token, mode = 'create', onNavigate }) {
     <section className="rooms-page reservations-page" aria-labelledby="reservations-title">
       <div className="rooms-heading">
         <div>
-          <p className="eyebrow">{isAvailabilityOnly ? 'DISPONIBILIDAD' : 'GESTIÓN DE ESTADÍAS'}</p>
-          <h1 id="reservations-title">{isAvailabilityOnly ? 'Consultar disponibilidad' : 'Nueva reservación'}</h1>
+          <p className="eyebrow">GESTIÓN DE ESTADÍAS</p>
+          <h1 id="reservations-title">Nueva reservación</h1>
           <p className="intro">
-            {isAvailabilityOnly
-              ? 'Verifica qué habitaciones están libres en el rango de fechas indicado.'
-              : 'Selecciona fechas y habitación; la disponibilidad se confirma nuevamente al guardar.'}
+            Selecciona fechas y habitación; la disponibilidad se confirma nuevamente al guardar.
           </p>
         </div>
-        {!isAvailabilityOnly && (
-          <div className="reservation-heading-actions">
-            <button className="button-secondary" type="button" onClick={() => onNavigate?.('reception-reservations-list')}>
-              Consultar reservaciones
-            </button>
-          </div>
-        )}
+        <div className="reservation-heading-actions">
+          <button className="button-secondary" type="button" onClick={() => onNavigate?.('reception-reservations-list')}>
+            Consultar reservaciones
+          </button>
+        </div>
       </div>
 
       {notice && (
@@ -401,7 +396,7 @@ function ReservationCreationPage({ token, mode = 'create', onNavigate }) {
           </section>
         )}
 
-        {!isAvailabilityOnly && selectedRoom && (
+        {selectedRoom && (
           <>
             <div className="receptionist-form-heading reservation-guest-heading">
               <div>
