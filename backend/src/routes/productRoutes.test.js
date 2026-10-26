@@ -17,6 +17,7 @@ jest.mock('../middlewares/authMiddleware', () => ({
 jest.mock('../services/productService', () => ({
     createProduct: jest.fn(),
     getProducts: jest.fn(),
+    getCategories: jest.fn(),
     updateProduct: jest.fn()
 }));
 
@@ -46,6 +47,74 @@ describe('productRoutes', () => {
         expect(response.status).toBe(200);
         expect(response.body.results).toBe(1);
         expect(productService.getProducts).toHaveBeenCalled();
+    });
+
+    it('passes catalog filters to the service for administrators', async () => {
+        productService.getProducts.mockResolvedValue([]);
+
+        const response = await request(app)
+            .get('/api/v1/products')
+            .query({ search: 'agua', category: 'Bebidas', status: 'inactivo', inStock: 'true' });
+
+        expect(response.status).toBe(200);
+        expect(productService.getProducts).toHaveBeenCalledWith({
+            search: 'agua',
+            category: 'Bebidas',
+            status: 'inactivo',
+            inStock: 'true'
+        });
+    });
+
+    it('shows receptionists only active products', async () => {
+        productService.getProducts.mockResolvedValue([]);
+
+        const response = await request(app)
+            .get('/api/v1/products')
+            .set('x-role', 'RECEPCIONISTA')
+            .query({ status: 'inactivo' });
+
+        expect(response.status).toBe(200);
+        expect(productService.getProducts).toHaveBeenCalledWith(expect.objectContaining({
+            status: 'activo'
+        }));
+    });
+
+    it('rejects invalid catalog filters', async () => {
+        const response = await request(app)
+            .get('/api/v1/products')
+            .query({ status: 'agotado', inStock: 'si', search: 'a'.repeat(101) });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg)).toEqual(expect.arrayContaining([
+            'El estado debe ser activo o inactivo',
+            'El filtro de stock debe ser true o false',
+            'La búsqueda no puede superar 100 caracteres'
+        ]));
+        expect(productService.getProducts).not.toHaveBeenCalled();
+    });
+
+    it('rejects a catalog filter sent more than once', async () => {
+        const response = await request(app)
+            .get('/api/v1/products?category=Bebidas&category=Snacks');
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg)).toContain('Cada filtro admite un solo valor');
+        expect(productService.getProducts).not.toHaveBeenCalled();
+    });
+
+    it('lists categories, limited to active products for receptionists', async () => {
+        productService.getCategories.mockResolvedValue(['Bebidas', 'Snacks']);
+
+        const adminResponse = await request(app).get('/api/v1/products/categories');
+        const receptionResponse = await request(app)
+            .get('/api/v1/products/categories')
+            .set('x-role', 'RECEPCIONISTA');
+
+        expect(adminResponse.status).toBe(200);
+        expect(adminResponse.body.data.categories).toEqual(['Bebidas', 'Snacks']);
+        expect(receptionResponse.status).toBe(200);
+        expect(productService.getCategories).toHaveBeenNthCalledWith(1, { activeOnly: false });
+        expect(productService.getCategories).toHaveBeenNthCalledWith(2, { activeOnly: true });
     });
 
     it('allows partial product updates', async () => {
