@@ -771,6 +771,15 @@ h1 {
 .room-description { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 9px; line-height: 1.5; }
 .rooms-table td:last-child { min-width: 190px; }
 .room-description-input { min-height: 90px; height: auto !important; padding-top: 11px; resize: vertical; }
+.rooms-filters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto; align-items: end; gap: 14px; padding: 17px 20px; border-bottom: 1px solid var(--color-border); }
+.rooms-filters-actions { display: flex; gap: 8px; }
+.rooms-filters-actions .button-primary,
+.rooms-filters-actions .button-secondary { min-height: 43px; padding: 0 14px; }
+.rooms-filters-error { grid-column: 1 / -1; margin: 0; color: var(--color-danger); font-size: 11px; line-height: 1.6; }
+.rooms-filters-summary { margin: 0; padding: 11px 20px; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); font-size: 10px; }
+@media (max-width: 1200px) {
+  .rooms-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .reservations-page { display: flex; flex-direction: column; gap: 22px; }
 .reservations-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
 .reservations-heading .eyebrow { margin-bottom: 12px; }
@@ -927,6 +936,10 @@ h1 {
   .receptionists-heading { align-items: flex-start; flex-direction: column; gap: 17px; }
   .rooms-heading { align-items: flex-start; flex-direction: column; gap: 17px; }
   .rooms-create-action { width: 100%; }
+  .rooms-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rooms-filters-actions { grid-column: 1 / -1; }
+  .rooms-filters-actions .button-primary,
+  .rooms-filters-actions .button-secondary { flex: 1; }
   .reservations-heading { align-items: flex-start; flex-direction: column; gap: 17px; }
   .reservation-receipt { padding: 19px; }
   .receptionists-create-actions { width: 100%; align-items: stretch; flex-direction: column; }

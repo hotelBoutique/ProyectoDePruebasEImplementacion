@@ -114,8 +114,15 @@ export function createRoom(token, room) {
   });
 }
 
-export function getRooms(token) {
-  return apiRequest('/rooms', { token });
+export function getRooms(token, filters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([name, value]) => {
+    const text = String(value ?? '').trim();
+    if (text) params.set(name, text);
+  });
+  const query = params.toString();
+
+  return apiRequest(`/rooms${query ? `?${query}` : ''}`, { token });
 }
 
 export function updateRoom(token, roomId, changes) {

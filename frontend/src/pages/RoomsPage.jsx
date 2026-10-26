@@ -10,6 +10,32 @@ const EMPTY_FORM = {
   status: 'disponible',
 };
 
+const EMPTY_FILTERS = {
+  status: '',
+  type: '',
+  minCapacity: '',
+  minPrice: '',
+  maxPrice: '',
+};
+
+function validateFilters(filters) {
+  const minCapacity = filters.minCapacity.trim();
+  if (minCapacity && (!Number.isInteger(Number(minCapacity)) || Number(minCapacity) < 1)) {
+    return 'La capacidad mínima debe ser un número entero mayor o igual a 1.';
+  }
+
+  const minPrice = filters.minPrice.trim();
+  const maxPrice = filters.maxPrice.trim();
+  if ((minPrice && !(Number(minPrice) >= 0)) || (maxPrice && !(Number(maxPrice) >= 0))) {
+    return 'Los precios deben ser números mayores o iguales a 0.';
+  }
+  if (minPrice && maxPrice && Number(maxPrice) < Number(minPrice)) {
+    return 'El precio máximo debe ser mayor o igual al precio mínimo.';
+  }
+
+  return '';
+}
+
 const ROOM_STATUSES = [
   { value: 'disponible', label: 'Disponible' },
   { value: 'ocupada', label: 'Ocupada' },
@@ -36,6 +62,13 @@ export default function RoomsPage({
   const [updatingRoomId, setUpdatingRoomId] = useState('');
   const [editingRoom, setEditingRoom] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
+  const [filterError, setFilterError] = useState('');
+  const [knownTypes, setKnownTypes] = useState([]);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const hasAppliedFilters = Object.values(appliedFilters).some((value) => value.trim());
 
   useEffect(() => {
     if (mode !== 'list') return undefined;
@@ -44,9 +77,15 @@ export default function RoomsPage({
     setLoading(true);
     setLoadError('');
 
-    getRooms(token)
+    getRooms(token, appliedFilters)
       .then((response) => {
-        if (isCurrent) setRooms(response.data?.rooms || []);
+        if (!isCurrent) return;
+        const loadedRooms = response.data?.rooms || [];
+        setRooms(loadedRooms);
+        // Los tipos del filtro salen del inventario completo, no de un resultado ya filtrado.
+        if (!Object.values(appliedFilters).some((value) => value.trim())) {
+          setKnownTypes([...new Set(loadedRooms.map((room) => room.type))].sort((a, b) => a.localeCompare(b, 'es')));
+        }
       })
       .catch((error) => {
         if (isCurrent) setLoadError(error.message || 'No fue posible cargar las habitaciones.');
@@ -58,7 +97,7 @@ export default function RoomsPage({
     return () => {
       isCurrent = false;
     };
-  }, [mode, token]);
+  }, [mode, token, appliedFilters, reloadKey]);
 
   useEffect(() => {
     setEditingRoom(null);
@@ -69,6 +108,24 @@ export default function RoomsPage({
   function updateField(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function updateFilter(event) {
+    const { name, value } = event.target;
+    setFilters((current) => ({ ...current, [name]: value }));
+  }
+
+  function applyFilters(event) {
+    event.preventDefault();
+    const error = validateFilters(filters);
+    setFilterError(error);
+    if (!error) setAppliedFilters({ ...filters });
+  }
+
+  function clearFilters() {
+    setFilters(EMPTY_FILTERS);
+    setFilterError('');
+    setAppliedFilters(EMPTY_FILTERS);
   }
 
   function startEditing(room) {
@@ -352,25 +409,123 @@ export default function RoomsPage({
             <button
               className="button-secondary receptionist-refresh"
               type="button"
-              onClick={() => {
-                setLoading(true);
-                setLoadError('');
-                getRooms(token)
-                  .then((response) => setRooms(response.data?.rooms || []))
-                  .catch((error) => setLoadError(error.message || 'No fue posible cargar las habitaciones.'))
-                  .finally(() => setLoading(false));
-              }}
+              onClick={() => setReloadKey((current) => current + 1)}
               disabled={loading}
             >
               {loading ? 'Cargando…' : 'Actualizar listado'}
             </button>
           </div>
+          <form className="rooms-filters" onSubmit={applyFilters} noValidate aria-label="Filtrar habitaciones">
+            <label className="form-field" htmlFor="filter-status">
+              <span className="field-label">Estado</span>
+              <select
+                className="form-input"
+                id="filter-status"
+                name="status"
+                value={filters.status}
+                onChange={updateFilter}
+              >
+                <option value="">Todos</option>
+                {ROOM_STATUSES.map((status) => (
+                  <option value={status.value} key={status.value}>{status.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="form-field" htmlFor="filter-type">
+              <span className="field-label">Tipo</span>
+              <select
+                className="form-input"
+                id="filter-type"
+                name="type"
+                value={filters.type}
+                onChange={updateFilter}
+              >
+                <option value="">Todos</option>
+                {knownTypes.map((type) => (
+                  <option value={type} key={type}>{type}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="form-field" htmlFor="filter-capacity">
+              <span className="field-label">Capacidad mínima</span>
+              <input
+                className="form-input"
+                id="filter-capacity"
+                name="minCapacity"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="Ej. 2"
+                value={filters.minCapacity}
+                onChange={updateFilter}
+              />
+            </label>
+
+            <label className="form-field" htmlFor="filter-min-price">
+              <span className="field-label">Precio desde</span>
+              <input
+                className="form-input"
+                id="filter-min-price"
+                name="minPrice"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="0"
+                value={filters.minPrice}
+                onChange={updateFilter}
+              />
+            </label>
+
+            <label className="form-field" htmlFor="filter-max-price">
+              <span className="field-label">Precio hasta</span>
+              <input
+                className="form-input"
+                id="filter-max-price"
+                name="maxPrice"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="Sin límite"
+                value={filters.maxPrice}
+                onChange={updateFilter}
+              />
+            </label>
+
+            <div className="rooms-filters-actions">
+              <button className="button-primary" type="submit" disabled={loading}>Filtrar</button>
+              <button
+                className="button-secondary"
+                type="button"
+                onClick={clearFilters}
+                disabled={loading || (!hasAppliedFilters && !Object.values(filters).some((value) => value.trim()))}
+              >
+                Limpiar
+              </button>
+            </div>
+
+            {filterError && <p className="rooms-filters-error" role="alert">{filterError}</p>}
+          </form>
+          {!loading && !loadError && hasAppliedFilters && rooms.length > 0 && (
+            <p className="rooms-filters-summary" role="status">
+              {rooms.length === 1 ? '1 habitación coincide' : `${rooms.length} habitaciones coinciden`} con los filtros.
+            </p>
+          )}
           {loading ? (
             <div className="receptionist-empty-state" role="status">Cargando habitaciones…</div>
           ) : loadError ? (
             <div className="receptionist-empty-state">
               <strong>No fue posible cargar el inventario</strong>
               <p>{loadError}</p>
+            </div>
+          ) : rooms.length === 0 && hasAppliedFilters ? (
+            <div className="receptionist-empty-state">
+              <strong>Ninguna habitación coincide</strong>
+              <p>Prueba con otros filtros o límpialos para ver todo el inventario.</p>
+              <button className="button-secondary" type="button" onClick={clearFilters}>
+                Limpiar filtros
+              </button>
             </div>
           ) : rooms.length === 0 ? (
             <div className="receptionist-empty-state">

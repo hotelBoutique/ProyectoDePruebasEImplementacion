@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 
 const roomController = require('../controllers/roomController');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
@@ -31,8 +31,38 @@ const requireObjectBody = (req, res, next) => {
 
 router.use(protect);
 
+const singleValue = value => typeof value === 'string';
+
 router.get('/',
     restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    query(['status', 'type', 'minCapacity', 'minPrice', 'maxPrice'])
+        .optional()
+        .custom(singleValue)
+        .withMessage('Cada filtro admite un solo valor'),
+    query('status')
+        .optional({ checkFalsy: true })
+        .isIn(ROOM_STATUSES)
+        .withMessage('El estado no es válido'),
+    query('type')
+        .optional({ checkFalsy: true })
+        .isLength({ max: 50 })
+        .withMessage('El tipo de habitación no puede superar 50 caracteres'),
+    query('minCapacity')
+        .optional({ checkFalsy: true })
+        .isInt({ min: 1 })
+        .withMessage('La capacidad mínima debe ser un número entero mayor o igual a 1'),
+    query('minPrice')
+        .optional({ checkFalsy: true })
+        .isFloat({ min: 0 })
+        .withMessage('El precio mínimo debe ser un número mayor o igual a 0'),
+    query('maxPrice')
+        .optional({ checkFalsy: true })
+        .isFloat({ min: 0 })
+        .withMessage('El precio máximo debe ser un número mayor o igual a 0')
+        .bail()
+        .custom((maxPrice, { req }) => !req.query.minPrice || Number(maxPrice) >= Number(req.query.minPrice))
+        .withMessage('El precio máximo debe ser mayor o igual al precio mínimo'),
+    validate,
     roomController.getRooms
 );
 

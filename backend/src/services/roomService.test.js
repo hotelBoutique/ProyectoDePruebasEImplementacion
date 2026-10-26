@@ -1,4 +1,5 @@
 jest.mock('../models/room', () => ({
+    find: jest.fn(),
     findOne: jest.fn(),
     create: jest.fn(),
     findByIdAndUpdate: jest.fn()
@@ -6,6 +7,67 @@ jest.mock('../models/room', () => ({
 
 const Room = require('../models/room');
 const roomService = require('./roomService');
+
+describe('roomService.getAllRooms', () => {
+    let sort;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        sort = jest.fn().mockResolvedValue([]);
+        Room.find.mockReturnValue({ sort });
+    });
+
+    it('lists every room sorted by number when no filter is given', async () => {
+        await roomService.getAllRooms();
+
+        expect(Room.find).toHaveBeenCalledWith({});
+        expect(sort).toHaveBeenCalledWith({ number: 1 });
+    });
+
+    it('ignores empty filter values', async () => {
+        await roomService.getAllRooms({ status: '', type: '  ', minCapacity: '', minPrice: '', maxPrice: '' });
+
+        expect(Room.find).toHaveBeenCalledWith({});
+    });
+
+    it('combines status, capacity and price range filters', async () => {
+        await roomService.getAllRooms({
+            status: 'disponible',
+            minCapacity: '2',
+            minPrice: '100',
+            maxPrice: '300'
+        });
+
+        expect(Room.find).toHaveBeenCalledWith({
+            status: 'disponible',
+            capacity: { $gte: 2 },
+            price: { $gte: 100, $lte: 300 }
+        });
+    });
+
+    it('supports an open-ended price range', async () => {
+        await roomService.getAllRooms({ maxPrice: '250' });
+
+        expect(Room.find).toHaveBeenCalledWith({ price: { $lte: 250 } });
+    });
+
+    it('matches the room type exactly, ignoring case and surrounding spaces', async () => {
+        await roomService.getAllRooms({ type: ' suite ' });
+
+        const { type } = Room.find.mock.calls[0][0];
+        expect(type.test('Suite')).toBe(true);
+        expect(type.test('SUITE')).toBe(true);
+        expect(type.test('Suite Deluxe')).toBe(false);
+    });
+
+    it('treats special characters in the type as plain text', async () => {
+        await roomService.getAllRooms({ type: 'Doble (vista)' });
+
+        const { type } = Room.find.mock.calls[0][0];
+        expect(type.test('Doble (vista)')).toBe(true);
+        expect(type.test('Doble vista')).toBe(false);
+    });
+});
 
 describe('roomService.createRoom', () => {
     beforeEach(() => {
