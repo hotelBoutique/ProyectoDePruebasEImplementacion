@@ -45,6 +45,21 @@ const additionalChargeSchema = new mongoose.Schema(
             type: Number,
             required: true,
             min: 0
+        },
+        quantity: {
+            type: Number,
+            required: true,
+            min: 1
+        },
+        unitPrice: {
+            type: Number,
+            required: true,
+            min: 0
+        },
+        subtotal: {
+            type: Number,
+            required: true,
+            min: 0
         }
     },
     { _id: false }
@@ -75,6 +90,16 @@ const settlementSchema = new mongoose.Schema(
         additionalCharges: {
             type: [additionalChargeSchema],
             default: []
+        },
+        consumptions: {
+            type: [additionalChargeSchema],
+            default: []
+        },
+        consumptionsTotal: {
+            type: Number,
+            required: true,
+            min: 0,
+            default: 0
         },
         additionalChargesTotal: {
             type: Number,
@@ -154,6 +179,10 @@ const reservationSchema = new mongoose.Schema(
         },
         checkInAt: {
             type: Date
+        },
+        consumptions: {
+            type: [additionalChargeSchema],
+            default: []
         },
         checkOutAt: {
             type: Date

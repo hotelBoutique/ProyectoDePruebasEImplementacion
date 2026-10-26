@@ -38,12 +38,27 @@ export default function CheckOutPage({ token }) {
 
   const chargesTotal = useMemo(
     () => additionalCharges.reduce((total, charge) => {
-      const amount = Number(charge.amount);
-      return total + (Number.isFinite(amount) && amount >= 0 ? Math.round(amount * 100) : 0);
+      const quantity = Number(charge.quantity);
+      const unitPrice = Number(charge.unitPrice);
+      if (
+        !Number.isInteger(quantity)
+        || quantity < 1
+        || !Number.isFinite(unitPrice)
+        || unitPrice < 0
+      ) {
+        return total;
+      }
+      return total + Math.round(unitPrice * 100) * quantity;
     }, 0) / 100,
     [additionalCharges],
   );
-  const totalDue = estimate ? estimate.roomSubtotal + chargesTotal : 0;
+  const totalDue = estimate
+    ? (
+      Math.round(estimate.roomSubtotal * 100)
+      + Math.round((estimate.consumptionsTotal || 0) * 100)
+      + Math.round(chargesTotal * 100)
+    ) / 100
+    : 0;
 
   const loadPendingCheckOuts = useCallback(async () => {
     setLoading(true);
@@ -75,7 +90,10 @@ export default function CheckOutPage({ token }) {
   }
 
   function addCharge() {
-    setAdditionalCharges((current) => [...current, { description: '', amount: '' }]);
+    setAdditionalCharges((current) => [
+      ...current,
+      { description: '', quantity: '1', unitPrice: '' },
+    ]);
   }
 
   function removeCharge(index) {
@@ -104,9 +122,13 @@ export default function CheckOutPage({ token }) {
     const invalidCharge = additionalCharges.find((charge) => (
       charge.description.trim().length < 2
       || charge.description.trim().length > 120
-      || charge.amount === ''
-      || !Number.isFinite(Number(charge.amount))
-      || Number(charge.amount) < 0
+      || charge.quantity === ''
+      || !Number.isInteger(Number(charge.quantity))
+      || Number(charge.quantity) < 1
+      || Number(charge.quantity) > 1000
+      || charge.unitPrice === ''
+      || !Number.isFinite(Number(charge.unitPrice))
+      || Number(charge.unitPrice) < 0
     ));
     if (invalidCharge) {
       setNotice({
@@ -121,7 +143,8 @@ export default function CheckOutPage({ token }) {
       const response = await checkOutReservation(token, selectedReservation._id, {
         additionalCharges: additionalCharges.map((charge) => ({
           description: charge.description.trim(),
-          amount: Number(charge.amount),
+          quantity: Number(charge.quantity),
+          unitPrice: Number(charge.unitPrice),
         })),
         paidAmount: totalDue,
         paymentMethod,
@@ -190,13 +213,35 @@ export default function CheckOutPage({ token }) {
             <div><dt>Noches cobradas</dt><dd>{receipt.settlement.actualNights}</dd></div>
             <div><dt>Tarifa por noche</dt><dd>{formatCurrency(receipt.settlement.nightlyRate)}</dd></div>
             <div><dt>Alojamiento</dt><dd>{formatCurrency(receipt.settlement.roomSubtotal)}</dd></div>
-            {receipt.settlement.additionalCharges.map((charge, index) => (
-              <div key={`${charge.description}-${index}`}>
-                <dt>{charge.description}</dt><dd>{formatCurrency(charge.amount)}</dd>
+            {(receipt.settlement.consumptions || []).map((consumption, index) => (
+              <div key={`consumption-${index}`}>
+                <dt>
+                  {consumption.description} · {consumption.quantity} ×{' '}
+                  {formatCurrency(consumption.unitPrice)}
+                </dt>
+                <dd>{formatCurrency(consumption.subtotal)}</dd>
               </div>
             ))}
+            <div>
+              <dt>Subtotal de consumos registrados</dt>
+              <dd>{formatCurrency(receipt.settlement.consumptionsTotal)}</dd>
+            </div>
+            {receipt.settlement.additionalCharges.map((charge, index) => (
+              <div key={`${charge.description}-${index}`}>
+                <dt>
+                  {charge.description} · {charge.quantity ?? 1} ×{' '}
+                  {formatCurrency(charge.unitPrice ?? charge.amount)}
+                </dt>
+                <dd>{formatCurrency(charge.subtotal ?? charge.amount)}</dd>
+              </div>
+            ))}
+            <div>
+              <dt>Subtotal de cargos al cierre</dt>
+              <dd>{formatCurrency(receipt.settlement.additionalChargesTotal)}</dd>
+            </div>
+            <div><dt>Impuestos</dt><dd>No configurados</dd></div>
             <div className="reservation-receipt-total">
-              <dt>Total pagado · {receipt.settlement.paymentMethod}</dt>
+              <dt>Gran total pagado · {receipt.settlement.paymentMethod}</dt>
               <dd>{formatCurrency(receipt.settlement.paidAmount)}</dd>
             </div>
           </dl>
@@ -223,7 +268,7 @@ export default function CheckOutPage({ token }) {
                 </span>
                 <strong>
                   {reservation.settlementEstimate
-                    ? formatCurrency(reservation.settlementEstimate.roomSubtotal)
+                    ? formatCurrency(reservation.settlementEstimate.totalDue)
                     : 'Liquidación no disponible'}
                 </strong>
               </button>
@@ -245,7 +290,25 @@ export default function CheckOutPage({ token }) {
                     <div><dt>Noches efectivas</dt><dd>{estimate.actualNights}</dd></div>
                     <div><dt>Tarifa por noche</dt><dd>{formatCurrency(estimate.nightlyRate)}</dd></div>
                     <div><dt>Alojamiento</dt><dd>{formatCurrency(estimate.roomSubtotal)}</dd></div>
+                    <div><dt>Consumos registrados</dt><dd>{formatCurrency(estimate.consumptionsTotal || 0)}</dd></div>
+                    <div><dt>Cargos al cierre</dt><dd>{formatCurrency(chargesTotal)}</dd></div>
+                    <div><dt>Impuestos</dt><dd>No configurados</dd></div>
                   </dl>
+
+                  {(selectedReservation.consumptions || []).length > 0 && (
+                    <section className="checkout-consumption-breakdown" aria-label="Consumos registrados">
+                      <h3>Detalle de consumos</h3>
+                      {selectedReservation.consumptions.map((consumption, index) => (
+                        <div className="consumption-history-row" key={`checkout-consumption-${index}`}>
+                          <span>
+                            <strong>{consumption.description}</strong>
+                            <span>{consumption.quantity} × {formatCurrency(consumption.unitPrice)}</span>
+                          </span>
+                          <strong>{formatCurrency(consumption.subtotal)}</strong>
+                        </div>
+                      ))}
+                    </section>
+                  )}
 
                   <div className="checkout-charges-heading">
                     <h3>Cargos adicionales</h3>
@@ -271,14 +334,27 @@ export default function CheckOutPage({ token }) {
                         />
                       </label>
                       <label className="form-field">
-                        <span className="field-label">Importe (COP)</span>
+                        <span className="field-label">Cantidad</span>
+                        <input
+                          className="form-input"
+                          type="number"
+                          min="1"
+                          max="1000"
+                          step="1"
+                          value={charge.quantity}
+                          onChange={(event) => updateCharge(index, 'quantity', event.target.value)}
+                          required
+                        />
+                      </label>
+                      <label className="form-field">
+                        <span className="field-label">Precio unitario (COP)</span>
                         <input
                           className="form-input"
                           type="number"
                           min="0"
                           step="0.01"
-                          value={charge.amount}
-                          onChange={(event) => updateCharge(index, 'amount', event.target.value)}
+                          value={charge.unitPrice}
+                          onChange={(event) => updateCharge(index, 'unitPrice', event.target.value)}
                           required
                         />
                       </label>
@@ -291,6 +367,15 @@ export default function CheckOutPage({ token }) {
                       >
                         Quitar
                       </button>
+                      <p className="checkout-charge-subtotal">
+                        Subtotal:{' '}
+                        {Number.isInteger(Number(charge.quantity))
+                        && Number(charge.quantity) > 0
+                        && Number.isFinite(Number(charge.unitPrice))
+                        && Number(charge.unitPrice) >= 0
+                          ? formatCurrency(Math.round(Number(charge.unitPrice) * 100) * Number(charge.quantity) / 100)
+                          : 'Ingresa cantidad y precio unitario'}
+                      </p>
                     </div>
                   ))}
 

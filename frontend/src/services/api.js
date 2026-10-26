@@ -176,3 +176,11 @@ export function checkOutReservation(token, reservationId, settlement) {
     body: JSON.stringify(settlement),
   });
 }
+
+export function addReservationConsumption(token, reservationId, consumption) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/consumptions`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify(consumption),
+  });
+}

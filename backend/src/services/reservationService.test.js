@@ -21,6 +21,7 @@ const mongoose = require('mongoose');
 const Reservation = require('../models/reservation');
 const Room = require('../models/room');
 const {
+    addReservationConsumption,
     checkInReservation,
     checkOutReservation,
     createReservation,
@@ -102,6 +103,12 @@ describe('reservationService', () => {
             _id: 'reservation-id',
             checkInAt: new Date(Date.now() - 90 * 60 * 60 * 1000),
             nightlyRate: 100,
+            consumptions: [{
+                description: 'Minibar',
+                quantity: 2,
+                unitPrice: 25,
+                subtotal: 50
+            }],
             roomNumber: '102',
             toObject: () => ({ _id: 'reservation-id', roomNumber: '102' })
         };
@@ -121,9 +128,38 @@ describe('reservationService', () => {
             settlementEstimate: {
                 actualNights: 4,
                 nightlyRate: 100,
-                roomSubtotal: 400
+                roomSubtotal: 400,
+                consumptionsTotal: 50,
+                totalDue: 450
             }
         });
+    });
+
+    it('registers a calculated consumption only on an active stay', async () => {
+        const updatedReservation = { _id: 'reservation-id' };
+        Reservation.findOneAndUpdate.mockResolvedValue(updatedReservation);
+
+        await expect(addReservationConsumption('reservation-id', {
+            description: 'Lavandería',
+            quantity: 3,
+            unitPrice: 12.5
+        })).resolves.toBe(updatedReservation);
+
+        expect(Reservation.findOneAndUpdate).toHaveBeenCalledWith(
+            { _id: 'reservation-id', status: 'ocupada' },
+            {
+                $push: {
+                    consumptions: {
+                        description: 'Lavandería',
+                        quantity: 3,
+                        unitPrice: 12.5,
+                        subtotal: 37.5,
+                        amount: 37.5
+                    }
+                }
+            },
+            { new: true, runValidators: true }
+        );
     });
 
     it('creates a reservation atomically with a calculated total', async () => {
@@ -360,7 +396,7 @@ describe('reservationService', () => {
 
         await expect(checkOutReservation({
             reservationId: reservation._id,
-            additionalCharges: [{ description: 'Minibar', amount: 50 }],
+            additionalCharges: [{ description: 'Minibar', quantity: 2, unitPrice: 25 }],
             paidAmount: 250,
             paymentMethod: 'tarjeta'
         })).resolves.toBe(finalized);
@@ -384,7 +420,13 @@ describe('reservationService', () => {
                         actualNights: 2,
                         nightlyRate: 100,
                         roomSubtotal: 200,
-                        additionalCharges: [{ description: 'Minibar', amount: 50 }],
+                        additionalCharges: [{
+                            description: 'Minibar',
+                            quantity: 2,
+                            unitPrice: 25,
+                            subtotal: 50,
+                            amount: 50
+                        }],
                         additionalChargesTotal: 50,
                         totalAmount: 250,
                         paidAmount: 250,
@@ -396,6 +438,89 @@ describe('reservationService', () => {
             expect.objectContaining({ new: true, runValidators: true, session })
         );
         expect(session.endSession).toHaveBeenCalled();
+    });
+
+    it('includes previously registered consumptions in the final settlement', async () => {
+        const session = createSessionMock();
+        const reservation = {
+            _id: 'reservation-id',
+            room: 'room-id',
+            status: 'ocupada',
+            checkInAt: new Date(Date.now() - 60 * 60 * 1000),
+            checkOut: new Date(Date.now() + 86400000),
+            nightlyRate: 100,
+            consumptions: [{
+                description: 'Minibar',
+                quantity: 2,
+                unitPrice: 25,
+                subtotal: 50,
+                amount: 50
+            }]
+        };
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue(reservation)
+        });
+        Room.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({ _id: 'room-id', status: 'ocupada' })
+        });
+        Room.updateOne.mockResolvedValue({ matchedCount: 1 });
+        Reservation.findOneAndUpdate.mockResolvedValue({ _id: 'reservation-id' });
+
+        await checkOutReservation({
+            reservationId: reservation._id,
+            paidAmount: 150,
+            paymentMethod: 'efectivo'
+        });
+
+        expect(Reservation.findOneAndUpdate).toHaveBeenCalledWith(
+            { _id: reservation._id, status: 'ocupada' },
+            {
+                $set: expect.objectContaining({
+                    settlement: expect.objectContaining({
+                        roomSubtotal: 100,
+                        consumptionsTotal: 50,
+                        consumptions: reservation.consumptions,
+                        additionalChargesTotal: 0,
+                        totalAmount: 150,
+                        paidAmount: 150
+                    })
+                })
+            },
+            expect.objectContaining({ session })
+        );
+    });
+
+    it('blocks checkout when a registered consumption subtotal is inconsistent', async () => {
+        createSessionMock();
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                _id: 'reservation-id',
+                room: 'room-id',
+                status: 'ocupada',
+                checkInAt: new Date(Date.now() - 60 * 60 * 1000),
+                checkOut: new Date(Date.now() + 86400000),
+                nightlyRate: 100,
+                consumptions: [{
+                    description: 'Minibar',
+                    quantity: 2,
+                    unitPrice: 25,
+                    subtotal: 40
+                }]
+            })
+        });
+        Room.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({ _id: 'room-id', status: 'ocupada' })
+        });
+
+        await expect(checkOutReservation({
+            reservationId: 'reservation-id',
+            paidAmount: 100,
+            paymentMethod: 'efectivo'
+        })).rejects.toMatchObject({
+            statusCode: 409,
+            message: expect.stringContaining('datos inconsistentes')
+        });
+        expect(Room.updateOne).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -470,8 +595,25 @@ describe('reservationService', () => {
     it('rejects invalid additional charges and payment methods', async () => {
         await expect(checkOutReservation({
             reservationId: 'reservation-id',
-            additionalCharges: [{ description: 'x', amount: 20 }],
+            additionalCharges: [{ description: 'x', quantity: 1, unitPrice: 20 }],
             paidAmount: 220,
+            paymentMethod: 'efectivo'
+        })).rejects.toMatchObject({ statusCode: 400 });
+
+        await expect(checkOutReservation({
+            reservationId: 'reservation-id',
+            additionalCharges: [{ description: 'Minibar', quantity: 2, unitPrice: 20, amount: 30 }],
+            paidAmount: 230,
+            paymentMethod: 'efectivo'
+        })).rejects.toMatchObject({
+            statusCode: 400,
+            message: expect.stringContaining('no coincide')
+        });
+
+        await expect(checkOutReservation({
+            reservationId: 'reservation-id',
+            additionalCharges: [{ description: 'Minibar', quantity: 1.5, unitPrice: 20 }],
+            paidAmount: 230,
             paymentMethod: 'efectivo'
         })).rejects.toMatchObject({ statusCode: 400 });
 

@@ -55,6 +55,19 @@ const checkOutReservation = catchAsync(async (req, res) => {
     });
 });
 
+const addReservationConsumption = catchAsync(async (req, res) => {
+    const reservation = await reservationService.addReservationConsumption(
+        req.params.id,
+        req.body
+    );
+
+    res.status(201).json({
+        status: 'success',
+        message: 'El consumo se registró en la cuenta de la estancia',
+        data: { reservation }
+    });
+});
+
 const getAvailableRooms = catchAsync(async (req, res) => {
     const rooms = await reservationService.getAvailableRooms(
         req.query.checkIn,
@@ -119,6 +132,7 @@ module.exports = {
     checkInReservation,
     getPendingCheckOuts,
     checkOutReservation,
+    addReservationConsumption,
     getAvailableRooms,
     getReservations,
     getReservationById,

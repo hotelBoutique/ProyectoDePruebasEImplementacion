@@ -21,7 +21,8 @@ jest.mock('../services/reservationService', () => ({
     getPendingCheckIns: jest.fn(),
     checkInReservation: jest.fn(),
     getPendingCheckOuts: jest.fn(),
-    checkOutReservation: jest.fn()
+    checkOutReservation: jest.fn(),
+    addReservationConsumption: jest.fn()
 }));
 
 jest.mock('../utils/logger', () => ({
@@ -204,7 +205,7 @@ describe('/api/v1/reservations', () => {
             .send({
                 paidAmount: 250,
                 paymentMethod: 'tarjeta',
-                additionalCharges: [{ description: 'Minibar', amount: 50 }]
+                additionalCharges: [{ description: 'Minibar', quantity: 2, unitPrice: 25 }]
             });
 
         expect(response.status).toBe(200);
@@ -213,7 +214,7 @@ describe('/api/v1/reservations', () => {
             reservationId: '507f1f77bcf86cd799439012',
             paidAmount: 250,
             paymentMethod: 'tarjeta',
-            additionalCharges: [{ description: 'Minibar', amount: 50 }]
+            additionalCharges: [{ description: 'Minibar', quantity: 2, unitPrice: 25 }]
         });
     });
 
@@ -223,7 +224,7 @@ describe('/api/v1/reservations', () => {
             .send({
                 paidAmount: -1,
                 paymentMethod: 'cheque',
-                additionalCharges: [{ description: 'x', amount: -10 }]
+                additionalCharges: [{ description: 'Minibar', quantity: -1, unitPrice: -10 }]
             });
         expect(invalid.status).toBe(400);
         expect(reservationService.checkOutReservation).not.toHaveBeenCalled();
@@ -234,5 +235,38 @@ describe('/api/v1/reservations', () => {
             .send({ paidAmount: 100, paymentMethod: 'efectivo' });
         expect(forbidden.status).toBe(403);
         expect(reservationService.checkOutReservation).not.toHaveBeenCalled();
+    });
+
+    it('registers a consumption for an active receptionist stay', async () => {
+        reservationService.addReservationConsumption.mockResolvedValue({
+            _id: 'reservation-id',
+            consumptions: [{ description: 'Minibar', quantity: 2, unitPrice: 20, subtotal: 40 }]
+        });
+
+        const response = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions')
+            .send({ description: 'Minibar', quantity: 2, unitPrice: 20 });
+
+        expect(response.status).toBe(201);
+        expect(response.body.message).toContain('consumo se registró');
+        expect(reservationService.addReservationConsumption).toHaveBeenCalledWith(
+            '507f1f77bcf86cd799439012',
+            { description: 'Minibar', quantity: 2, unitPrice: 20 }
+        );
+    });
+
+    it('validates consumption details and denies administrators', async () => {
+        const invalid = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions')
+            .send({ description: 'x', quantity: 0, unitPrice: -1 });
+        expect(invalid.status).toBe(400);
+        expect(reservationService.addReservationConsumption).not.toHaveBeenCalled();
+
+        const forbidden = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions')
+            .set('x-role', 'ADMIN')
+            .send({ description: 'Minibar', quantity: 1, unitPrice: 5 });
+        expect(forbidden.status).toBe(403);
+        expect(reservationService.addReservationConsumption).not.toHaveBeenCalled();
     });
 });
