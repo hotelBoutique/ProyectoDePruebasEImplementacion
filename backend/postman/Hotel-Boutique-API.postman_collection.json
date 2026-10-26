@@ -1,0 +1,3251 @@
+{
+  "info": {
+    "name": "Hotel Boutique API - pruebas automatizadas",
+    "description": "Colección Postman para validar los endpoints REST del backend: códigos HTTP, contrato JSON, latencia configurable, autenticación JWT, autorización por roles y flujos principales. Ejecutar en orden contra una base de datos exclusiva para pruebas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const contentType = (pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase();",
+          "pm.test(\"La respuesta usa JSON\", function () {",
+          "  pm.expect(contentType).to.include(\"application/json\");",
+          "});",
+          "pm.test(\"El cuerpo es JSON válido\", function () {",
+          "  pm.expect(function () { pm.response.json(); }).not.to.throw();",
+          "});",
+          "const maxResponseMs = Number(pm.environment.get(\"maxResponseMs\") || 2000);",
+          "pm.test(\"Tiempo de respuesta dentro del límite configurado\", function () {",
+          "  pm.expect(Number.isFinite(maxResponseMs), \"maxResponseMs debe ser numérico\").to.eql(true);",
+          "  pm.expect(pm.response.responseTime).to.be.at.most(maxResponseMs);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "runTag",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Salud",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 - Autenticación y sesiones",
+      "item": [
+        {
+          "name": "Login administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.token).to.be.a(\"string\").and.not.empty; pm.expect(body.data.user.role).to.eql(\"ADMIN\"); });",
+                  "if (pm.response.code === 200) { const body = pm.response.json(); pm.environment.set(\"adminToken\", body.data.token); pm.environment.set(\"adminId\", body.data.user._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con credenciales incorrectas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"incorrecta-{{runTag}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });",
+                  "pm.test(\"Detalle del error\", function () { const body = pm.response.json(); pm.expect(body.message).to.include(\"incorrectos\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar usuario autenticado administrador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user._id).to.eql(pm.environment.get(\"adminId\")); pm.expect(body.data.user).not.to.have.property(\"password\"); pm.expect(body.data.user).not.to.have.property(\"tokenVersion\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar perfil sin token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar perfil con token malformado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.request.headers.upsert({ key: \"Authorization\", value: \"Bearer token-malformado\" });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });",
+                  "pm.test(\"Detalle del error\", function () { const body = pm.response.json(); pm.expect(body.message).to.include(\"Token inválido\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar recepcionista mediante /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"QA Recepción {{runTag}}\",\n  \"email\": \"qa+{{runTag}}@example.test\",\n  \"password\": \"{{testReceptionPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user.role).to.eql(\"RECEPCIONISTA\"); pm.expect(body.data.user).not.to.have.property(\"password\"); });",
+                  "if (pm.response.code === 201) { const body = pm.response.json(); pm.environment.set(\"registeredReceptionId\", body.data.user._id); pm.environment.set(\"registeredReceptionEmail\", \"qa+\" + pm.collectionVariables.get(\"runTag\") + \"@example.test\"); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login recepcionista creado por la colección",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registeredReceptionEmail}}\",\n  \"password\": \"{{testReceptionPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.token).to.be.a(\"string\").and.not.empty; pm.expect(body.data.user.role).to.eql(\"RECEPCIONISTA\"); });",
+                  "if (pm.response.code === 200) { const body = pm.response.json(); pm.environment.set(\"receptionToken\", body.data.token); pm.environment.set(\"registeredReceptionId\", body.data.user._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar usuario autenticado recepcionista",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user.role).to.eql(\"RECEPCIONISTA\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar perfil y cambiar contraseña",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"QA Perfil actualizado {{runTag}}\",\n  \"currentPassword\": \"{{testReceptionPassword}}\",\n  \"newPassword\": \"{{rotatedReceptionPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user.name).to.include(\"QA Perfil actualizado\"); pm.expect(body.data.token).to.be.a(\"string\").and.not.empty; });",
+                  "if (pm.response.code === 200) { const body = pm.response.json(); pm.environment.set(\"receptionToken\", body.data.token); pm.environment.set(\"testReceptionPassword\", pm.environment.get(\"rotatedReceptionPassword\")); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token anterior rechazado después del cambio de contraseña",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{oldReceptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Administración y reportes",
+      "item": [
+        {
+          "name": "Dashboard de administrador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/dashboard",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.user.role).to.eql(\"ADMIN\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte administrativo de ocupación",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/reports/occupancy?startDate={{today}}&endDate={{tomorrow}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data).to.be.an(\"object\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte administrativo de ingresos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/reports/income?startDate={{today}}&endDate={{tomorrow}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data).to.be.an(\"object\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte administrativo de ventas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/reports/sales?startDate={{today}}&endDate={{tomorrow}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data).to.be.an(\"object\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Recepción y reportes",
+      "item": [
+        {
+          "name": "Dashboard de recepción",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reception/dashboard",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.user.role).to.eql(\"RECEPCIONISTA\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte diario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reception/reports/daily?date={{today}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte de llegadas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reception/reports/arrivals?date={{today}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte de salidas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reception/reports/departures?date={{today}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte de ocupación actual",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reception/reports/occupancy",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Usuarios",
+      "item": [
+        {
+          "name": "Listar recepcionistas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/users",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.users).to.be.an(\"array\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear recepcionista",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/users",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"QA Usuario {{runTag}}\",\n  \"email\": \"managed+{{runTag}}@example.test\",\n  \"password\": \"{{managedTestPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user.role).to.eql(\"RECEPCIONISTA\"); });",
+                  "if (pm.response.code === 201) { const body = pm.response.json(); pm.environment.set(\"managedReceptionistId\", body.data.user._id); pm.environment.set(\"managedReceptionistEmail\", \"managed+\" + pm.collectionVariables.get(\"runTag\") + \"@example.test\"); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login del recepcionista administrado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{managedReceptionistEmail}}\",\n  \"password\": \"{{managedTestPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user.role).to.eql(\"RECEPCIONISTA\"); });",
+                  "if (pm.response.code === 200) { const body = pm.response.json(); pm.environment.set(\"managedReceptionistToken\", body.data.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/users/admin",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"QA Admin {{runTag}}\",\n  \"email\": \"admin+{{runTag}}@example.test\",\n  \"password\": \"{{managedTestPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user.role).to.eql(\"ADMIN\"); });",
+                  "if (pm.response.code === 201) { const body = pm.response.json(); pm.environment.set(\"createdAdminId\", body.data.user._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar recepcionista",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/users/{{managedReceptionistId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"QA Usuario actualizado {{runTag}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user.name).to.include(\"QA Usuario actualizado\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Desactivar recepcionista de prueba",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/users/{{managedReceptionistId}}/status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.user.isActive).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token rechazado para cuenta desactivada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managedReceptionistToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });",
+                  "pm.test(\"Detalle del error\", function () { const body = pm.response.json(); pm.expect(body.message).to.include(\"desactivada\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Habitaciones",
+      "item": [
+        {
+          "name": "Crear habitación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/rooms",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"QA-{{runTag}}\",\n  \"type\": \"Suite\",\n  \"description\": \"Registro automatizado\",\n  \"capacity\": 2,\n  \"price\": 255,\n  \"status\": \"disponible\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.room.number).to.include(\"QA-\"); pm.expect(body.data.room.status).to.eql(\"disponible\"); });",
+                  "if (pm.response.code === 201) { const body = pm.response.json(); pm.environment.set(\"roomId\", body.data.room._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar habitaciones con filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/rooms?status=disponible&type=Suite&minCapacity=1&minPrice=0&maxPrice=10000",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.rooms).to.be.an(\"array\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar habitación",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/rooms/{{roomId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Habitación actualizada por Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.room._id).to.eql(pm.environment.get(\"roomId\")); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 - Productos",
+      "item": [
+        {
+          "name": "Crear producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"QA-Producto-{{runTag}}\",\n  \"description\": \"Producto de pruebas\",\n  \"category\": \"QA Automatización\",\n  \"price\": 12,\n  \"stock\": 5,\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.product.name).to.include(\"QA-Producto-\"); });",
+                  "if (pm.response.code === 201) { const body = pm.response.json(); pm.environment.set(\"productId\", body.data.product._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar productos con filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products?search=QA-Producto-{{runTag}}&category=QA%20Automatizaci%C3%B3n&status=activo&inStock=true",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.products).to.be.an(\"array\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar categorías de productos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products/categories",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.categories).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar producto",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products/{{productId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 12,\n  \"stock\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.product._id).to.eql(pm.environment.get(\"productId\")); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 - Reservaciones y ciclo de estancia",
+      "item": [
+        {
+          "name": "Consultar disponibilidad antes de reservar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/availability?checkIn={{today}}&checkOut={{tomorrow}}&type=Suite&guests=2&maxPrice=10000",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.rooms).to.be.an(\"array\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear reservación para ciclo de estancia",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guest\": {\n    \"fullName\": \"QA Huésped {{runTag}}\",\n    \"email\": \"guest+{{runTag}}@example.test\",\n    \"phone\": \"3001234567\",\n    \"identification\": \"QA{{runTag}}\"\n  },\n  \"roomId\": \"{{roomId}}\",\n  \"checkIn\": \"{{today}}\",\n  \"checkOut\": \"{{tomorrow}}\",\n  \"nightlyRate\": 255\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation.status).to.eql(\"reservada\"); pm.expect(body.data.receipt).to.be.an(\"object\"); });",
+                  "if (pm.response.code === 201) { const body = pm.response.json(); pm.environment.set(\"reservationId\", body.data.reservation._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear reservación para probar cancelación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guest\": {\n    \"fullName\": \"QA Cancelación {{runTag}}\",\n    \"email\": \"cancel+{{runTag}}@example.test\",\n    \"phone\": \"3001234568\",\n    \"identification\": \"C{{runTag}}\"\n  },\n  \"roomId\": \"{{roomId}}\",\n  \"checkIn\": \"{{tomorrow}}\",\n  \"checkOut\": \"{{dayAfterTomorrow}}\",\n  \"nightlyRate\": 255\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation.status).to.eql(\"reservada\"); });",
+                  "if (pm.response.code === 201) { const body = pm.response.json(); pm.environment.set(\"cancelReservationId\", body.data.reservation._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar reservaciones con filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations?checkInFrom={{today}}&checkInTo={{tomorrow}}&roomId={{roomId}}&roomType=Suite&status=reservada",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservations).to.be.an(\"array\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar reservación por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation._id).to.eql(pm.environment.get(\"reservationId\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar reservación pendiente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nightlyRate\": 255\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation._id).to.eql(pm.environment.get(\"reservationId\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelar reservación pendiente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{cancelReservationId}}/cancel",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Cancelación automatizada de prueba\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation.status).to.eql(\"cancelada\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar check-ins pendientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/check-ins/pending",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservations).to.be.an(\"array\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar check-in",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/check-in",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation.status).to.eql(\"ocupada\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar check-outs pendientes y capturar saldo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/check-outs/pending",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservations).to.be.an(\"array\"); });",
+                  "if (pm.response.code === 200) { const body = pm.response.json(); const item = body.data.reservations.find((reservation) => String(reservation._id) === String(pm.environment.get(\"reservationId\"))); if (item && item.settlementEstimate) pm.environment.set(\"totalDue\", String(item.settlementEstimate.totalDue)); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar consumos de la estancia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/consumptions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.consumptions).to.be.an(\"array\"); pm.expect(body.data.status).to.eql(\"ocupada\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar consumo desde el catálogo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/consumptions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation.consumptions).to.be.an(\"array\").that.is.not.empty; });",
+                  "if (pm.response.code === 201) { const body = pm.response.json(); const consumption = body.data.reservation.consumptions[body.data.reservation.consumptions.length - 1]; pm.environment.set(\"consumptionId\", consumption._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Corregir consumo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/consumptions/{{consumptionId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"QA consumo corregido\",\n  \"quantity\": 2,\n  \"unitPrice\": 12\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation._id).to.eql(pm.environment.get(\"reservationId\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anular consumo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/consumptions/{{consumptionId}}/void",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Anulación automatizada de prueba\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation._id).to.eql(pm.environment.get(\"reservationId\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verificar consumo anulado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/consumptions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.voidedConsumptions).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recalcular saldo antes del check-out",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/check-outs/pending",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservations).to.be.an(\"array\"); });",
+                  "if (pm.response.code === 200) { const body = pm.response.json(); const item = body.data.reservations.find((reservation) => String(reservation._id) === String(pm.environment.get(\"reservationId\"))); if (item && item.settlementEstimate) pm.environment.set(\"totalDue\", String(item.settlementEstimate.totalDue)); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar check-out y pago",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/check-out",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paidAmount\": \"{{totalDue}}\",\n  \"paymentMethod\": \"transferencia\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.reservation.status).to.eql(\"finalizada\"); pm.expect(body.data.receipt.settlement.status).to.eql(\"pagada\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar comprobante de la estancia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/receipt",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.receipt.receiptNumber).to.be.a(\"string\"); pm.expect(body.data.receipt.totals.total).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar lista de pagos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/payments",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.payments).to.be.an(\"array\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar lista de comprobantes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/receipts",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.payments).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar pago por reservación",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/payments/{{reservationId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.payment).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar historial de liquidaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/settlements/history",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.data.settlements).to.be.an(\"array\"); pm.expect(body.results).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 - Seguridad y validaciones",
+      "item": [
+        {
+          "name": "Admin no puede registrar reservaciones",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin no puede registrar check-in",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/check-in",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recepción no puede consultar administración",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/dashboard",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recepción no puede gestionar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/users",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recepción no puede crear habitaciones",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/rooms",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"forbidden\",\n  \"type\": \"Suite\",\n  \"price\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recepción no puede crear productos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"No autorizado\",\n  \"category\": \"QA\",\n  \"price\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sin token no se puede consultar habitaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/rooms",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro de recepción sin permisos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sin permiso\",\n  \"email\": \"forbidden@example.test\",\n  \"password\": \"Password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", function () { pm.response.to.have.status(403); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Disponibilidad rechaza fechas faltantes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/availability?type=Suite",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Contrato de error de validación\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"fail\"); pm.expect(body.message).to.be.a(\"string\"); pm.expect(body.errors).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Habitaciones rechaza filtros inválidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/rooms?status=estado-invalido",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Contrato de error de validación\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"fail\"); pm.expect(body.message).to.be.a(\"string\"); pm.expect(body.errors).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Productos rechaza filtros inválidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products?status=estado-invalido",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Contrato de error de validación\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"fail\"); pm.expect(body.message).to.be.a(\"string\"); pm.expect(body.errors).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pago rechaza paginación inválida",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/payments?page=0",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Contrato de error de validación\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"fail\"); pm.expect(body.message).to.be.a(\"string\"); pm.expect(body.errors).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reservación rechaza identificador malformado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/reservations/identificador-invalido",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Contrato de error de validación\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"fail\"); pm.expect(body.message).to.be.a(\"string\"); pm.expect(body.errors).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Creación de habitación rechaza cuerpo vacío",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/rooms",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Contrato de error de validación\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"fail\"); pm.expect(body.message).to.be.a(\"string\"); pm.expect(body.errors).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Habitación duplicada responde 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"QA-{{runTag}}\",\n  \"type\": \"Suite\",\n  \"price\": 255\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/rooms"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });",
+                  "pm.test(\"Mensaje esperado\", function () { const body = pm.response.json(); pm.expect(body.message).to.include(\"Ya existe una habitación\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producto duplicado responde 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"QA-Producto-{{runTag}}\",\n  \"category\": \"QA Automatización\",\n  \"price\": 12,\n  \"stock\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });",
+                  "pm.test(\"Mensaje esperado\", function () { const body = pm.response.json(); pm.expect(body.message).to.include(\"Ya existe un producto\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Creación de producto rechaza cuerpo vacío",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Contrato de error de validación\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"fail\"); pm.expect(body.message).to.be.a(\"string\"); pm.expect(body.errors).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Creación de usuario rechaza cuerpo vacío",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/users",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Contrato de error de validación\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"fail\"); pm.expect(body.message).to.be.a(\"string\"); pm.expect(body.errors).to.be.an(\"array\").that.is.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reservación inexistente responde 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/v1/reservations/507f1f77bcf86cd799439099"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.include(\"reservación\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ruta inexistente responde 404 JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/__postman_ruta_inexistente__",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 - Cierre de sesión",
+      "item": [
+        {
+          "name": "Cerrar sesión de recepcionista",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/logout",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Envoltorio de éxito\", function () { const body = pm.response.json(); pm.expect(body.status).to.eql(\"success\"); });",
+                  "pm.test(\"Estructura de respuesta\", function () { const body = pm.response.json(); pm.expect(body.message).to.include(\"Sesión cerrada\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token rechazado después del cierre de sesión",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{receptionToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Contrato de error\", function () { const body = pm.response.json(); pm.expect(body.success).to.eql(false); pm.expect(body.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
