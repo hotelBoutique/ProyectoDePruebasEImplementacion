@@ -6,6 +6,7 @@ import ConsumptionPage from './pages/ConsumptionPage.jsx';
 import ReceptionistsPage from './pages/ReceptionistsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import OccupancyReportPage from './pages/OccupancyReportPage.jsx';
+import OpenAccountsPage from './pages/OpenAccountsPage.jsx';
 import IncomeReportPage from './pages/IncomeReportPage.jsx';
 import ProductCatalogPage from './pages/ProductCatalogPage.jsx';
 import SalesReportPage from './pages/SalesReportPage.jsx';
@@ -322,11 +323,13 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
   const [activeItem, setActiveItem] = useState(homeItem.id);
   const [accountActive, setAccountActive] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedCheckoutReservationId, setSelectedCheckoutReservationId] = useState('');
   const selectedItem = groups.flatMap((group) => group.items).find((item) => item.id === activeItem);
 
-  function selectItem(itemId) {
+  function selectItem(itemId, options = {}) {
     setAccountActive(itemId === 'account');
     setActiveItem(itemId === 'account' ? '' : itemId);
+    setSelectedCheckoutReservationId(itemId === 'reception-check-out' ? options.reservationId || '' : '');
     setMobileMenuOpen(false);
   }
 
@@ -478,6 +481,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <ProductCatalogPage token={token} />
           ) : isAdmin && activeItem === 'settlements-history' ? (
             <SettlementHistoryPage token={token} />
+          ) : !isAdmin && activeItem === 'reception-settlements-open' ? (
+            <OpenAccountsPage token={token} onNavigate={selectItem} />
           ) : isAdmin && activeItem === 'reports-occupancy' ? (
             <OccupancyReportPage token={token} />
           ) : isAdmin && activeItem === 'reports-income' ? (
@@ -487,7 +492,7 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
           ) : !isAdmin && activeItem === 'reception-check-in' ? (
             <CheckInPage token={token} />
           ) : !isAdmin && activeItem === 'reception-check-out' ? (
-            <CheckOutPage token={token} />
+            <CheckOutPage token={token} initialReservationId={selectedCheckoutReservationId} />
           ) : !isAdmin && activeItem === 'reception-consumptions-create' ? (
             <ConsumptionPage token={token} />
           ) : (
