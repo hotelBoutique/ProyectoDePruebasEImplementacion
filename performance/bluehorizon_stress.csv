@@ -1,0 +1,111 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1793046774406,287,POST - Login,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1480,295,2,2,http://localhost:3000/api/v1/auth/login,287,0,2
+1793046775901,247,POST - Login,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1480,295,3,3,http://localhost:3000/api/v1/auth/login,247,0,1
+1793046776695,2,GET - Health,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1020,388,3,3,http://localhost:3000/health,2,0,0
+1793046777400,247,POST - Login,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1480,295,4,4,http://localhost:3000/api/v1/auth/login,247,0,1
+1793046778149,2,GET - Health,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1020,388,4,4,http://localhost:3000/health,2,0,0
+1793046778698,8,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1288,396,5,5,http://localhost:3000/api/v1/auth/me,8,0,0
+1793046778897,249,POST - Login,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1480,295,5,5,http://localhost:3000/api/v1/auth/login,249,0,1
+1793046779649,1,GET - Health,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1020,388,5,5,http://localhost:3000/health,1,0,0
+1793046780152,6,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1288,396,6,6,http://localhost:3000/api/v1/auth/me,6,0,0
+1793046780409,247,POST - Login,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1480,295,6,6,http://localhost:3000/api/v1/auth/login,247,0,1
+1793046780721,6,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1328,408,6,6,http://localhost:3000/api/v1/reception/dashboard,6,0,0
+1793046781159,1,GET - Health,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1020,388,6,6,http://localhost:3000/health,1,0,0
+1793046781651,6,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1288,396,7,7,http://localhost:3000/api/v1/auth/me,6,0,0
+1793046781908,245,POST - Login,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1480,295,7,7,http://localhost:3000/api/v1/auth/login,245,0,1
+1793046782172,5,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1328,408,7,7,http://localhost:3000/api/v1/reception/dashboard,5,0,0
+1793046782657,1,GET - Health,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1020,388,7,7,http://localhost:3000/health,1,0,0
+1793046782727,8,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1746,395,7,7,http://localhost:3000/api/v1/rooms/,8,0,0
+1793046783160,6,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1288,396,8,8,http://localhost:3000/api/v1/auth/me,6,0,0
+1793046783405,246,POST - Login,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1480,295,8,8,http://localhost:3000/api/v1/auth/login,246,0,1
+1793046783670,3,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1328,408,8,8,http://localhost:3000/api/v1/reception/dashboard,3,0,0
+1793046784153,1,GET - Health,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1020,388,8,8,http://localhost:3000/health,1,0,0
+1793046784184,6,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1746,395,8,8,http://localhost:3000/api/v1/rooms/,6,0,0
+1793046784657,6,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1288,396,9,9,http://localhost:3000/api/v1/auth/me,6,0,0
+1793046784735,6,GET - Productos,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1111,398,9,9,http://localhost:3000/api/v1/products/,6,0,0
+1793046784897,246,POST - Login,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1480,295,9,9,http://localhost:3000/api/v1/auth/login,246,0,1
+1793046785178,4,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1328,408,9,9,http://localhost:3000/api/v1/reception/dashboard,4,0,0
+1793046785651,1,GET - Health,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1020,388,9,9,http://localhost:3000/health,1,0,0
+1793046785673,6,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1746,395,9,9,http://localhost:3000/api/v1/rooms/,6,0,0
+1793046786155,4,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1288,396,10,10,http://localhost:3000/api/v1/auth/me,4,0,0
+1793046786192,5,GET - Productos,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1111,398,10,10,http://localhost:3000/api/v1/products/,5,0,0
+1793046786405,253,POST - Login,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1480,295,10,10,http://localhost:3000/api/v1/auth/login,253,0,0
+1793046786672,3,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1328,408,10,10,http://localhost:3000/api/v1/reception/dashboard,3,0,0
+1793046786749,6,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1113,408,10,10,http://localhost:3000/api/v1/products/categories,6,0,0
+1793046787152,1,GET - Health,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1020,388,10,10,http://localhost:3000/health,1,0,0
+1793046787184,6,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1746,395,10,10,http://localhost:3000/api/v1/rooms/,6,0,0
+1793046787653,6,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1288,396,10,10,http://localhost:3000/api/v1/auth/me,6,0,0
+1793046787680,9,GET - Productos,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1111,398,10,10,http://localhost:3000/api/v1/products/,9,0,0
+1793046787902,287,POST - Login,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1480,295,10,10,http://localhost:3000/api/v1/auth/login,287,0,1
+1793046788170,20,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1328,408,10,10,http://localhost:3000/api/v1/reception/dashboard,20,0,0
+1793046788201,4,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1113,408,10,10,http://localhost:3000/api/v1/products/categories,4,0,0
+1793046788660,0,GET - Health,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1020,388,10,10,http://localhost:3000/health,0,0,0
+1793046788678,6,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1746,395,10,10,http://localhost:3000/api/v1/rooms/,6,0,0
+1793046788756,6,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1115,402,10,10,http://localhost:3000/api/v1/reservations/,6,0,0
+1793046789167,4,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1288,396,10,10,http://localhost:3000/api/v1/auth/me,4,0,0
+1793046789199,10,GET - Productos,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1111,398,10,10,http://localhost:3000/api/v1/products/,10,0,0
+1793046789669,4,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1328,408,10,10,http://localhost:3000/api/v1/reception/dashboard,4,0,0
+1793046789700,6,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1113,408,10,10,http://localhost:3000/api/v1/products/categories,6,0,0
+1793046790193,1,GET - Health,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1020,388,10,10,http://localhost:3000/health,1,0,0
+1793046790193,6,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1746,395,10,10,http://localhost:3000/api/v1/rooms/,6,0,0
+1793046790209,6,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1115,402,10,10,http://localhost:3000/api/v1/reservations/,6,0,0
+1793046790662,7,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1288,396,10,10,http://localhost:3000/api/v1/auth/me,7,0,0
+1793046790694,6,GET - Productos,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1111,398,10,10,http://localhost:3000/api/v1/products/,6,0,0
+1793046790772,45,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1239,410,10,10,http://localhost:3000/api/v1/reservations/receipts,45,0,0
+1793046791183,5,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1328,408,10,10,http://localhost:3000/api/v1/reception/dashboard,4,0,0
+1793046791213,6,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1113,408,10,10,http://localhost:3000/api/v1/products/categories,6,0,0
+1793046791679,7,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1746,395,10,10,http://localhost:3000/api/v1/rooms/,7,0,0
+1793046791710,7,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1115,402,10,10,http://localhost:3000/api/v1/reservations/,7,0,0
+1793046792207,6,GET - Productos,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1111,398,10,10,http://localhost:3000/api/v1/products/,6,0,0
+1793046792207,7,GET - Mi perfil,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1288,396,10,10,http://localhost:3000/api/v1/auth/me,7,0,0
+1793046792222,9,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1239,410,10,10,http://localhost:3000/api/v1/reservations/receipts,9,0,0
+1793046792672,3,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1328,408,10,10,http://localhost:3000/api/v1/reception/dashboard,3,0,0
+1793046792703,4,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1113,408,10,10,http://localhost:3000/api/v1/products/categories,4,0,0
+1793046792829,10,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1115,419,10,10,http://localhost:3000/api/v1/reservations/check-ins/pending,10,0,0
+1793046793190,6,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1746,395,10,10,http://localhost:3000/api/v1/rooms/,6,0,0
+1793046793221,6,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1115,402,10,10,http://localhost:3000/api/v1/reservations/,6,0,0
+1793046793701,5,GET - Productos,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1111,398,10,10,http://localhost:3000/api/v1/products/,5,0,0
+1793046793732,11,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1239,410,10,10,http://localhost:3000/api/v1/reservations/receipts,11,0,0
+1793046794215,5,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1113,408,10,10,http://localhost:3000/api/v1/products/categories,5,0,0
+1793046794230,4,GET - Dashboard recepción,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1328,408,10,10,http://localhost:3000/api/v1/reception/dashboard,4,0,0
+1793046794246,6,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1115,419,10,10,http://localhost:3000/api/v1/reservations/check-ins/pending,6,0,0
+1793046794685,5,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1746,395,10,10,http://localhost:3000/api/v1/rooms/,5,0,0
+1793046794716,5,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1115,402,10,10,http://localhost:3000/api/v1/reservations/,5,0,0
+1793046794841,7,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-1,text,true,,1115,420,10,10,http://localhost:3000/api/v1/reservations/check-outs/pending,7,0,0
+1793046795200,6,GET - Productos,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1111,398,9,9,http://localhost:3000/api/v1/products/,6,0,0
+1793046795231,10,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1239,410,9,9,http://localhost:3000/api/v1/reservations/receipts,10,0,0
+1793046795716,5,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1113,408,9,9,http://localhost:3000/api/v1/products/categories,5,0,0
+1793046795747,6,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1115,419,9,9,http://localhost:3000/api/v1/reservations/check-ins/pending,6,0,0
+1793046796229,7,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1115,402,9,9,http://localhost:3000/api/v1/reservations/,7,0,0
+1793046796245,5,GET - Habitaciones,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1746,395,9,9,http://localhost:3000/api/v1/rooms/,5,0,0
+1793046796261,6,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-2,text,true,,1115,420,9,9,http://localhost:3000/api/v1/reservations/check-outs/pending,6,0,0
+1793046796694,6,GET - Productos,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1111,398,8,8,http://localhost:3000/api/v1/products/,6,0,0
+1793046796725,9,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1239,410,8,8,http://localhost:3000/api/v1/reservations/receipts,9,0,0
+1793046797206,4,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1113,408,8,8,http://localhost:3000/api/v1/products/categories,4,0,0
+1793046797252,4,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1115,419,8,8,http://localhost:3000/api/v1/reservations/check-ins/pending,4,0,0
+1793046797732,6,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1115,402,8,8,http://localhost:3000/api/v1/reservations/,6,0,0
+1793046797763,7,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-3,text,true,,1115,420,8,8,http://localhost:3000/api/v1/reservations/check-outs/pending,7,0,0
+1793046798243,10,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1239,410,7,7,http://localhost:3000/api/v1/reservations/receipts,10,0,0
+1793046798258,7,GET - Productos,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1111,398,7,7,http://localhost:3000/api/v1/products/,7,0,0
+1793046798708,6,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1113,408,7,7,http://localhost:3000/api/v1/products/categories,6,0,0
+1793046798739,8,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1115,419,7,7,http://localhost:3000/api/v1/reservations/check-ins/pending,8,0,0
+1793046799225,9,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1115,402,7,7,http://localhost:3000/api/v1/reservations/,9,0,0
+1793046799257,6,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-4,text,true,,1115,420,7,7,http://localhost:3000/api/v1/reservations/check-outs/pending,6,0,0
+1793046799745,9,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1239,410,6,6,http://localhost:3000/api/v1/reservations/receipts,9,0,0
+1793046800265,8,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1115,419,6,6,http://localhost:3000/api/v1/reservations/check-ins/pending,8,0,0
+1793046800280,6,GET - Categorías de productos,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1113,408,6,6,http://localhost:3000/api/v1/products/categories,6,0,0
+1793046800716,6,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1115,402,6,6,http://localhost:3000/api/v1/reservations/,6,0,0
+1793046800748,6,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-5,text,true,,1115,420,6,6,http://localhost:3000/api/v1/reservations/check-outs/pending,6,0,0
+1793046801248,11,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1239,410,5,5,http://localhost:3000/api/v1/reservations/receipts,11,0,0
+1793046801761,5,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1115,419,5,5,http://localhost:3000/api/v1/reservations/check-ins/pending,5,0,0
+1793046802287,7,GET - Reservaciones,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1115,402,5,5,http://localhost:3000/api/v1/reservations/,7,0,0
+1793046802287,8,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-6,text,true,,1114,420,5,5,http://localhost:3000/api/v1/reservations/check-outs/pending,8,0,0
+1793046802722,8,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1238,410,4,4,http://localhost:3000/api/v1/reservations/receipts,8,0,0
+1793046803265,6,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1114,419,4,4,http://localhost:3000/api/v1/reservations/check-ins/pending,6,0,0
+1793046803780,5,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-7,text,true,,1114,420,4,4,http://localhost:3000/api/v1/reservations/check-outs/pending,5,0,0
+1793046804295,9,GET - Comprobantes,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1238,410,3,3,http://localhost:3000/api/v1/reservations/receipts,9,0,0
+1793046804731,6,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1114,419,3,3,http://localhost:3000/api/v1/reservations/check-ins/pending,6,0,0
+1793046805276,4,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-8,text,true,,1114,420,3,3,http://localhost:3000/api/v1/reservations/check-outs/pending,4,0,0
+1793046806308,5,GET - Check-ins pendientes,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1114,419,2,2,http://localhost:3000/api/v1/reservations/check-ins/pending,5,0,0
+1793046806748,6,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-9,text,true,,1114,420,2,2,http://localhost:3000/api/v1/reservations/check-outs/pending,6,0,0
+1793046808321,5,GET - Check-outs pendientes,200,OK,Stress - usuarios concurrentes 1-10,text,true,,1114,420,1,1,http://localhost:3000/api/v1/reservations/check-outs/pending,5,0,0
