@@ -32,6 +32,97 @@ app.use(express.json());
 app.use('/api/v1/rooms', roomRoutes);
 app.use(errorHandler);
 
+describe('GET /api/v1/rooms', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('lists rooms for receptionists without filters', async () => {
+        const rooms = [{ _id: 'room-id', number: '101' }];
+        roomService.getAllRooms.mockResolvedValue(rooms);
+
+        const response = await request(app)
+            .get('/api/v1/rooms')
+            .set('x-role', 'RECEPCIONISTA');
+
+        expect(response.status).toBe(200);
+        expect(response.body.results).toBe(1);
+        expect(response.body.data.rooms).toEqual(rooms);
+    });
+
+    it('passes valid filters to the service', async () => {
+        roomService.getAllRooms.mockResolvedValue([{ _id: 'room-id', number: '101' }]);
+
+        const response = await request(app)
+            .get('/api/v1/rooms')
+            .query({ status: 'disponible', type: 'Suite', minCapacity: '2', minPrice: '100', maxPrice: '300' });
+
+        expect(response.status).toBe(200);
+        expect(roomService.getAllRooms).toHaveBeenCalledWith({
+            status: 'disponible',
+            type: 'Suite',
+            minCapacity: '2',
+            minPrice: '100',
+            maxPrice: '300'
+        });
+    });
+
+    it('explains when no room matches the filters', async () => {
+        roomService.getAllRooms.mockResolvedValue([]);
+
+        const response = await request(app)
+            .get('/api/v1/rooms')
+            .query({ status: 'limpieza' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.results).toBe(0);
+        expect(response.body.message).toBe('No hay habitaciones que coincidan con los filtros');
+    });
+
+    it('keeps the original message when the inventory is empty', async () => {
+        roomService.getAllRooms.mockResolvedValue([]);
+
+        const response = await request(app).get('/api/v1/rooms');
+
+        expect(response.body.message).toBe('No existen habitaciones registradas');
+    });
+
+    it('rejects invalid filter values', async () => {
+        const response = await request(app)
+            .get('/api/v1/rooms')
+            .query({ status: 'perdida', type: 'Penthouse', minCapacity: '0', minPrice: '-5' });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg)).toEqual(expect.arrayContaining([
+            'El estado no es válido',
+            'El tipo de habitación no es válido',
+            'La capacidad mínima debe ser un número entero mayor o igual a 1',
+            'El precio mínimo debe ser un número mayor o igual a 0'
+        ]));
+        expect(roomService.getAllRooms).not.toHaveBeenCalled();
+    });
+
+    it('rejects a maximum price below the minimum price', async () => {
+        const response = await request(app)
+            .get('/api/v1/rooms')
+            .query({ minPrice: '300', maxPrice: '100' });
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg))
+            .toContain('El precio máximo debe ser mayor o igual al precio mínimo');
+        expect(roomService.getAllRooms).not.toHaveBeenCalled();
+    });
+
+    it('rejects a filter sent more than once', async () => {
+        const response = await request(app)
+            .get('/api/v1/rooms?status=disponible&status=ocupada');
+
+        expect(response.status).toBe(400);
+        expect(response.body.errors.map(({ msg }) => msg)).toContain('Cada filtro admite un solo valor');
+        expect(roomService.getAllRooms).not.toHaveBeenCalled();
+    });
+});
+
 describe('POST /api/v1/rooms', () => {
     beforeEach(() => {
         jest.clearAllMocks();

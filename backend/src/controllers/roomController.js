@@ -4,12 +4,18 @@ const catchAsync = require('../utils/catchAsync');
 const getRooms = catchAsync(
     async (req, res) => {
 
-        const rooms = await roomService.getAllRooms();
+        const { status, type, minCapacity, minPrice, maxPrice } = req.query;
+        const filters = { status, type, minCapacity, minPrice, maxPrice };
+        const hasFilters = Object.values(filters).some(value => value && String(value).trim());
+
+        const rooms = await roomService.getAllRooms(filters);
 
         if (rooms.length === 0) {
             return res.status(200).json({
                 status: 'success',
-                message: 'No existen habitaciones registradas',
+                message: hasFilters
+                    ? 'No hay habitaciones que coincidan con los filtros'
+                    : 'No existen habitaciones registradas',
                 results: 0,
                 data: {
                     rooms
