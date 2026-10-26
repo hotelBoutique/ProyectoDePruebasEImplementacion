@@ -442,8 +442,13 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
             <ReservationsPage token={token} mode="availability" />
           ) : !isAdmin && activeItem === 'reception-rooms-availability' ? (
             <ReservationsPage token={token} mode="availability" />
-          ) : !isAdmin && activeItem === 'reception-reservations-create' ? (
-            <ReservationsPage token={token} />
+          ) : (isAdmin && activeItem === 'reservations-list') || (!isAdmin && ['reception-reservations-list', 'reception-reservations-create'].includes(activeItem)) ? (
+            <ReservationsPage
+              token={token}
+              mode={activeItem === 'reception-reservations-create' ? 'create' : 'list'}
+              canCreate={!isAdmin}
+              onNavigate={selectItem}
+            />
           ) : (
             <section className="module-placeholder" aria-labelledby="module-title">
               <span className="module-placeholder-mark" aria-hidden="true"><SidebarIcon name="home" /></span>

@@ -1,13 +1,15 @@
 const express = require('express');
-const { body, query } = require('express-validator');
+const { body, param, query } = require('express-validator');
 
 const reservationController = require('../controllers/reservationController');
 const { protect, restrictTo } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validate');
 const { ROLES } = require('../constants/roles');
+const ROOM_TYPES = require('../constants/roomTypes');
 const { isValidDateOnly } = require('../utils/reservationDates');
 
 const router = express.Router();
+const RESERVATION_STATUSES = ['reservada', 'ocupada', 'cancelada', 'finalizada'];
 const validateDate = (value, fieldName) => {
     if (!isValidDateOnly(value)) {
         throw new Error(`${fieldName} debe ser una fecha válida con formato AAAA-MM-DD`);
@@ -17,6 +19,35 @@ const validateDate = (value, fieldName) => {
 };
 
 router.use(protect);
+
+router.get(
+    '/',
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    query('checkInFrom')
+        .optional({ checkFalsy: true })
+        .custom(value => validateDate(value, 'La fecha inicial')),
+    query('checkInTo')
+        .optional({ checkFalsy: true })
+        .custom(value => validateDate(value, 'La fecha final')),
+    query('checkInTo')
+        .optional({ checkFalsy: true })
+        .custom((checkInTo, { req }) => !req.query.checkInFrom || checkInTo >= req.query.checkInFrom)
+        .withMessage('La fecha final debe ser igual o posterior a la fecha inicial'),
+    query('roomId')
+        .optional({ checkFalsy: true })
+        .isMongoId()
+        .withMessage('El identificador de habitación no es válido'),
+    query('roomType')
+        .optional({ checkFalsy: true })
+        .isIn(ROOM_TYPES)
+        .withMessage('El tipo de habitación no es válido'),
+    query('status')
+        .optional({ checkFalsy: true })
+        .isIn(RESERVATION_STATUSES)
+        .withMessage('El estado de la reservación no es válido'),
+    validate,
+    reservationController.getReservations
+);
 
 router.get(
     '/availability',
@@ -37,6 +68,16 @@ router.get(
         .withMessage('La habitación seleccionada no es válida'),
     validate,
     reservationController.getAvailableRooms
+);
+
+router.get(
+    '/:id',
+    restrictTo(ROLES.ADMIN, ROLES.RECEPCIONISTA),
+    param('id')
+        .isMongoId()
+        .withMessage('Identificador de reservación inválido'),
+    validate,
+    reservationController.getReservationById
 );
 
 router.post(
