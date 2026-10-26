@@ -23,7 +23,11 @@ jest.mock('../services/reservationService', () => ({
     getPendingCheckOuts: jest.fn(),
     checkOutReservation: jest.fn(),
     addReservationConsumption: jest.fn(),
-    updateReservation: jest.fn()
+    updateReservation: jest.fn(),
+    cancelReservation: jest.fn(),
+    getReservationConsumptions: jest.fn(),
+    updateReservationConsumption: jest.fn(),
+    voidReservationConsumption: jest.fn()
 }));
 
 jest.mock('../utils/logger', () => ({
@@ -269,5 +273,79 @@ describe('/api/v1/reservations', () => {
             .send({ description: 'Minibar', quantity: 1, unitPrice: 5 });
         expect(forbidden.status).toBe(403);
         expect(reservationService.addReservationConsumption).not.toHaveBeenCalled();
+    });
+
+    it('lists consumption history for an active stay', async () => {
+        reservationService.getReservationConsumptions.mockResolvedValue({
+            reservationId: '507f1f77bcf86cd799439012',
+            consumptions: [{ description: 'Minibar', quantity: 2, subtotal: 40 }],
+            total: 40
+        });
+
+        const response = await request(app)
+            .get('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions');
+
+        expect(response.status).toBe(200);
+        expect(response.body.results).toBe(1);
+        expect(reservationService.getReservationConsumptions).toHaveBeenCalledWith(
+            '507f1f77bcf86cd799439012'
+        );
+    });
+
+    it('corrects a consumption and returns the updated reservation', async () => {
+        reservationService.updateReservationConsumption.mockResolvedValue({
+            _id: '507f1f77bcf86cd799439012'
+        });
+
+        const response = await request(app)
+            .patch('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions/507f1f77bcf86cd799439013')
+            .send({ quantity: 3, unitPrice: 25 });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toContain('consumo se corrigió');
+        expect(reservationService.updateReservationConsumption).toHaveBeenCalledWith(
+            '507f1f77bcf86cd799439012',
+            '507f1f77bcf86cd799439013',
+            { quantity: 3, unitPrice: 25 }
+        );
+    });
+
+    it('voids a consumption and denies administrators', async () => {
+        reservationService.voidReservationConsumption.mockResolvedValue({
+            _id: '507f1f77bcf86cd799439012'
+        });
+
+        const response = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions/507f1f77bcf86cd799439013/void')
+            .send({ reason: 'Cargo registrado por error' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toContain('consumo se anuló');
+
+        reservationService.voidReservationConsumption.mockClear();
+        const forbidden = await request(app)
+            .post('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions/507f1f77bcf86cd799439013/void')
+            .set('x-role', 'ADMIN')
+            .send({ reason: 'Cargo registrado por error' });
+        expect(forbidden.status).toBe(403);
+        expect(reservationService.voidReservationConsumption).not.toHaveBeenCalled();
+    });
+
+    it('validates consumption IDs and correction payloads', async () => {
+        const invalidId = await request(app)
+            .patch('/api/v1/reservations/invalid/consumptions/also-invalid')
+            .send({ quantity: 2 });
+        expect(invalidId.status).toBe(400);
+
+        const empty = await request(app)
+            .patch('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions/507f1f77bcf86cd799439013')
+            .send({});
+        expect(empty.status).toBe(400);
+
+        const unknown = await request(app)
+            .patch('/api/v1/reservations/507f1f77bcf86cd799439012/consumptions/507f1f77bcf86cd799439013')
+            .send({ status: 'anulado' });
+        expect(unknown.status).toBe(400);
+        expect(reservationService.updateReservationConsumption).not.toHaveBeenCalled();
     });
 });
