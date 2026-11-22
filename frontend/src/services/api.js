@@ -285,3 +285,53 @@ export function addReservationConsumption(token, reservationId, consumption) {
     body: JSON.stringify(consumption),
   });
 }
+
+export function createProduct(token, product) {
+  return apiRequest('/products', {
+    method: 'POST',
+    token,
+    body: JSON.stringify(product),
+  });
+}
+
+export function updateProduct(token, productId, changes) {
+  return apiRequest(`/products/${encodeURIComponent(productId)}`, {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify(changes),
+  });
+}
+
+export function updateReservation(token, reservationId, changes) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}`, {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify(changes),
+  });
+}
+
+export function getReservationConsumptions(token, reservationId) {
+  return apiRequest(`/reservations/${encodeURIComponent(reservationId)}/consumptions`, { token });
+}
+
+export function updateReservationConsumption(token, reservationId, consumptionId, changes) {
+  return apiRequest(
+    `/reservations/${encodeURIComponent(reservationId)}/consumptions/${encodeURIComponent(consumptionId)}`,
+    {
+      method: 'PATCH',
+      token,
+      body: JSON.stringify(changes),
+    },
+  );
+}
+
+export function voidReservationConsumption(token, reservationId, consumptionId, reason) {
+  return apiRequest(
+    `/reservations/${encodeURIComponent(reservationId)}/consumptions/${encodeURIComponent(consumptionId)}/void`,
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ reason }),
+    },
+  );
+}

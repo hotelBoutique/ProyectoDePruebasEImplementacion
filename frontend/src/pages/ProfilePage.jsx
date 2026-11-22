@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { updateMyProfile } from '../services/api.js';
 
-export default function ProfilePage({ user, token, roleLabel, onProfileUpdated }) {
+export default function ProfilePage({ user, token, roleLabel, onProfileUpdated, theme = 'light', onThemeChange }) {
   const [name, setName] = useState(user?.name || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -163,6 +163,39 @@ export default function ProfilePage({ user, token, roleLabel, onProfileUpdated }
           </button>
         </div>
       </form>
+
+      {onThemeChange && (
+        <section className="receptionist-form-card profile-form-card appearance-card" aria-labelledby="appearance-title">
+          <div className="receptionist-form-heading">
+            <div>
+              <span className="card-kicker">AJUSTES</span>
+              <h2 id="appearance-title">Apariencia</h2>
+              <p>Elige cómo se ve el panel. La preferencia se guarda en este navegador.</p>
+            </div>
+          </div>
+          <div className="appearance-options" role="radiogroup" aria-label="Tema del panel">
+            {[
+              { value: 'light', label: 'Modo claro', detail: 'Fondo crema y texto azul noche.' },
+              { value: 'dark', label: 'Modo oscuro', detail: 'Los mismos tonos del inicio de sesión.' },
+            ].map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={theme === option.value}
+                className={`appearance-option appearance-option-${option.value}${theme === option.value ? ' is-selected' : ''}`}
+                onClick={() => onThemeChange(option.value)}
+              >
+                <span className="appearance-swatch" aria-hidden="true"><span /><span /><span /></span>
+                <span>
+                  <strong>{option.label}</strong>
+                  <small>{option.detail}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

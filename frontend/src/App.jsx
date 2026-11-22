@@ -4,6 +4,8 @@ import AvailabilityPage from './pages/AvailabilityPage.jsx';
 import CheckInPage from './pages/CheckInPage.jsx';
 import CheckOutPage from './pages/CheckOutPage.jsx';
 import ConsumptionPage from './pages/ConsumptionPage.jsx';
+import ConsumptionHistoryPage from './pages/ConsumptionHistoryPage.jsx';
+import RoomConsumptionsPage from './pages/RoomConsumptionsPage.jsx';
 import CurrentOccupancyPage from './pages/CurrentOccupancyPage.jsx';
 import DailyReportPage from './pages/DailyReportPage.jsx';
 import DeparturesReportPage from './pages/DeparturesReportPage.jsx';
@@ -15,6 +17,8 @@ import IncomeReportPage from './pages/IncomeReportPage.jsx';
 import ProductCatalogPage from './pages/ProductCatalogPage.jsx';
 import SalesReportPage from './pages/SalesReportPage.jsx';
 import DashboardHome from './components/DashboardHome.jsx';
+import { BrandEmblem, BrandLockup } from './components/BrandLogo.jsx';
+import HotelShowcase from './components/hotel2d/HotelShowcase.jsx';
 import ReservationsPage from './pages/ReservationsPage.jsx';
 import RoomsPage from './pages/RoomsPage.jsx';
 import SettlementHistoryPage from './pages/SettlementHistoryPage.jsx';
@@ -29,6 +33,7 @@ import {
 } from './services/api.js';
 
 const SESSION_TOKEN_KEY = 'estancia.session.token';
+const THEME_KEY = 'hotelboutique.theme';
 const ROLE_ADMIN = 'ADMIN';
 const ROLE_RECEPTIONIST = 'RECEPCIONISTA';
 
@@ -105,6 +110,8 @@ function SidebarIcon({ name }) {
     reports: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></>,
     account: <><circle cx="12" cy="8" r="4" /><path d="M5 21a7 7 0 0 1 14 0" /></>,
     logout: <><path d="M10 17l5-5-5-5M15 12H3" /><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" /></>,
+    moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />,
+    sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
   };
 
   return (
@@ -114,7 +121,7 @@ function SidebarIcon({ name }) {
   );
 }
 
-function RoleSidebar({ groups, roleLabel, activeItem, accountActive, onSelect, onLogout, onCloseMobile, busy }) {
+function RoleSidebar({ groups, roleLabel, activeItem, accountActive, onSelect, onLogout, onCloseMobile, busy, theme, onToggleTheme }) {
   return (
     <>
       <button className="sidebar-backdrop" type="button" onClick={onCloseMobile} aria-label="Cerrar menú" />
@@ -156,6 +163,15 @@ function RoleSidebar({ groups, roleLabel, activeItem, accountActive, onSelect, o
 
         <div className="sidebar-footer">
           <button
+            className="sidebar-utility"
+            type="button"
+            onClick={onToggleTheme}
+            aria-pressed={theme === 'dark'}
+          >
+            <SidebarIcon name={theme === 'dark' ? 'sun' : 'moon'} />
+            <span>{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>
+          </button>
+          <button
             className={`sidebar-utility${accountActive ? ' sidebar-link-active' : ''}`}
             type="button"
             onClick={() => onSelect('account')}
@@ -181,12 +197,7 @@ async function getRoleDashboard(token, role) {
 }
 
 function Brand() {
-  return (
-    <a className="brand" href="/" aria-label="Estancia, inicio">
-      <span className="brand-mark" aria-hidden="true">E</span>
-      <span>estancia<span className="brand-period">.</span></span>
-    </a>
-  );
+  return <BrandLockup />;
 }
 
 function Topbar({ children }) {
@@ -210,117 +221,99 @@ function LoginScreen({ onLogin, busy, message, messageTone }) {
   }
 
   return (
-    <div className="page-shell">
-      <Topbar>
-        <span className="topbar-label">Administración y recepción</span>
-      </Topbar>
+    <div className="login-scene">
+      <div className="login-backdrop">
+        <HotelShowcase variant="background" />
+      </div>
+      <div className="page-shell login-shell">
+        <Topbar>
+          <span className="topbar-label">Administración y recepción</span>
+        </Topbar>
 
-      <main className="auth-layout">
-        <section className="auth-panel" aria-labelledby="login-title">
-          <div className="auth-copy">
-            <p className="eyebrow">ACCESO AL EQUIPO</p>
-            <h1 id="login-title">Tu operación,<br />bajo control.</h1>
-            <p className="intro">
-              Inicia sesión para entrar al espacio de trabajo de Estancia.
-            </p>
-          </div>
+        <main className="auth-layout">
+          <section className="auth-panel" aria-labelledby="login-title">
+            <div className="auth-copy">
+              <p className="eyebrow">ACCESO AL EQUIPO</p>
+              <h1 id="login-title">Tu operación,<br />bajo control.</h1>
+              <p className="intro">
+                Inicia sesión para entrar al espacio de trabajo de Hotel Boutique.
+              </p>
+            </div>
 
-          <form className="auth-form" onSubmit={handleSubmit}>
-            <label className="form-field" htmlFor="admin-email">
-              <span className="field-label">Correo electrónico</span>
-              <input
-                id="admin-email"
-                className="form-input"
-                type="email"
-                name="email"
-                autoComplete="username"
-                placeholder="usuario@hotel.com"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-                disabled={busy}
-              />
-            </label>
-
-            <div className="form-field">
-              <label className="field-label" htmlFor="admin-password">Contraseña</label>
-              <span className="password-control">
+            <form className="auth-form" onSubmit={handleSubmit}>
+              <label className="form-field" htmlFor="admin-email">
+                <span className="field-label">Correo electrónico</span>
                 <input
-                  id="admin-password"
+                  id="admin-email"
                   className="form-input"
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  autoComplete="current-password"
-                  placeholder="Ingresa tu contraseña"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  type="email"
+                  name="email"
+                  autoComplete="username"
+                  placeholder="usuario@hotel.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                   disabled={busy}
                 />
-                <button
-                  className="password-toggle"
-                  type="button"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  aria-pressed={showPassword}
-                  disabled={busy}
-                >
-                  {showPassword ? 'Ocultar' : 'Mostrar'}
-                </button>
-              </span>
-            </div>
+              </label>
 
-            <div className="auth-feedback" aria-live="polite">
-              {message && <p className={`feedback-message feedback-${messageTone}`}>{message}</p>}
-            </div>
+              <div className="form-field">
+                <label className="field-label" htmlFor="admin-password">Contraseña</label>
+                <span className="password-control">
+                  <input
+                    id="admin-password"
+                    className="form-input"
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    autoComplete="current-password"
+                    placeholder="Ingresa tu contraseña"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    required
+                    disabled={busy}
+                  />
+                  <button
+                    className="password-toggle"
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-pressed={showPassword}
+                    disabled={busy}
+                  >
+                    {showPassword ? 'Ocultar' : 'Mostrar'}
+                  </button>
+                </span>
+              </div>
 
-            <button className="button-primary auth-submit" type="submit" disabled={busy}>
-              {busy ? (
-                <><span className="button-spinner" aria-hidden="true" /> Verificando acceso</>
-              ) : (
-                <>Iniciar sesión <span aria-hidden="true">→</span></>
-              )}
-            </button>
-          </form>
+              <div className="auth-feedback" aria-live="polite">
+                {message && <p className={`feedback-message feedback-${messageTone}`}>{message}</p>}
+              </div>
 
-          <p className="auth-hint">
-            Las opciones disponibles dependen del rol asignado a tu cuenta.
-          </p>
-        </section>
+              <button className="button-primary auth-submit" type="submit" disabled={busy}>
+                {busy ? (
+                  <><span className="button-spinner" aria-hidden="true" /> Verificando acceso</>
+                ) : (
+                  <>Iniciar sesión <span aria-hidden="true">→</span></>
+                )}
+              </button>
+            </form>
 
-        <aside className="auth-aside" aria-label="Seguridad de la plataforma">
-          <div className="aside-topline">
-            <span>ESTANCIA / EQUIPO</span>
-            <span>01 — 03</span>
-          </div>
-          <div className="auth-art" aria-hidden="true">
-            <div className="auth-sun" />
-            <div className="auth-arch-back" />
-            <div className="auth-arch-front">
-              <div className="auth-arch-window" />
-              <span className="auth-seal">E</span>
-            </div>
-            <span className="auth-art-label">HOSPITALIDAD, CON CALMA</span>
-          </div>
-          <div className="security-note">
-            <span className="security-note-icon" aria-hidden="true">✓</span>
-            <div>
-              <strong>Acceso protegido</strong>
-              <p>Verificamos tu identidad y permisos antes de abrir cada espacio.</p>
-            </div>
-          </div>
-        </aside>
-      </main>
+            <p className="auth-hint">
+              Las opciones disponibles dependen del rol asignado a tu cuenta.
+            </p>
+          </section>
+        </main>
 
-      <footer className="page-footer">
-        <span>ESTANCIA · GESTIÓN HOTELERA</span>
-        <span>Acceso seguro por rol</span>
-      </footer>
+        <footer className="page-footer">
+          <span>HOTEL BOUTIQUE · GESTIÓN HOTELERA</span>
+          <span>Acceso seguro por rol</span>
+        </footer>
+      </div>
     </div>
   );
 }
 
-function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) {
+function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy, theme, onThemeChange }) {
   const isAdmin = role === ROLE_ADMIN;
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'equipo';
   const roleLabel = isAdmin ? 'ADMINISTRADOR' : 'RECEPCIONISTA';
@@ -353,6 +346,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
         onLogout={onLogout}
         onCloseMobile={() => setMobileMenuOpen(false)}
         busy={busy}
+        theme={theme}
+        onToggleTheme={() => onThemeChange(theme === 'dark' ? 'light' : 'dark')}
       />
 
       <div className="dashboard-workspace">
@@ -386,6 +381,8 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               token={token}
               roleLabel={roleLabel}
               onProfileUpdated={onProfileUpdated}
+              theme={theme}
+              onThemeChange={onThemeChange}
             />
           ) : isAdmin && ['users-list', 'users-create', 'users-admin-create'].includes(activeItem) ? (
             <ReceptionistsPage
@@ -421,16 +418,29 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
               token={token}
               mode={activeItem === 'reception-reservations-create' ? 'create' : 'list'}
               canCreate={!isAdmin}
+              canEdit={!isAdmin}
               onNavigate={selectItem}
             />
           ) : isAdmin && activeItem === 'reservations-cancellations' ? (
-            <ReservationsPage token={token} mode="cancellations" />
+            <ReservationsPage token={token} mode="cancellations" isAdmin />
           ) : !isAdmin && activeItem === 'reception-reservations-cancellations' ? (
             <ReservationsPage token={token} mode="cancellations" />
-          ) : isAdmin && activeItem === 'consumptions-catalog' ? (
-            <ProductCatalogPage token={token} showInactive />
+          ) : isAdmin && ['consumptions-catalog', 'consumptions-create'].includes(activeItem) ? (
+            <ProductCatalogPage
+              token={token}
+              showInactive
+              canManage
+              mode={activeItem === 'consumptions-create' ? 'create' : 'list'}
+              createItemId="consumptions-create"
+              listItemId="consumptions-catalog"
+              onNavigate={selectItem}
+            />
+          ) : isAdmin && activeItem === 'consumptions-history' ? (
+            <ConsumptionHistoryPage token={token} />
           ) : !isAdmin && activeItem === 'reception-consumptions-catalog' ? (
             <ProductCatalogPage token={token} />
+          ) : !isAdmin && activeItem === 'reception-consumptions-room' ? (
+            <RoomConsumptionsPage token={token} onNavigate={selectItem} />
           ) : isAdmin && activeItem === 'settlements-history' ? (
             <SettlementHistoryPage token={token} />
           ) : isAdmin && activeItem === 'settlements-payments' ? (
@@ -470,7 +480,7 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
         </main>
 
         <footer className="dashboard-footer">
-          <span>ESTANCIA · GESTIÓN HOTELERA</span>
+          <span>HOTEL BOUTIQUE · GESTIÓN HOTELERA</span>
           <span>Sesión de {roleLabel.toLowerCase()} activa</span>
         </footer>
       </div>
@@ -478,8 +488,17 @@ function RoleDashboard({ user, role, token, onLogout, onProfileUpdated, busy }) 
   );
 }
 
+function readStoredTheme() {
+  try {
+    return window.localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
 export default function App() {
   const [view, setView] = useState('loading');
+  const [theme, setTheme] = useState(readStoredTheme);
   const [user, setUser] = useState(null);
   const [role, setRole] = useState('');
   const [token, setToken] = useState('');
@@ -494,6 +513,22 @@ export default function App() {
     }
     if (profile?.user) {
       setUser(profile.user);
+    }
+  }
+
+  // El tema solo aplica a los paneles; el inicio de sesión tiene su propio diseño oscuro.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (view === 'dashboard' && theme === 'dark') root.dataset.theme = 'dark';
+    else delete root.dataset.theme;
+  }, [view, theme]);
+
+  function handleThemeChange(nextTheme) {
+    setTheme(nextTheme);
+    try {
+      window.localStorage.setItem(THEME_KEY, nextTheme);
+    } catch {
+      // Sin almacenamiento disponible el tema dura solo esta sesión.
     }
   }
 
@@ -609,7 +644,7 @@ export default function App() {
   if (view === 'loading') {
     return (
       <main className="loading-screen" role="status" aria-live="polite">
-        <span className="loading-mark" aria-hidden="true">E</span>
+        <BrandEmblem className="loading-mark" />
         <p>Verificando tu sesión…</p>
       </main>
     );
@@ -624,6 +659,8 @@ export default function App() {
         onLogout={handleLogout}
         onProfileUpdated={handleProfileUpdated}
         busy={busy}
+        theme={theme}
+        onThemeChange={handleThemeChange}
       />
     );
   }
