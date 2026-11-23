@@ -18,6 +18,12 @@ const AppError = require('./utils/AppError');
 const app = express();
 
 app.disable('x-powered-by');
+
+// En producción (Render) la API corre detrás de un proxy: sin esto el
+// rate limiter vería la IP del proxy y contaría a todos los clientes juntos.
+if (config.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
 app.use(helmet());
 app.use(
     cors({

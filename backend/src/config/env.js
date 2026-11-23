@@ -1,3 +1,4 @@
+const fs = require('fs')
 const path = require('path')
 const dotenv = require('dotenv')
 
@@ -7,12 +8,10 @@ const envPath = path.resolve(
     process.cwd(), `.env.${nodeEnv}`
 )
 
-const resultado = dotenv.config({
-    path: envPath
-})
-
-if (resultado.error) {
-    throw new Error(`no se puedo cargar el archivo de entorno: ${envPath}`)
+// En local se lee .env.<NODE_ENV>. En plataformas como Render no existe ese
+// archivo: las variables llegan por process.env y se validan más abajo.
+if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath })
 }
 
 const requiereVariables = ['MONGODB_URI', 'JWT_SECRET']
