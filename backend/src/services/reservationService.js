@@ -238,19 +238,9 @@ const updateReservationConsumption = async (reservationId, consumptionId, change
                 throw new AppError('El subtotal del consumo supera el límite permitido', 400);
             }
 
-            // Los consumos del catálogo conservan el nombre y el precio del producto;
-            // solo se corrige la cantidad y el inventario se ajusta con la diferencia.
+            // En los consumos del catálogo, el inventario se ajusta con la diferencia
+            // de cantidad (el concepto y el precio se pueden corregir como en cualquier consumo).
             if (consumption.product) {
-                if (
-                    description !== consumption.description
-                    || unitPriceCents !== toCents(Number(consumption.unitPrice))
-                ) {
-                    throw new AppError(
-                        'En los consumos del catálogo solo se puede corregir la cantidad',
-                        400
-                    );
-                }
-
                 const stockDelta = quantity - previousQuantity;
                 if (stockDelta > 0) {
                     const stockUpdate = await Product.updateOne(
