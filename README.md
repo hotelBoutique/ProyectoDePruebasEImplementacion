@@ -15,7 +15,7 @@
 
 <img src="repository_Sources/hotelVid.gif" alt="Demostración de Hotel Boutique" width="850">
 
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://www.postman.com/imnotseb670-8749507/testing-pruebas-para-hotel)
+[![Abrir entorno en Postman](https://img.shields.io/badge/Postman-Abrir_entorno_compartido-FF6C37?logo=postman&logoColor=white)](https://www.postman.com/imnotseb670-8749507/workspace/testing-pruebas-para-hotel/environment/57446888-06f53965-c57a-4bcf-ad37-e9e03bd9e354?action=share&creator=57446888&active-environment=57446888-06f53965-c57a-4bcf-ad37-e9e03bd9e354)
 
 </div>
 
@@ -151,7 +151,7 @@ npx --yes newman run backend/postman/Hotel-Boutique-API.postman_collection.json 
 
 ## API de pruebas desplegada
 
-Para ejecutar la colección desde el botón **Run in Postman** sin configurar el proyecto localmente:
+Para ejecutar la colección desde el entorno compartido sin configurar el proyecto localmente:
 
 1. Abre el entorno `testing-pruebas-para-hotel` en tu workspace de Postman.
 2. En Environments, actualiza los valores y guarda con `Ctrl+S`.
