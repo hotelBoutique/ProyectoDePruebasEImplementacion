@@ -172,3 +172,127 @@ El servidor carga `.env.development`, conecta con MongoDB Atlas y expone la API 
 6. Añadir flujos completos de usuarios, reservas, check-in, check-out y pagos.
 
 No se deben incluir credenciales reales en este README ni en archivos versionados.
+
+## Sprint 3: pruebas del frontend React
+
+### Configuración Jest
+
+Desde `frontend`:
+
+```bash
+npm install
+npm run test:unit
+```
+
+El resultado actual es:
+
+- 6 suites aprobadas.
+- 13 pruebas unitarias aprobadas.
+- 0 pruebas fallidas.
+
+Las pruebas están en `frontend/tests/unit`. Usan Jest, React Testing Library y mocks de `frontend/src/services/api.js`; no hacen llamadas ni cambios reales en MongoDB. Cubren:
+
+- Inicio de sesión válido e inválido.
+- Habitaciones: listado y error de carga.
+- Disponibilidad: resultado, estado vacío y consulta.
+- Reservaciones: validación obligatoria y confirmación.
+- Catálogo de productos: productos, estado vacío y error.
+- Comprobantes: listado y estado vacío.
+
+Cobertura opcional:
+
+```bash
+cd frontend
+npm run test:unit -- --coverage --coverageReporters=text
+```
+
+### Pruebas Selenium con Page Object Model
+
+La implementación está separada en:
+
+- `frontend/tests/e2e/pages`: clases POM de login, dashboard, habitaciones, disponibilidad y reservas.
+- `frontend/tests/e2e/run.js`: casos ejecutables y control de cierre del navegador.
+- `frontend/tests/e2e/run.js`: usa esperas explícitas de Selenium y localizadores por ID, CSS y XPath.
+
+Instalación y navegador:
+
+```bash
+cd frontend
+npm install
+```
+
+Se necesita Google Chrome instalado. Selenium Manager puede obtener el controlador compatible si no está disponible en el sistema.
+
+Preparar el entorno aislado:
+
+1. Inicia el backend solo con una base de datos de pruebas:
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+2. En otra terminal inicia el frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+No uses cuentas, reservaciones o datos de producción. Crea una cuenta y datos exclusivos en el entorno de pruebas.
+
+Variables opcionales:
+
+```text
+TEST_APP_URL=http://localhost:5173
+TEST_USER_EMAIL=<correo-de-prueba>
+TEST_USER_PASSWORD=<contraseña-de-prueba>
+SELENIUM_HEADLESS=true
+TEST_CREATE_RESERVATION=false
+TEST_RESERVATION_CHECK_IN=<YYYY-MM-DD>
+TEST_RESERVATION_CHECK_OUT=<YYYY-MM-DD>
+TEST_GUEST_NAME=<nombre-de-prueba>
+TEST_GUEST_EMAIL=<correo-de-prueba>
+TEST_GUEST_PHONE=<teléfono-de-prueba>
+TEST_GUEST_ID=<identificación-de-prueba>
+```
+
+Ejemplos de ejecución en PowerShell sin incluir secretos en archivos:
+
+```powershell
+cd frontend
+$env:TEST_APP_URL = "http://localhost:5173"
+$env:TEST_USER_EMAIL = "<correo-de-prueba>"
+$env:TEST_USER_PASSWORD = "<contraseña-de-prueba>"
+npm run test:e2e
+```
+
+Configura las credenciales solo en la sesión de terminal actual y no las agregues a archivos versionados. Estos datos no son necesarios para ejecutar únicamente el login inválido.
+
+Para habilitar la creación real de una reserva, usa una base aislada y asigna:
+
+```powershell
+$env:TEST_CREATE_RESERVATION = "true"
+$env:TEST_RESERVATION_CHECK_IN = "<fecha-futura-YYYY-MM-DD>"
+$env:TEST_RESERVATION_CHECK_OUT = "<fecha-futura-YYYY-MM-DD>"
+```
+
+Ejecución:
+
+```bash
+cd frontend
+npm run test:e2e
+```
+
+Estado ejecutado en este entorno:
+
+- Navegador Chrome iniciado correctamente.
+- Login inválido ejecutado y aprobado.
+- Frontend levantado con Vite en `http://localhost:5173`.
+- Login válido no ejecutado: faltaron credenciales de prueba.
+- Navegación, consulta de habitaciones y disponibilidad no ejecutadas: requieren sesión válida.
+- Creación de reserva no ejecutada: requiere entorno de base aislado y datos identificados.
+- Check-in, consumo y check-out no ejecutados: requieren datos aislados y dependen de la reserva creada.
+
+El navegador se cierra con `driver.quit()` en el bloque `finally`, tanto si la prueba pasa como si falla.
