@@ -1,0 +1,4654 @@
+{
+	"id": "788c5c20-ec85-45a8-a0f0-acb10228a6e8",
+	"name": "Hotel Boutique API - pruebas automatizadas",
+	"timestamp": "2026-11-23T20:32:56.845Z",
+	"collection_id": "53469956-e5c5a099-ab3f-44aa-b3b6-236452673f33",
+	"folder_id": 0,
+	"environment_id": "53469956-09d77e2e-1233-49e0-8e86-857d1fc4ca78",
+	"totalPass": 447,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-11-23T20:32:30.649Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "412c16ac-a233-479b-be19-03206e302c92",
+			"name": "Health check",
+			"url": "http://localhost:3001/health",
+			"time": 33,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				33
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "e52c8fcc-b8f6-4bc9-bfd9-409ffee91c12",
+			"name": "Login administrador",
+			"url": "http://localhost:3001/api/v1/auth/login",
+			"time": 510,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				510
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "00e9ad78-a591-4e79-94ab-83b9d0df3b09",
+			"name": "Login con credenciales incorrectas",
+			"url": "http://localhost:3001/api/v1/auth/login",
+			"time": 349,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 401": true,
+				"Contrato de error": true,
+				"Detalle del error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 401": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Detalle del error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				349
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 401": true,
+					"Contrato de error": true,
+					"Detalle del error": true
+				}
+			]
+		},
+		{
+			"id": "3ea0dca1-a5f7-4f2e-b991-a7318cf2c135",
+			"name": "Consultar usuario autenticado administrador",
+			"url": "http://localhost:3001/api/v1/auth/me",
+			"time": 178,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				178
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "419703ef-c5b8-43ee-9e5d-016b69f1d9c4",
+			"name": "Consultar perfil sin token",
+			"url": "http://localhost:3001/api/v1/auth/me",
+			"time": 6,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 401": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 401": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				6
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 401": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "2ed766d6-b468-47b9-add0-821d87070421",
+			"name": "Consultar perfil con token malformado",
+			"url": "http://localhost:3001/api/v1/auth/me",
+			"time": 6,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 401": true,
+				"Contrato de error": true,
+				"Detalle del error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 401": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Detalle del error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				6
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 401": true,
+					"Contrato de error": true,
+					"Detalle del error": true
+				}
+			]
+		},
+		{
+			"id": "b61589d0-8511-41f4-b603-a44b0bac00f5",
+			"name": "Registrar recepcionista mediante /auth/register",
+			"url": "http://localhost:3001/api/v1/auth/register",
+			"time": 550,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 201": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				550
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 201": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "f0ae9aa0-2112-452a-bdb1-ddbbed013726",
+			"name": "Login recepcionista creado por la colección",
+			"url": "http://localhost:3001/api/v1/auth/login",
+			"time": 352,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				352
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "445a6173-fa30-442e-be18-cc3b05fdc54a",
+			"name": "Consultar usuario autenticado recepcionista",
+			"url": "http://localhost:3001/api/v1/auth/me",
+			"time": 175,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				175
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "0d645bfe-321d-4797-aaf8-d4878fe0227a",
+			"name": "Actualizar perfil y cambiar contraseña",
+			"url": "http://localhost:3001/api/v1/auth/me",
+			"time": 858,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				858
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "d5a90196-1675-4a1c-b2a7-ae03c01a37b7",
+			"name": "Token anterior rechazado después del cambio de contraseña",
+			"url": "http://localhost:3001/api/v1/auth/me",
+			"time": 8,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 401": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 401": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				8
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 401": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "c1174237-9000-4f6d-9614-f029d71e35bf",
+			"name": "Dashboard de administrador",
+			"url": "http://localhost:3001/api/v1/admin/dashboard",
+			"time": 101,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				101
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "96913871-6838-49f7-b1aa-55c8a8f0e428",
+			"name": "Reporte administrativo de ocupación",
+			"url": "http://localhost:3001/api/v1/admin/reports/occupancy?startDate=2026-11-23&endDate=2026-11-24",
+			"time": 276,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				276
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "d30d6c6e-3e7a-4012-9e61-a16f1c19c160",
+			"name": "Reporte administrativo de ingresos",
+			"url": "http://localhost:3001/api/v1/admin/reports/income?startDate=2026-11-23&endDate=2026-11-24",
+			"time": 176,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				176
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "11e468fb-1a6b-44fa-8418-3fe36e5c6dfe",
+			"name": "Reporte administrativo de ventas",
+			"url": "http://localhost:3001/api/v1/admin/reports/sales?startDate=2026-11-23&endDate=2026-11-24",
+			"time": 182,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				182
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "b6cb0f70-e919-4e3a-a398-f9204970abab",
+			"name": "Dashboard de recepción",
+			"url": "http://localhost:3001/api/v1/reception/dashboard",
+			"time": 87,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				87
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "32de1cf1-a174-4de1-a63e-32991c97d825",
+			"name": "Reporte diario",
+			"url": "http://localhost:3001/api/v1/reception/reports/daily?date=2026-11-23",
+			"time": 760,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				760
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "61ff03e9-7821-4ab7-8657-41325da26aea",
+			"name": "Reporte de llegadas",
+			"url": "http://localhost:3001/api/v1/reception/reports/arrivals?date=2026-11-23",
+			"time": 179,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				179
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "bfdc899b-992c-452a-83ff-5b28c05fe5da",
+			"name": "Reporte de salidas",
+			"url": "http://localhost:3001/api/v1/reception/reports/departures?date=2026-11-23",
+			"time": 177,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				177
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "9b99f64b-559c-4f22-9587-4e27e7863dfd",
+			"name": "Reporte de ocupación actual",
+			"url": "http://localhost:3001/api/v1/reception/reports/occupancy",
+			"time": 178,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				178
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "d31d75cf-6d26-43ad-b08d-8167705f006b",
+			"name": "Listar recepcionistas",
+			"url": "http://localhost:3001/api/v1/users",
+			"time": 179,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				179
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "0cd5ea53-e16e-4cf8-96fb-16cfaaf71c00",
+			"name": "Crear recepcionista",
+			"url": "http://localhost:3001/api/v1/users",
+			"time": 545,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 201": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				545
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 201": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "cbc2ad65-de64-4f07-b1fa-1010efcbbe40",
+			"name": "Login del recepcionista administrado",
+			"url": "http://localhost:3001/api/v1/auth/login",
+			"time": 351,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				351
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "a73e90db-f1f0-4965-9c83-f9b8464dd62e",
+			"name": "Crear administrador",
+			"url": "http://localhost:3001/api/v1/users/admin",
+			"time": 547,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 201": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				547
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 201": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "139d7fef-6f34-4c9b-97fb-1176e372e19c",
+			"name": "Actualizar recepcionista",
+			"url": "http://localhost:3001/api/v1/users/6b04a2e66220c0a50166f202",
+			"time": 316,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				316
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "b1021d22-24c5-4137-a594-4def68fc3be5",
+			"name": "Desactivar recepcionista de prueba",
+			"url": "http://localhost:3001/api/v1/users/6b04a2e66220c0a50166f202/status",
+			"time": 191,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				191
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "8da37267-93aa-4cc9-8a1f-404274b2c8ee",
+			"name": "Token rechazado para cuenta desactivada",
+			"url": "http://localhost:3001/api/v1/auth/me",
+			"time": 93,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 403": true,
+				"Contrato de error": true,
+				"Detalle del error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 403": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Detalle del error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				93
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 403": true,
+					"Contrato de error": true,
+					"Detalle del error": true
+				}
+			]
+		},
+		{
+			"id": "4c789349-c0ae-4e74-904f-4197f18ad337",
+			"name": "Crear habitación",
+			"url": "http://localhost:3001/api/v1/rooms",
+			"time": 271,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 201": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				271
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 201": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "8d7c257f-0684-4507-a020-956d9e38f5ee",
+			"name": "Listar habitaciones con filtros",
+			"url": "http://localhost:3001/api/v1/rooms?status=disponible&type=Suite&minCapacity=1&minPrice=0&maxPrice=10000",
+			"time": 182,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				182
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "2f72a029-456e-4947-a855-44221dd3440d",
+			"name": "Actualizar habitación",
+			"url": "http://localhost:3001/api/v1/rooms/6b04a2e96220c0a50166f204",
+			"time": 182,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				182
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "5c8fb6aa-598c-4a21-ab0e-e2c33aba954a",
+			"name": "Crear producto",
+			"url": "http://localhost:3001/api/v1/products",
+			"time": 349,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 201": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				349
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 201": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "6ecda0d2-9579-4cb0-ab23-f87f59f421b9",
+			"name": "Listar productos con filtros",
+			"url": "http://localhost:3001/api/v1/products?search=QA-Producto-MWTQ2IM93ZJUHH&category=QA%20Automatizaci%C3%B3n&status=activo&inStock=true",
+			"time": 177,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				177
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "708c1022-0f66-42c4-ab35-3d8ab1361636",
+			"name": "Listar categorías de productos",
+			"url": "http://localhost:3001/api/v1/products/categories",
+			"time": 184,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				184
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "9c2f63c4-9992-493f-af21-3230e6e0600a",
+			"name": "Actualizar producto",
+			"url": "http://localhost:3001/api/v1/products/6b04a2ea6220c0a50166f205",
+			"time": 187,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				187
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "59e382a0-bfa2-4b4e-a075-735b32dd7233",
+			"name": "Consultar disponibilidad antes de reservar",
+			"url": "http://localhost:3001/api/v1/reservations/availability?checkIn=2026-11-23&checkOut=2026-11-24&type=Suite&guests=2&maxPrice=10000",
+			"time": 310,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				310
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "1ba8739f-326c-4dee-8e2d-723c7a8aaa48",
+			"name": "Crear reservación para ciclo de estancia",
+			"url": "http://localhost:3001/api/v1/reservations",
+			"time": 550,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 201": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				550
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 201": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "57264c1b-852a-40d6-a3d8-883c3742e467",
+			"name": "Crear reservación para probar cancelación",
+			"url": "http://localhost:3001/api/v1/reservations",
+			"time": 555,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 201": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				555
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 201": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "606b80fa-35e8-49dc-b9a5-7dc256576d76",
+			"name": "Listar reservaciones con filtros",
+			"url": "http://localhost:3001/api/v1/reservations?checkInFrom=2026-11-23&checkInTo=2026-11-24&roomId=6b04a2e96220c0a50166f204&roomType=Suite&status=reservada",
+			"time": 186,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				186
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "14067bbe-62de-47b2-bbc0-950fcf9a503d",
+			"name": "Consultar reservación por ID",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206",
+			"time": 197,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				197
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "c54b7144-4e1a-432d-bc55-e90425113fc8",
+			"name": "Actualizar reservación pendiente",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206",
+			"time": 559,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				559
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "de45f8ba-f947-482f-9e99-7ce7f4334905",
+			"name": "Cancelar reservación pendiente",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2ec6220c0a50166f207/cancel",
+			"time": 213,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				213
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "3dd387a9-88cc-4858-a514-0ca5dc27c7a4",
+			"name": "Consultar check-ins pendientes",
+			"url": "http://localhost:3001/api/v1/reservations/check-ins/pending",
+			"time": 592,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				592
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "fd3f399d-69dd-49ef-8af5-267df9b3df51",
+			"name": "Registrar check-in",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/check-in",
+			"time": 545,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				545
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "2177cc60-60c1-4745-bbcf-61a1490074da",
+			"name": "Consultar check-outs pendientes y capturar saldo",
+			"url": "http://localhost:3001/api/v1/reservations/check-outs/pending",
+			"time": 274,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				274
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "c3705652-f2aa-41f6-b316-5fc29447d98f",
+			"name": "Consultar consumos de la estancia",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/consumptions",
+			"time": 182,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				182
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "85cc82c5-f361-4d1e-bb06-c083a8e4ce43",
+			"name": "Registrar consumo desde el catálogo",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/consumptions",
+			"time": 549,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 201": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				549
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 201": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "b6acff04-faf3-454d-95dd-2b417a0f4fa4",
+			"name": "Corregir consumo",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/consumptions/6b04a2f06220c0a50166f208",
+			"time": 456,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				456
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "1a0adfcf-85ec-4fb3-ae83-7d6c04048dbc",
+			"name": "Anular consumo",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/consumptions/6b04a2f06220c0a50166f208/void",
+			"time": 445,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				445
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "da9c34ca-dcd0-4662-b62a-17f9a052607c",
+			"name": "Verificar consumo anulado",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/consumptions",
+			"time": 181,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				181
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "9b4434b4-e969-4eed-a3a6-3248ef62d18a",
+			"name": "Recalcular saldo antes del check-out",
+			"url": "http://localhost:3001/api/v1/reservations/check-outs/pending",
+			"time": 275,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				275
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "c1d094f0-0dc7-4f1e-87aa-f52b899eeaf4",
+			"name": "Registrar check-out y pago",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/check-out",
+			"time": 673,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				673
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "46411c04-5e69-43a2-9bc7-dcc61fff1d67",
+			"name": "Consultar comprobante de la estancia",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/receipt",
+			"time": 185,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				185
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "65117715-1253-4b4a-bcea-a48a9caa203d",
+			"name": "Consultar lista de pagos",
+			"url": "http://localhost:3001/api/v1/reservations/payments",
+			"time": 267,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				267
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "fdc8c774-c73e-4ee6-89bc-1283999416ae",
+			"name": "Consultar lista de comprobantes",
+			"url": "http://localhost:3001/api/v1/reservations/receipts",
+			"time": 184,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				184
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "41a36d4e-9fa5-4d07-b70d-f013925ccde8",
+			"name": "Consultar pago por reservación",
+			"url": "http://localhost:3001/api/v1/reservations/payments/6b04a2eb6220c0a50166f206",
+			"time": 183,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				183
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "ebcf4f47-09af-4b27-a192-06e7f1b1f28a",
+			"name": "Consultar historial de liquidaciones",
+			"url": "http://localhost:3001/api/v1/reservations/settlements/history",
+			"time": 192,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				192
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "df91f198-e43b-4d53-8489-8bbf8c382b91",
+			"name": "Admin no puede registrar reservaciones",
+			"url": "http://localhost:3001/api/v1/reservations",
+			"time": 99,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 403": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 403": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				99
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 403": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "6ced5259-96e8-4079-bce6-525a77a7fe76",
+			"name": "Admin no puede registrar check-in",
+			"url": "http://localhost:3001/api/v1/reservations/6b04a2eb6220c0a50166f206/check-in",
+			"time": 96,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 403": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 403": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				96
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 403": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "d6a72f1d-b72d-4133-8149-fe9313a159b5",
+			"name": "Recepción no puede consultar administración",
+			"url": "http://localhost:3001/api/v1/admin/dashboard",
+			"time": 94,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 403": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 403": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				94
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 403": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "c8735a49-4466-4a73-825b-356fa98807d3",
+			"name": "Recepción no puede gestionar usuarios",
+			"url": "http://localhost:3001/api/v1/users",
+			"time": 96,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 403": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 403": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				96
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 403": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "28431fae-6866-4a94-9889-653ef34bec80",
+			"name": "Recepción no puede crear habitaciones",
+			"url": "http://localhost:3001/api/v1/rooms",
+			"time": 99,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 403": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 403": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				99
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 403": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "2be11716-09ac-44c7-8789-8c8262dd9bfc",
+			"name": "Recepción no puede crear productos",
+			"url": "http://localhost:3001/api/v1/products",
+			"time": 97,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 403": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 403": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				97
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 403": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "1fa6688e-5899-47c0-a0c1-67e5007e82c5",
+			"name": "Sin token no se puede consultar habitaciones",
+			"url": "http://localhost:3001/api/v1/rooms",
+			"time": 6,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 401": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 401": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				6
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 401": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "01007300-12b7-4ab6-bace-a741771892b8",
+			"name": "Registro de recepción sin permisos",
+			"url": "http://localhost:3001/api/v1/auth/register",
+			"time": 94,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 403": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 403": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				94
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 403": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "f7da9219-44e0-422c-b9a3-814877df5220",
+			"name": "Disponibilidad rechaza fechas faltantes",
+			"url": "http://localhost:3001/api/v1/reservations/availability?type=Suite",
+			"time": 99,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 400": true,
+				"Contrato de error de validación": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 400": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error de validación": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				99
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 400": true,
+					"Contrato de error de validación": true
+				}
+			]
+		},
+		{
+			"id": "f9467e07-4d3f-4de2-a717-90a403a511d3",
+			"name": "Habitaciones rechaza filtros inválidos",
+			"url": "http://localhost:3001/api/v1/rooms?status=estado-invalido",
+			"time": 95,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 400": true,
+				"Contrato de error de validación": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 400": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error de validación": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				95
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 400": true,
+					"Contrato de error de validación": true
+				}
+			]
+		},
+		{
+			"id": "8f6d49e5-15dc-4c63-ae27-586ccab2fd89",
+			"name": "Productos rechaza filtros inválidos",
+			"url": "http://localhost:3001/api/v1/products?status=estado-invalido",
+			"time": 91,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 400": true,
+				"Contrato de error de validación": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 400": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error de validación": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				91
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 400": true,
+					"Contrato de error de validación": true
+				}
+			]
+		},
+		{
+			"id": "242ba3b3-e490-4ca0-b021-c385371099ed",
+			"name": "Pago rechaza paginación inválida",
+			"url": "http://localhost:3001/api/v1/reservations/payments?page=0",
+			"time": 93,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 400": true,
+				"Contrato de error de validación": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 400": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error de validación": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				93
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 400": true,
+					"Contrato de error de validación": true
+				}
+			]
+		},
+		{
+			"id": "8145dbe1-9461-47d8-9fc0-a364d127da43",
+			"name": "Reservación rechaza identificador malformado",
+			"url": "http://localhost:3001/api/v1/reservations/identificador-invalido",
+			"time": 94,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 400": true,
+				"Contrato de error de validación": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 400": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error de validación": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				94
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 400": true,
+					"Contrato de error de validación": true
+				}
+			]
+		},
+		{
+			"id": "7f212ad1-18b8-4b58-af2f-0efcea116261",
+			"name": "Creación de habitación rechaza cuerpo vacío",
+			"url": "http://localhost:3001/api/v1/rooms",
+			"time": 179,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 400": true,
+				"Contrato de error de validación": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 400": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error de validación": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				179
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 400": true,
+					"Contrato de error de validación": true
+				}
+			]
+		},
+		{
+			"id": "b9fa595c-4e1d-4a3c-b24b-754917eddc2e",
+			"name": "Habitación duplicada responde 409",
+			"url": "http://localhost:3001/api/v1/rooms",
+			"time": 184,
+			"responseCode": {
+				"code": 409,
+				"name": "Conflict"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 409": true,
+				"Contrato de error": true,
+				"Mensaje esperado": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 409": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Mensaje esperado": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				184
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 409": true,
+					"Contrato de error": true,
+					"Mensaje esperado": true
+				}
+			]
+		},
+		{
+			"id": "66a951bf-01fc-4f2b-8c67-72def1d067b7",
+			"name": "Producto duplicado responde 409",
+			"url": "http://localhost:3001/api/v1/products",
+			"time": 185,
+			"responseCode": {
+				"code": 409,
+				"name": "Conflict"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 409": true,
+				"Contrato de error": true,
+				"Mensaje esperado": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 409": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Mensaje esperado": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				185
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 409": true,
+					"Contrato de error": true,
+					"Mensaje esperado": true
+				}
+			]
+		},
+		{
+			"id": "84043da8-c048-4708-ad07-db247c15e341",
+			"name": "Creación de producto rechaza cuerpo vacío",
+			"url": "http://localhost:3001/api/v1/products",
+			"time": 94,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 400": true,
+				"Contrato de error de validación": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 400": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error de validación": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				94
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 400": true,
+					"Contrato de error de validación": true
+				}
+			]
+		},
+		{
+			"id": "67af2f42-677c-4d4c-ab00-cb48f5190d7e",
+			"name": "Creación de usuario rechaza cuerpo vacío",
+			"url": "http://localhost:3001/api/v1/users",
+			"time": 95,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 400": true,
+				"Contrato de error de validación": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 400": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error de validación": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				95
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 400": true,
+					"Contrato de error de validación": true
+				}
+			]
+		},
+		{
+			"id": "0c36a002-59b1-440b-9cc5-f70ce91305e1",
+			"name": "Reservación inexistente responde 404",
+			"url": "http://localhost:3001/api/v1/reservations/507f1f77bcf86cd799439099",
+			"time": 182,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 404": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 404": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				182
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 404": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "ad6fa0eb-ea62-45b4-bc56-f455789637d5",
+			"name": "Ruta inexistente responde 404 JSON",
+			"url": "http://localhost:3001/api/v1/__postman_ruta_inexistente__",
+			"time": 5,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 404": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 404": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				5
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 404": true,
+					"Contrato de error": true
+				}
+			]
+		},
+		{
+			"id": "9b07b0b7-5b8b-428d-9013-532e5c8e7dcc",
+			"name": "Cerrar sesión de recepcionista",
+			"url": "http://localhost:3001/api/v1/auth/logout",
+			"time": 193,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 200": true,
+				"Envoltorio de éxito": true,
+				"Estructura de respuesta": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Envoltorio de éxito": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estructura de respuesta": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				193
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 200": true,
+					"Envoltorio de éxito": true,
+					"Estructura de respuesta": true
+				}
+			]
+		},
+		{
+			"id": "d591575d-d01f-4147-84ff-0db6d4d53c1d",
+			"name": "Token rechazado después del cierre de sesión",
+			"url": "http://localhost:3001/api/v1/auth/me",
+			"time": 97,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"La respuesta usa JSON": true,
+				"El cuerpo es JSON válido": true,
+				"Tiempo de respuesta dentro del límite configurado": true,
+				"HTTP 401": true,
+				"Contrato de error": true
+			},
+			"testPassFailCounts": {
+				"La respuesta usa JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El cuerpo es JSON válido": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tiempo de respuesta dentro del límite configurado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"HTTP 401": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Contrato de error": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				97
+			],
+			"allTests": [
+				{
+					"La respuesta usa JSON": true,
+					"El cuerpo es JSON válido": true,
+					"Tiempo de respuesta dentro del límite configurado": true,
+					"HTTP 401": true,
+					"Contrato de error": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 19015,
+	"collection": {
+		"requests": [
+			{
+				"id": "412c16ac-a233-479b-be19-03206e302c92",
+				"method": "GET"
+			},
+			{
+				"id": "e52c8fcc-b8f6-4bc9-bfd9-409ffee91c12",
+				"method": "POST"
+			},
+			{
+				"id": "00e9ad78-a591-4e79-94ab-83b9d0df3b09",
+				"method": "POST"
+			},
+			{
+				"id": "3ea0dca1-a5f7-4f2e-b991-a7318cf2c135",
+				"method": "GET"
+			},
+			{
+				"id": "419703ef-c5b8-43ee-9e5d-016b69f1d9c4",
+				"method": "GET"
+			},
+			{
+				"id": "2ed766d6-b468-47b9-add0-821d87070421",
+				"method": "GET"
+			},
+			{
+				"id": "b61589d0-8511-41f4-b603-a44b0bac00f5",
+				"method": "POST"
+			},
+			{
+				"id": "f0ae9aa0-2112-452a-bdb1-ddbbed013726",
+				"method": "POST"
+			},
+			{
+				"id": "445a6173-fa30-442e-be18-cc3b05fdc54a",
+				"method": "GET"
+			},
+			{
+				"id": "0d645bfe-321d-4797-aaf8-d4878fe0227a",
+				"method": "PATCH"
+			},
+			{
+				"id": "d5a90196-1675-4a1c-b2a7-ae03c01a37b7",
+				"method": "GET"
+			},
+			{
+				"id": "c1174237-9000-4f6d-9614-f029d71e35bf",
+				"method": "GET"
+			},
+			{
+				"id": "96913871-6838-49f7-b1aa-55c8a8f0e428",
+				"method": "GET"
+			},
+			{
+				"id": "d30d6c6e-3e7a-4012-9e61-a16f1c19c160",
+				"method": "GET"
+			},
+			{
+				"id": "11e468fb-1a6b-44fa-8418-3fe36e5c6dfe",
+				"method": "GET"
+			},
+			{
+				"id": "b6cb0f70-e919-4e3a-a398-f9204970abab",
+				"method": "GET"
+			},
+			{
+				"id": "32de1cf1-a174-4de1-a63e-32991c97d825",
+				"method": "GET"
+			},
+			{
+				"id": "61ff03e9-7821-4ab7-8657-41325da26aea",
+				"method": "GET"
+			},
+			{
+				"id": "bfdc899b-992c-452a-83ff-5b28c05fe5da",
+				"method": "GET"
+			},
+			{
+				"id": "9b99f64b-559c-4f22-9587-4e27e7863dfd",
+				"method": "GET"
+			},
+			{
+				"id": "d31d75cf-6d26-43ad-b08d-8167705f006b",
+				"method": "GET"
+			},
+			{
+				"id": "0cd5ea53-e16e-4cf8-96fb-16cfaaf71c00",
+				"method": "POST"
+			},
+			{
+				"id": "cbc2ad65-de64-4f07-b1fa-1010efcbbe40",
+				"method": "POST"
+			},
+			{
+				"id": "a73e90db-f1f0-4965-9c83-f9b8464dd62e",
+				"method": "POST"
+			},
+			{
+				"id": "139d7fef-6f34-4c9b-97fb-1176e372e19c",
+				"method": "PATCH"
+			},
+			{
+				"id": "b1021d22-24c5-4137-a594-4def68fc3be5",
+				"method": "PATCH"
+			},
+			{
+				"id": "8da37267-93aa-4cc9-8a1f-404274b2c8ee",
+				"method": "GET"
+			},
+			{
+				"id": "4c789349-c0ae-4e74-904f-4197f18ad337",
+				"method": "POST"
+			},
+			{
+				"id": "8d7c257f-0684-4507-a020-956d9e38f5ee",
+				"method": "GET"
+			},
+			{
+				"id": "2f72a029-456e-4947-a855-44221dd3440d",
+				"method": "PATCH"
+			},
+			{
+				"id": "5c8fb6aa-598c-4a21-ab0e-e2c33aba954a",
+				"method": "POST"
+			},
+			{
+				"id": "6ecda0d2-9579-4cb0-ab23-f87f59f421b9",
+				"method": "GET"
+			},
+			{
+				"id": "708c1022-0f66-42c4-ab35-3d8ab1361636",
+				"method": "GET"
+			},
+			{
+				"id": "9c2f63c4-9992-493f-af21-3230e6e0600a",
+				"method": "PATCH"
+			},
+			{
+				"id": "59e382a0-bfa2-4b4e-a075-735b32dd7233",
+				"method": "GET"
+			},
+			{
+				"id": "1ba8739f-326c-4dee-8e2d-723c7a8aaa48",
+				"method": "POST"
+			},
+			{
+				"id": "57264c1b-852a-40d6-a3d8-883c3742e467",
+				"method": "POST"
+			},
+			{
+				"id": "606b80fa-35e8-49dc-b9a5-7dc256576d76",
+				"method": "GET"
+			},
+			{
+				"id": "14067bbe-62de-47b2-bbc0-950fcf9a503d",
+				"method": "GET"
+			},
+			{
+				"id": "c54b7144-4e1a-432d-bc55-e90425113fc8",
+				"method": "PATCH"
+			},
+			{
+				"id": "de45f8ba-f947-482f-9e99-7ce7f4334905",
+				"method": "POST"
+			},
+			{
+				"id": "3dd387a9-88cc-4858-a514-0ca5dc27c7a4",
+				"method": "GET"
+			},
+			{
+				"id": "fd3f399d-69dd-49ef-8af5-267df9b3df51",
+				"method": "POST"
+			},
+			{
+				"id": "2177cc60-60c1-4745-bbcf-61a1490074da",
+				"method": "GET"
+			},
+			{
+				"id": "c3705652-f2aa-41f6-b316-5fc29447d98f",
+				"method": "GET"
+			},
+			{
+				"id": "85cc82c5-f361-4d1e-bb06-c083a8e4ce43",
+				"method": "POST"
+			},
+			{
+				"id": "b6acff04-faf3-454d-95dd-2b417a0f4fa4",
+				"method": "PATCH"
+			},
+			{
+				"id": "1a0adfcf-85ec-4fb3-ae83-7d6c04048dbc",
+				"method": "POST"
+			},
+			{
+				"id": "da9c34ca-dcd0-4662-b62a-17f9a052607c",
+				"method": "GET"
+			},
+			{
+				"id": "9b4434b4-e969-4eed-a3a6-3248ef62d18a",
+				"method": "GET"
+			},
+			{
+				"id": "c1d094f0-0dc7-4f1e-87aa-f52b899eeaf4",
+				"method": "POST"
+			},
+			{
+				"id": "46411c04-5e69-43a2-9bc7-dcc61fff1d67",
+				"method": "GET"
+			},
+			{
+				"id": "65117715-1253-4b4a-bcea-a48a9caa203d",
+				"method": "GET"
+			},
+			{
+				"id": "fdc8c774-c73e-4ee6-89bc-1283999416ae",
+				"method": "GET"
+			},
+			{
+				"id": "41a36d4e-9fa5-4d07-b70d-f013925ccde8",
+				"method": "GET"
+			},
+			{
+				"id": "ebcf4f47-09af-4b27-a192-06e7f1b1f28a",
+				"method": "GET"
+			},
+			{
+				"id": "df91f198-e43b-4d53-8489-8bbf8c382b91",
+				"method": "POST"
+			},
+			{
+				"id": "6ced5259-96e8-4079-bce6-525a77a7fe76",
+				"method": "POST"
+			},
+			{
+				"id": "d6a72f1d-b72d-4133-8149-fe9313a159b5",
+				"method": "GET"
+			},
+			{
+				"id": "c8735a49-4466-4a73-825b-356fa98807d3",
+				"method": "GET"
+			},
+			{
+				"id": "28431fae-6866-4a94-9889-653ef34bec80",
+				"method": "POST"
+			},
+			{
+				"id": "2be11716-09ac-44c7-8789-8c8262dd9bfc",
+				"method": "POST"
+			},
+			{
+				"id": "1fa6688e-5899-47c0-a0c1-67e5007e82c5",
+				"method": "GET"
+			},
+			{
+				"id": "01007300-12b7-4ab6-bace-a741771892b8",
+				"method": "POST"
+			},
+			{
+				"id": "f7da9219-44e0-422c-b9a3-814877df5220",
+				"method": "GET"
+			},
+			{
+				"id": "f9467e07-4d3f-4de2-a717-90a403a511d3",
+				"method": "GET"
+			},
+			{
+				"id": "8f6d49e5-15dc-4c63-ae27-586ccab2fd89",
+				"method": "GET"
+			},
+			{
+				"id": "242ba3b3-e490-4ca0-b021-c385371099ed",
+				"method": "GET"
+			},
+			{
+				"id": "8145dbe1-9461-47d8-9fc0-a364d127da43",
+				"method": "GET"
+			},
+			{
+				"id": "7f212ad1-18b8-4b58-af2f-0efcea116261",
+				"method": "POST"
+			},
+			{
+				"id": "b9fa595c-4e1d-4a3c-b24b-754917eddc2e",
+				"method": "POST"
+			},
+			{
+				"id": "66a951bf-01fc-4f2b-8c67-72def1d067b7",
+				"method": "POST"
+			},
+			{
+				"id": "84043da8-c048-4708-ad07-db247c15e341",
+				"method": "POST"
+			},
+			{
+				"id": "67af2f42-677c-4d4c-ab00-cb48f5190d7e",
+				"method": "POST"
+			},
+			{
+				"id": "0c36a002-59b1-440b-9cc5-f70ce91305e1",
+				"method": "GET"
+			},
+			{
+				"id": "ad6fa0eb-ea62-45b4-bc56-f455789637d5",
+				"method": "GET"
+			},
+			{
+				"id": "9b07b0b7-5b8b-428d-9013-532e5c8e7dcc",
+				"method": "POST"
+			},
+			{
+				"id": "d591575d-d01f-4147-84ff-0db6d4d53c1d",
+				"method": "GET"
+			}
+		]
+	}
+}
