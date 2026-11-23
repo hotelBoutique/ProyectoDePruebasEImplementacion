@@ -6,7 +6,12 @@ import {
   getReservation,
   getReservations,
   getRooms,
+  updateReservation as updateReservationRequest,
 } from '../services/api.js';
+
+// Igual que el backend: hoy bloquea cualquier estado no operativo; a futuro solo la desactivación.
+const UNAVAILABLE_TODAY_STATUSES = ['ocupada', 'mantenimiento', 'fuera de servicio', 'limpieza', 'desinfeccion'];
+const DEACTIVATED_ROOM_STATUSES = ['fuera de servicio'];
 
 const EMPTY_RESERVATION_FILTERS = {
   checkInFrom: '',
@@ -64,15 +69,161 @@ function getErrorMessage(error, fallback) {
     : error.message || fallback;
 }
 
-export default function ReservationsPage({ token, mode = 'create', onNavigate, canCreate = true }) {
+export default function ReservationsPage({
+  token,
+  mode = 'create',
+  onNavigate,
+  canCreate = true,
+  canEdit = false,
+  isAdmin = false,
+}) {
   if (mode === 'list') {
-    return <ReservationListPage token={token} canCreate={canCreate} onNavigate={onNavigate} />;
+    return <ReservationListPage token={token} canCreate={canCreate} canEdit={canEdit} onNavigate={onNavigate} />;
   }
   if (mode === 'cancellations') {
-    return <ReservationListPage token={token} mode="cancellations" />;
+    return <ReservationListPage token={token} mode="cancellations" isAdmin={isAdmin} />;
   }
 
   return <ReservationCreationPage token={token} onNavigate={onNavigate} />;
+}
+
+function ReservationEditForm({ reservation, rooms, onSave, onCancel }) {
+  const [form, setForm] = useState(() => ({
+    fullName: reservation.guest?.fullName || '',
+    email: reservation.guest?.email || '',
+    phone: reservation.guest?.phone || '',
+    identification: reservation.guest?.identification || '',
+    checkIn: String(reservation.checkIn || '').slice(0, 10),
+    checkOut: String(reservation.checkOut || '').slice(0, 10),
+    roomId: String(reservation.room?._id || reservation.room || ''),
+    nightlyRate: String(reservation.nightlyRate ?? ''),
+  }));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const today = todayDateOnly();
+  const blockedStatuses = form.checkIn <= today ? UNAVAILABLE_TODAY_STATUSES : DEACTIVATED_ROOM_STATUSES;
+  const selectableRooms = rooms.filter((room) => (
+    !blockedStatuses.includes(room.status) || room._id === form.roomId
+  ));
+
+  function updateField(event) {
+    const { name, value } = event.target;
+    setError('');
+    setForm((current) => {
+      const next = { ...current, [name]: value };
+      if (name === 'roomId') {
+        const room = rooms.find((item) => item._id === value);
+        if (room) next.nightlyRate = String(room.price);
+      }
+      if (name === 'checkIn' && next.checkOut <= value) next.checkOut = nextDate(value);
+      return next;
+    });
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (!form.checkIn || !form.checkOut || form.checkOut <= form.checkIn) {
+      setError('El check-out debe ser posterior al check-in.');
+      return;
+    }
+    if (form.fullName.trim().length < 2 || form.fullName.trim().length > 100) {
+      setError('El nombre completo debe tener entre 2 y 100 caracteres.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError('Ingresa un correo válido para el huésped.');
+      return;
+    }
+    if (form.phone.trim().length < 7 || form.phone.trim().length > 25) {
+      setError('El teléfono debe tener entre 7 y 25 caracteres.');
+      return;
+    }
+    if (form.identification.trim().length < 4 || form.identification.trim().length > 30) {
+      setError('La identificación debe tener entre 4 y 30 caracteres.');
+      return;
+    }
+    const rate = Number(form.nightlyRate);
+    if (form.nightlyRate.trim() === '' || !Number.isFinite(rate) || rate < 0) {
+      setError('La tarifa por noche debe ser un número mayor o igual a 0.');
+      return;
+    }
+
+    const changes = {};
+    const guestChanges = {};
+    ['fullName', 'email', 'phone', 'identification'].forEach((field) => {
+      const value = form[field].trim();
+      if (value !== (reservation.guest?.[field] || '')) guestChanges[field] = value;
+    });
+    if (Object.keys(guestChanges).length) changes.guest = guestChanges;
+    if (form.checkIn !== String(reservation.checkIn).slice(0, 10)) changes.checkIn = form.checkIn;
+    if (form.checkOut !== String(reservation.checkOut).slice(0, 10)) changes.checkOut = form.checkOut;
+    if (form.roomId !== String(reservation.room?._id || reservation.room || '')) changes.roomId = form.roomId;
+    if (rate !== Number(reservation.nightlyRate)) changes.nightlyRate = rate;
+
+    if (!Object.keys(changes).length) {
+      setError('No hay cambios para guardar.');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      await onSave(changes);
+    } catch (saveError) {
+      setError(getErrorMessage(saveError, 'No fue posible modificar la reservación.'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form className="reservation-cancellation-form" onSubmit={handleSubmit} noValidate>
+      <div className="receptionist-form-grid">
+        <label className="form-field">
+          <span className="field-label">Check-in *</span>
+          <input className="form-input" type="date" name="checkIn" min={today} value={form.checkIn} onChange={updateField} disabled={saving} />
+        </label>
+        <label className="form-field">
+          <span className="field-label">Check-out *</span>
+          <input className="form-input" type="date" name="checkOut" min={nextDate(form.checkIn)} value={form.checkOut} onChange={updateField} disabled={saving} />
+        </label>
+        <label className="form-field">
+          <span className="field-label">Habitación *</span>
+          <select className="form-input" name="roomId" value={form.roomId} onChange={updateField} disabled={saving}>
+            {selectableRooms.map((room) => (
+              <option value={room._id} key={room._id}>{room.number} · {room.type} · {formatCurrency(room.price)}</option>
+            ))}
+          </select>
+        </label>
+        <label className="form-field">
+          <span className="field-label">Tarifa por noche (COP) *</span>
+          <input className="form-input" type="number" name="nightlyRate" min="0" step="0.01" value={form.nightlyRate} onChange={updateField} disabled={saving} />
+        </label>
+        <label className="form-field">
+          <span className="field-label">Nombre completo *</span>
+          <input className="form-input" name="fullName" maxLength="100" value={form.fullName} onChange={updateField} disabled={saving} />
+        </label>
+        <label className="form-field">
+          <span className="field-label">Correo electrónico *</span>
+          <input className="form-input" type="email" name="email" maxLength="254" value={form.email} onChange={updateField} disabled={saving} />
+        </label>
+        <label className="form-field">
+          <span className="field-label">Teléfono *</span>
+          <input className="form-input" type="tel" name="phone" maxLength="25" value={form.phone} onChange={updateField} disabled={saving} />
+        </label>
+        <label className="form-field">
+          <span className="field-label">Identificación *</span>
+          <input className="form-input" name="identification" maxLength="30" value={form.identification} onChange={updateField} disabled={saving} />
+        </label>
+      </div>
+      <p className="room-description">La disponibilidad de la habitación se vuelve a comprobar al guardar.</p>
+      {error && <p className="reservation-inline-error" role="alert">{error}</p>}
+      <div className="receptionist-form-actions">
+        <button className="button-secondary" type="button" onClick={onCancel} disabled={saving}>Volver</button>
+        <button className="button-primary" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar cambios'}</button>
+      </div>
+    </form>
+  );
 }
 
 function ReservationCreationPage({ token, onNavigate }) {
@@ -448,7 +599,7 @@ function ReservationCreationPage({ token, onNavigate }) {
   );
 }
 
-function ReservationListPage({ token, canCreate, onNavigate, mode = 'list' }) {
+function ReservationListPage({ token, canCreate, canEdit = false, onNavigate, mode = 'list', isAdmin = false }) {
   const isCancellationMode = mode === 'cancellations';
   const canCancel = isCancellationMode;
   const initialFilters = isCancellationMode ? PENDING_CANCELLATION_FILTERS : EMPTY_RESERVATION_FILTERS;
@@ -559,12 +710,27 @@ function ReservationListPage({ token, canCreate, onNavigate, mode = 'list' }) {
     return updatedReservation;
   }
 
+  async function updateSelectedReservation(reservationId, changes) {
+    const response = await updateReservationRequest(token, reservationId, changes);
+    const updatedReservation = response.data?.reservation;
+    if (!updatedReservation) {
+      throw new Error('La reservación se actualizó, pero no se recibió su información.');
+    }
+    setSelectedReservation(updatedReservation);
+    setReservations((current) => current.map((reservation) => (
+      reservation._id === reservationId ? { ...reservation, ...updatedReservation } : reservation
+    )));
+    return updatedReservation;
+  }
+
   return (
     <section className="reservations-page" aria-labelledby="reservation-list-heading">
       <div className="reservations-heading">
         <div>
           <p className="eyebrow">GESTIÓN DE ESTADÍAS</p>
-          <h1 id="reservation-list-heading">{isCancellationMode ? 'Cancelaciones administrativas' : 'Reservaciones'}</h1>
+          <h1 id="reservation-list-heading">
+            {isCancellationMode ? (isAdmin ? 'Cancelaciones administrativas' : 'Cancelar reservaciones') : 'Reservaciones'}
+          </h1>
           <p className="intro">
             {isCancellationMode
               ? 'Consulta las reservaciones pendientes, revisa sus datos y cancélalas antes del check-in.'
@@ -599,6 +765,8 @@ function ReservationListPage({ token, canCreate, onNavigate, mode = 'list' }) {
         cancellationMode={isCancellationMode}
         canCancel={canCancel}
         onCancelReservation={cancelSelectedReservation}
+        canEdit={canEdit && !isCancellationMode}
+        onUpdateReservation={updateSelectedReservation}
       />
     </section>
   );
@@ -624,13 +792,17 @@ function ReservationListing({
   cancellationMode,
   canCancel,
   onCancelReservation,
+  canEdit,
+  onUpdateReservation,
 }) {
+  const [editFormOpen, setEditFormOpen] = useState(false);
   const [cancellationFormOpen, setCancellationFormOpen] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('');
   const [cancelling, setCancelling] = useState(false);
   const [cancellationNotice, setCancellationNotice] = useState(null);
 
   function openReservationDetails(reservationId) {
+    setEditFormOpen(false);
     setCancellationFormOpen(false);
     setCancellationReason('');
     setCancellationNotice(null);
@@ -638,6 +810,7 @@ function ReservationListing({
   }
 
   function closeReservationDetails() {
+    setEditFormOpen(false);
     setCancellationFormOpen(false);
     setCancellationReason('');
     setCancellationNotice(null);
@@ -808,6 +981,33 @@ function ReservationListing({
                   <div className={`reservation-notice feedback-${cancellationNotice.tone}`} role="status" aria-live="polite">
                     {cancellationNotice.text}
                   </div>
+                )}
+                {canEdit && selectedReservation.status === 'reservada' && (
+                  <section className="reservation-cancellation-panel" aria-label="Modificar reservación">
+                    {!editFormOpen ? (
+                      <button
+                        className="button-secondary"
+                        type="button"
+                        onClick={() => {
+                          setEditFormOpen(true);
+                          setCancellationNotice(null);
+                        }}
+                      >
+                        Modificar reservación
+                      </button>
+                    ) : (
+                      <ReservationEditForm
+                        reservation={selectedReservation}
+                        rooms={rooms}
+                        onCancel={() => setEditFormOpen(false)}
+                        onSave={async (changes) => {
+                          await onUpdateReservation(selectedReservation._id, changes);
+                          setEditFormOpen(false);
+                          setCancellationNotice({ tone: 'success', text: 'La reservación se actualizó correctamente.' });
+                        }}
+                      />
+                    )}
+                  </section>
                 )}
                 {canCancel && selectedReservation.status === 'reservada' && (
                   <section className="reservation-cancellation-panel" aria-label="Cancelar reservación">

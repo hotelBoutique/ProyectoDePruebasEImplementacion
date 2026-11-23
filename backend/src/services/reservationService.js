@@ -15,6 +15,17 @@ const UNAVAILABLE_ROOM_STATUSES = [
     'limpieza',
     'desinfeccion'
 ];
+// Una habitación fuera de servicio está desactivada para cualquier fecha.
+const DEACTIVATED_ROOM_STATUSES = ['fuera de servicio'];
+
+// El estado operativo (ocupada, mantenimiento, limpieza...) describe la habitación hoy:
+// bloquea una reservación que entra hoy, pero no una futura, donde solo cuentan la
+// desactivación y los cruces de fechas. El check-in vuelve a validar el estado ese día.
+const getBlockingRoomStatuses = checkInValue => (
+    checkInValue <= getTodayDateOnly()
+        ? UNAVAILABLE_ROOM_STATUSES
+        : DEACTIVATED_ROOM_STATUSES
+);
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const PAYMENT_METHODS = ['efectivo', 'tarjeta', 'transferencia'];
 
@@ -179,56 +190,89 @@ const updateReservationConsumption = async (reservationId, consumptionId, change
         throw new AppError('La solicitud contiene datos de consumo no editables', 400);
     }
 
-    const reservation = await Reservation.findById(reservationId);
-    if (!reservation) {
-        throw new AppError('La reservación no existe', 404);
-    }
-    if (reservation.status !== 'ocupada') {
-        throw new AppError('Solo se pueden corregir consumos antes de cerrar la cuenta', 409);
-    }
+    const session = await mongoose.startSession();
+    let updatedReservation;
 
-    const consumption = reservation.consumptions.id(consumptionId);
-    if (!consumption) {
-        throw new AppError('El consumo no existe en esta reservación', 404);
-    }
-    if (consumption.status === 'anulado') {
-        throw new AppError('No se puede corregir un consumo anulado', 409);
-    }
+    try {
+        await session.withTransaction(async () => {
+            const reservation = await Reservation.findById(reservationId).session(session);
+            if (!reservation) {
+                throw new AppError('La reservación no existe', 404);
+            }
+            if (reservation.status !== 'ocupada') {
+                throw new AppError('Solo se pueden corregir consumos antes de cerrar la cuenta', 409);
+            }
 
-    const description = changes.description === undefined
-        ? consumption.description
-        : changes.description.trim();
-    const quantity = changes.quantity === undefined
-        ? Number(consumption.quantity)
-        : Number(changes.quantity);
-    const unitPrice = changes.unitPrice === undefined
-        ? Number(consumption.unitPrice)
-        : Number(changes.unitPrice);
+            const consumption = reservation.consumptions.id(consumptionId);
+            if (!consumption) {
+                throw new AppError('El consumo no existe en esta reservación', 404);
+            }
+            if (consumption.status === 'anulado') {
+                throw new AppError('No se puede corregir un consumo anulado', 409);
+            }
 
-    if (description.length < 2 || description.length > 120) {
-        throw new AppError('El concepto debe tener entre 2 y 120 caracteres', 400);
-    }
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
-        throw new AppError('La cantidad debe ser un entero entre 1 y 1000', 400);
-    }
-    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-        throw new AppError('El precio unitario debe ser un número mayor o igual a 0', 400);
-    }
+            const description = changes.description === undefined
+                ? consumption.description
+                : changes.description.trim();
+            const previousQuantity = Number(consumption.quantity);
+            const quantity = changes.quantity === undefined
+                ? previousQuantity
+                : Number(changes.quantity);
+            const unitPrice = changes.unitPrice === undefined
+                ? Number(consumption.unitPrice)
+                : Number(changes.unitPrice);
 
-    const unitPriceCents = toCents(unitPrice);
-    const subtotalCents = unitPriceCents * quantity;
-    if (!Number.isSafeInteger(unitPriceCents) || !Number.isSafeInteger(subtotalCents)) {
-        throw new AppError('El subtotal del consumo supera el límite permitido', 400);
+            if (description.length < 2 || description.length > 120) {
+                throw new AppError('El concepto debe tener entre 2 y 120 caracteres', 400);
+            }
+            if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
+                throw new AppError('La cantidad debe ser un entero entre 1 y 1000', 400);
+            }
+            if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+                throw new AppError('El precio unitario debe ser un número mayor o igual a 0', 400);
+            }
+
+            const unitPriceCents = toCents(unitPrice);
+            const subtotalCents = unitPriceCents * quantity;
+            if (!Number.isSafeInteger(unitPriceCents) || !Number.isSafeInteger(subtotalCents)) {
+                throw new AppError('El subtotal del consumo supera el límite permitido', 400);
+            }
+
+            // En los consumos del catálogo, el inventario se ajusta con la diferencia
+            // de cantidad (el concepto y el precio se pueden corregir como en cualquier consumo).
+            if (consumption.product) {
+                const stockDelta = quantity - previousQuantity;
+                if (stockDelta > 0) {
+                    const stockUpdate = await Product.updateOne(
+                        { _id: consumption.product, stock: { $gte: stockDelta } },
+                        { $inc: { stock: -stockDelta } },
+                        { session }
+                    );
+                    if (stockUpdate.matchedCount === 0) {
+                        throw new AppError('No hay stock suficiente para aumentar la cantidad', 409);
+                    }
+                } else if (stockDelta < 0) {
+                    await Product.updateOne(
+                        { _id: consumption.product },
+                        { $inc: { stock: -stockDelta } },
+                        { session }
+                    );
+                }
+            }
+
+            consumption.description = description;
+            consumption.quantity = quantity;
+            consumption.unitPrice = unitPriceCents / 100;
+            consumption.subtotal = subtotalCents / 100;
+            consumption.amount = subtotalCents / 100;
+
+            updatedReservation = await reservation.save({ session });
+        });
+
+        return updatedReservation;
+    } finally {
+        await session.endSession();
     }
-
-    consumption.description = description;
-    consumption.quantity = quantity;
-    consumption.unitPrice = unitPriceCents / 100;
-    consumption.subtotal = subtotalCents / 100;
-    consumption.amount = subtotalCents / 100;
-
-    await reservation.save();
-    return reservation;
 };
 
 const voidReservationConsumption = async (reservationId, consumptionId, reason, voidedBy) => {
@@ -237,29 +281,48 @@ const voidReservationConsumption = async (reservationId, consumptionId, reason, 
         throw new AppError('El motivo de anulación debe tener entre 3 y 500 caracteres', 400);
     }
 
-    const reservation = await Reservation.findById(reservationId);
-    if (!reservation) {
-        throw new AppError('La reservación no existe', 404);
-    }
-    if (reservation.status !== 'ocupada') {
-        throw new AppError('Solo se pueden anular consumos antes de cerrar la cuenta', 409);
-    }
+    const session = await mongoose.startSession();
+    let updatedReservation;
 
-    const consumption = reservation.consumptions.id(consumptionId);
-    if (!consumption) {
-        throw new AppError('El consumo no existe en esta reservación', 404);
-    }
-    if (consumption.status === 'anulado') {
-        throw new AppError('El consumo ya fue anulado', 409);
-    }
+    try {
+        await session.withTransaction(async () => {
+            const reservation = await Reservation.findById(reservationId).session(session);
+            if (!reservation) {
+                throw new AppError('La reservación no existe', 404);
+            }
+            if (reservation.status !== 'ocupada') {
+                throw new AppError('Solo se pueden anular consumos antes de cerrar la cuenta', 409);
+            }
 
-    consumption.status = 'anulado';
-    consumption.voidReason = normalizedReason;
-    consumption.voidedAt = new Date();
-    consumption.voidedBy = voidedBy;
+            const consumption = reservation.consumptions.id(consumptionId);
+            if (!consumption) {
+                throw new AppError('El consumo no existe en esta reservación', 404);
+            }
+            if (consumption.status === 'anulado') {
+                throw new AppError('El consumo ya fue anulado', 409);
+            }
 
-    await reservation.save();
-    return reservation;
+            // Un consumo anulado no se cobra: sus unidades vuelven al inventario.
+            if (consumption.product) {
+                await Product.updateOne(
+                    { _id: consumption.product },
+                    { $inc: { stock: Number(consumption.quantity) } },
+                    { session }
+                );
+            }
+
+            consumption.status = 'anulado';
+            consumption.voidReason = normalizedReason;
+            consumption.voidedAt = new Date();
+            consumption.voidedBy = voidedBy;
+
+            updatedReservation = await reservation.save({ session });
+        });
+
+        return updatedReservation;
+    } finally {
+        await session.endSession();
+    }
 };
 
 const addReservationConsumption = async (reservationId, consumption) => {
@@ -767,7 +830,7 @@ const updateReservation = async (reservationId, changes) => {
             if (!room) {
                 throw new AppError('La habitación seleccionada no existe', 404);
             }
-            if (UNAVAILABLE_ROOM_STATUSES.includes(room.status)) {
+            if (getBlockingRoomStatuses(checkInValue).includes(room.status)) {
                 throw new AppError('La habitación no está disponible para el periodo seleccionado', 409);
             }
 
@@ -887,7 +950,7 @@ const parseFilterDate = (value, fieldName) => {
 const getAvailableRooms = async (checkInValue, checkOutValue, roomId, { type, guests, maxPrice } = {}) => {
     const { checkIn, checkOut } = getDateRange(checkInValue, checkOutValue);
     const roomFilter = {
-        status: { $nin: UNAVAILABLE_ROOM_STATUSES }
+        status: { $nin: getBlockingRoomStatuses(checkInValue) }
     };
 
     if (roomId) {
@@ -1216,7 +1279,7 @@ const createReservation = async ({
                 throw new AppError('La habitación seleccionada no existe', 404);
             }
 
-            if (UNAVAILABLE_ROOM_STATUSES.includes(room.status)) {
+            if (getBlockingRoomStatuses(checkInValue).includes(room.status)) {
                 throw new AppError('La habitación no está disponible para el periodo seleccionado', 409);
             }
 

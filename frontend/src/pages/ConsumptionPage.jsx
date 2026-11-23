@@ -9,6 +9,10 @@ function formatCurrency(value) {
   }).format(value);
 }
 
+function activeConsumptions(reservation) {
+  return (reservation?.consumptions || []).filter((item) => item.status !== 'anulado');
+}
+
 function getErrorMessage(error) {
   return Array.isArray(error.details) && error.details.length
     ? error.details.join('. ')
@@ -97,7 +101,6 @@ export default function ConsumptionPage({ token }) {
         quantity: quantityValue,
       });
       setQuantity('1');
-      setUnitPrice('');
       setNotice({
         tone: 'success',
         text: response.message || 'El consumo se registró en la cuenta de la estancia.',
@@ -146,7 +149,8 @@ export default function ConsumptionPage({ token }) {
         <div className="consumption-layout">
           <section className="check-in-list" aria-label="Estancias activas">
             {reservations.map((reservation) => {
-              const consumedTotal = (reservation.consumptions || []).reduce(
+              const consumptions = activeConsumptions(reservation);
+              const consumedTotal = consumptions.reduce(
                 (total, item) => total + Number(item.subtotal || item.amount || 0),
                 0,
               );
@@ -161,7 +165,7 @@ export default function ConsumptionPage({ token }) {
                   <span>
                     <strong>{reservation.guest.fullName}</strong>
                     <span>Habitación {reservation.roomNumber} · {reservation.roomType}</span>
-                    <span>{(reservation.consumptions || []).length} consumos registrados</span>
+                    <span>{consumptions.length} consumos registrados</span>
                   </span>
                   <strong>{formatCurrency(consumedTotal)}</strong>
                 </button>
@@ -232,10 +236,10 @@ export default function ConsumptionPage({ token }) {
 
               <section className="consumption-history" aria-labelledby="consumption-history-title">
                 <h2 id="consumption-history-title">Consumos de la estancia</h2>
-                {(selectedReservation.consumptions || []).length ? (
+                {activeConsumptions(selectedReservation).length ? (
                   <div className="consumption-history-list">
-                    {selectedReservation.consumptions.map((item, index) => (
-                      <div className="consumption-history-row" key={`${item.description}-${index}`}>
+                    {activeConsumptions(selectedReservation).map((item, index) => (
+                      <div className="consumption-history-row" key={item._id || `${item.description}-${index}`}>
                         <span>
                           <strong>{item.description}</strong>
                           <span>{item.quantity} × {formatCurrency(item.unitPrice)}</span>

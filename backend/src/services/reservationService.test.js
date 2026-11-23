@@ -42,6 +42,17 @@ const {
     updateReservation
 } = require('./reservationService');
 
+const getTodayDates = () => {
+    const checkIn = new Date();
+    const checkOut = new Date(checkIn);
+    checkOut.setUTCDate(checkOut.getUTCDate() + 1);
+
+    return {
+        checkIn: checkIn.toISOString().slice(0, 10),
+        checkOut: checkOut.toISOString().slice(0, 10)
+    };
+};
+
 const getFutureDates = () => {
     const checkIn = new Date();
     checkIn.setUTCDate(checkIn.getUTCDate() + 1);
@@ -217,16 +228,27 @@ describe('reservationService', () => {
         }));
     });
 
-    it('searches only operational rooms when no availability filter is given', async () => {
+    it('excludes only deactivated rooms for a future check-in', async () => {
         const dates = getFutureDates();
         Room.find.mockReturnValue({ sort: jest.fn().mockResolvedValue([]) });
 
         await expect(getAvailableRooms(dates.checkIn, dates.checkOut)).resolves.toEqual([]);
 
         expect(Room.find).toHaveBeenCalledWith({
-            status: { $nin: ['ocupada', 'mantenimiento', 'fuera de servicio', 'limpieza', 'desinfeccion'] }
+            status: { $nin: ['fuera de servicio'] }
         });
         expect(Reservation.find).not.toHaveBeenCalled();
+    });
+
+    it('searches only operational rooms for a check-in today', async () => {
+        const today = getTodayDates();
+        Room.find.mockReturnValue({ sort: jest.fn().mockResolvedValue([]) });
+
+        await expect(getAvailableRooms(today.checkIn, today.checkOut)).resolves.toEqual([]);
+
+        expect(Room.find).toHaveBeenCalledWith({
+            status: { $nin: ['ocupada', 'mantenimiento', 'fuera de servicio', 'limpieza', 'desinfeccion'] }
+        });
     });
 
     it('applies room type, guest capacity and maximum price to availability', async () => {
@@ -399,6 +421,50 @@ describe('reservationService', () => {
             status: 'reservada'
         })], { session });
         expect(session.endSession).toHaveBeenCalled();
+    });
+
+    it('allows a future reservation for a room that is occupied today', async () => {
+        const dates = getFutureDates();
+        createSessionMock();
+        const reservation = { _id: 'future-reservation' };
+        Room.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({ _id: 'room-id', number: '101', type: 'Doble', status: 'ocupada' })
+        });
+        Room.updateOne.mockResolvedValue({ matchedCount: 1 });
+        Reservation.findOne.mockReturnValue({ session: jest.fn().mockResolvedValue(null) });
+        Reservation.create.mockResolvedValue([reservation]);
+
+        await expect(createReservation({
+            guest: { fullName: 'Ada Lovelace' },
+            roomId: 'room-id',
+            checkIn: dates.checkIn,
+            checkOut: dates.checkOut,
+            nightlyRate: 175,
+            createdBy: 'user-id'
+        })).resolves.toBe(reservation);
+    });
+
+    it.each([
+        ['occupied today', 'ocupada', getTodayDates],
+        ['in maintenance today', 'mantenimiento', getTodayDates],
+        ['being cleaned today', 'limpieza', getTodayDates],
+        ['out of service in the future', 'fuera de servicio', getFutureDates]
+    ])('rejects a reservation for a room %s', async (_, status, datesFor) => {
+        const dates = datesFor();
+        createSessionMock();
+        Room.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({ _id: 'room-id', status })
+        });
+
+        await expect(createReservation({
+            guest: { fullName: 'Ada Lovelace' },
+            roomId: 'room-id',
+            checkIn: dates.checkIn,
+            checkOut: dates.checkOut,
+            nightlyRate: 175,
+            createdBy: 'user-id'
+        })).rejects.toMatchObject({ statusCode: 409 });
+        expect(Reservation.create).not.toHaveBeenCalled();
     });
 
     it('rejects an overlapping reservation without creating a record', async () => {

@@ -302,10 +302,10 @@ export default function CheckOutPage({ token, initialReservationId = '' }) {
                     <div><dt>Impuestos</dt><dd>No configurados</dd></div>
                   </dl>
 
-                  {(selectedReservation.consumptions || []).length > 0 && (
+                  {(selectedReservation.consumptions || []).some((item) => item.status !== 'anulado') && (
                     <section className="checkout-consumption-breakdown" aria-label="Consumos registrados">
                       <h3>Detalle de consumos</h3>
-                      {selectedReservation.consumptions.map((consumption, index) => (
+                      {selectedReservation.consumptions.filter((item) => item.status !== 'anulado').map((consumption, index) => (
                         <div className="consumption-history-row" key={`checkout-consumption-${index}`}>
                           <span>
                             <strong>{consumption.description}</strong>
