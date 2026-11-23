@@ -15,7 +15,21 @@
 
 <img src="repository_Sources/hotelVid.gif" alt="Demostración de Hotel Boutique" width="850">
 
-[![Abrir entorno en Postman](https://img.shields.io/badge/Postman-Abrir_entorno_compartido-FF6C37?logo=postman&logoColor=white)](https://www.postman.com/imnotseb670-8749507/workspace/testing-pruebas-para-hotel/environment/57446888-06f53965-c57a-4bcf-ad37-e9e03bd9e354?action=share&creator=57446888&active-environment=57446888-06f53965-c57a-4bcf-ad37-e9e03bd9e354)
+<div class="postman-run-button"
+data-postman-action="collection/fork"
+data-postman-visibility="public"
+data-postman-var-1="57446888-c936591f-bfeb-4381-9ed9-3d96d2913495"
+data-postman-collection-url="entityId=57446888-c936591f-bfeb-4381-9ed9-3d96d2913495&entityType=collection&workspaceId=34f68838-009d-43ac-9bd4-e53743d1cdb1"
+data-postman-param="env%5BQA%20testing%5D=W3sia2V5IjoiYmFzZVVybCIsInZhbHVlIjoiIiwiZW5hYmxlZCI6dHJ1ZSwidHlwZSI6ImRlZmF1bHQifSx7ImtleSI6Im1heFJlc3BvbnNlTXMiLCJ2YWx1ZSI6IiwiZW5hYmxlZCI6dHJ1ZSwidHlwZSI6ImRlZmF1bHQifSx7ImtleSI6ImFkbWluRW1haWwiLCJ2YWx1ZSI6IiIsImVuYWJsZWQiOnRydWUsInR5cGUiOiJkZWZhdWx0In0seyJrZXkiOiJhZG1pblBhc3N3b3JkIiwidmFsdWUiOiIiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoiZGVmYXVsdCJ9LHsia2V5IjoidGVzdFJlY2VwdGlvblBhc3N3b3JkIiwidmFsdWUiOiIiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoiZGVmYXVsdCJ9LHsia2V5Ijoicm90YXRlZFJlY2VwdGlvblBhc3N3b3JkIiwidmFsdWUiOiIiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoiZGVmYXVsdCJ9LHsia2V5IjoibWFuYWdlZFRlc3RQYXNzd29yZCIsInZhbHVlIjoiIiwiZW5hYmxlZCI6dHJ1ZSwidHlwZSI6ImRlZmF1bHQifV0="></div>
+<script type="text/javascript">
+  (function (p,o,s,t,m,a,n) {
+    !p[s] && (p[s] = function () { (p[t] || (p[t] = [])).push(arguments); });
+    !o.getElementById(s+t) && o.getElementsByTagName("head")[0].appendChild((
+      (n = o.createElement("script")),
+      (n.id = s+t), (n.async = 1), (n.src = m), n
+    ));
+  }(window, document, "_pm", "PostmanRunObject", "https://run.pstmn.io/button.js"));
+</script>
 
 </div>
 
