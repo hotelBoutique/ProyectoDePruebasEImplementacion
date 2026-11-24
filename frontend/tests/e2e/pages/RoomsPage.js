@@ -11,6 +11,7 @@ export class RoomsPage extends BasePage {
     this.emptyTitle = By.css('.receptionist-empty-state strong');
     this.summary = By.css('.rooms-filters-summary');
     this.filterErrorMessage = By.css('.rooms-filters-error');
+    this.refreshButton = By.css('button.receptionist-refresh');
     this.filterButton = By.xpath("//form//button[normalize-space()='Filtrar']");
     this.clearButton = By.xpath("//form//button[normalize-space()='Limpiar']");
     this.fields = {
@@ -27,7 +28,11 @@ export class RoomsPage extends BasePage {
   }
 
   async roomTableText() {
-    return this.text(By.css('.receptionist-table'));
+    return this.text(this.table);
+  }
+
+  async refresh() {
+    await this.click(this.refreshButton);
   }
 
   // Completa los filtros indicados; los que no se pasan quedan vacíos.
