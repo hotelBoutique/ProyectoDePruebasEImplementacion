@@ -38,4 +38,25 @@ describe('ReceiptsPage', () => {
 
     expect(await screen.findByText('Aún no hay pagos registrados')).toBeInTheDocument();
   });
+
+  test('muestra el error de la API sin listar comprobantes', async () => {
+    const error = new Error('Solicitud inválida');
+    error.details = ['La fecha final debe ser igual o posterior a la fecha inicial'];
+    getReceipts.mockRejectedValue(error);
+
+    render(<ReceiptsPage token="test-token" />);
+
+    expect(await screen.findByText('No fue posible consultar los comprobantes')).toBeInTheDocument();
+    expect(screen.getByText('La fecha final debe ser igual o posterior a la fecha inicial')).toBeInTheDocument();
+    expect(screen.queryByText('Aún no hay pagos registrados')).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  test('usa un mensaje claro si la falla no trae detalle', async () => {
+    getReceipts.mockRejectedValue(new Error(''));
+
+    render(<ReceiptsPage token="test-token" />);
+
+    expect(await screen.findByText('No fue posible consultar los comprobantes.')).toBeInTheDocument();
+  });
 });

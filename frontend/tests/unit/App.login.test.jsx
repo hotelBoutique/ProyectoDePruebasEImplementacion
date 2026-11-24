@@ -43,6 +43,34 @@ describe('inicio de sesión', () => {
     expect(await screen.findByText('Credenciales inválidas')).toBeInTheDocument();
   });
 
+  test('rechaza una respuesta vacía de la API sin abrir el panel', async () => {
+    login.mockResolvedValue({ data: {} });
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(await screen.findByLabelText('Correo electrónico'), 'recepcion@hotel.com');
+    await user.type(screen.getByLabelText('Contraseña'), 'clave-test');
+    await user.click(screen.getByRole('button', { name: /iniciar sesión/i }));
+
+    expect(await screen.findByText('La API no devolvió los datos necesarios para iniciar sesión.')).toBeInTheDocument();
+    expect(getReceptionDashboard).not.toHaveBeenCalled();
+    expect(window.sessionStorage.length).toBe(0);
+  });
+
+  test('informa cuando no hay conexión con el servidor', async () => {
+    login.mockRejectedValue(new TypeError('Failed to fetch'));
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(await screen.findByLabelText('Correo electrónico'), 'recepcion@hotel.com');
+    await user.type(screen.getByLabelText('Contraseña'), 'clave-test');
+    await user.click(screen.getByRole('button', { name: /iniciar sesión/i }));
+
+    expect(await screen.findByText('No fue posible conectar con el servidor. Inténtalo de nuevo.')).toBeInTheDocument();
+  });
+
   test('permite el acceso con credenciales válidas', async () => {
     login.mockResolvedValue({
       data: {
