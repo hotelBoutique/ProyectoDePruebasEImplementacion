@@ -26,6 +26,15 @@ export class LoginPage extends BasePage {
     await this.open(url);
   }
 
+  // Abre la app con una sesión ya iniciada (token obtenido por la API). El login por la
+  // interfaz se prueba en login.e2e.test.js; las demás suites lo reutilizan así para no
+  // gastar intentos del límite de inicios de sesión de la API.
+  async openWithSession(url, token) {
+    await super.open(url);
+    await this.driver.executeScript(`window.sessionStorage.setItem('${SESSION_TOKEN_KEY}', arguments[0]);`, token);
+    await super.open(url);
+  }
+
   async login(email, password) {
     await this.type(this.email, email);
     await this.type(this.password, password);

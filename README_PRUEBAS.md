@@ -322,7 +322,7 @@ Estado ejecutado en este entorno:
 - Login inválido ejecutado y aprobado.
 - Frontend levantado con Vite en `http://localhost:5173`.
 - Login válido no ejecutado en `run.js`: faltaron credenciales de prueba. (Ya se ejecuta en la suite formal de inicio de sesión; ver la siguiente sección.)
-- Navegación, consulta de habitaciones y disponibilidad no ejecutadas: requieren sesión válida.
+- Navegación, consulta de habitaciones y disponibilidad no ejecutadas en `run.js`: requieren sesión válida. (Ya se ejecutan en la suite formal de habitaciones y disponibilidad; ver más abajo.)
 - Creación de reserva no ejecutada: requiere entorno de base aislado y datos identificados.
 - Check-in, consumo y check-out no ejecutados: requieren datos aislados y dependen de la reserva creada.
 
@@ -368,3 +368,57 @@ Antes de abrir el navegador, la suite comprueba que existan las variables, despi
 Cada ejecución hace 5 intentos de login. La API permite 10 cada 15 minutos por persona, así que se puede correr la suite dos veces seguidas; después hay que esperar a que se renueve la ventana.
 
 Resultado ejecutado: **7/7 pruebas aprobadas** en Chrome contra la API de QA.
+
+### Suite formal de habitaciones y disponibilidad (Selenium + Jest)
+
+`frontend/tests/e2e/rooms-availability.e2e.test.js` automatiza la consulta del listado de habitaciones y la búsqueda de disponibilidad por fechas, con Selenium WebDriver y Page Object Model (`RoomsPage`, `AvailabilityPage` y `DashboardPage`). Se ejecuta como recepcionista de QA.
+
+#### Datos de prueba fijos
+
+Para comprobar resultados concretos (y no solo que la página cargó), la suite prepara antes de abrir el navegador estos datos en la base de QA, mediante `frontend/tests/e2e/support/qaData.js`:
+
+| Habitación | Tipo | Capacidad | Tarifa | Estado | Uso en las pruebas |
+|---|---|---|---|---|---|
+| `E2E-101` | Sencilla | 1 | $777.100 | Disponible | Siempre libre |
+| `E2E-201` | Doble | 2 | $777.200 | Disponible | Siempre libre |
+| `E2E-301` | Suite | 3 | $777.300 | Disponible | Tiene una reserva entre hoy+40 y hoy+42 días |
+| `E2E-401` | Familiar | 4 | $777.400 | Fuera de servicio | Nunca debe aparecer como disponible |
+
+Los precios 777.xxx permiten aislar estas habitaciones de otras creadas por otras pruebas (por ejemplo, Postman). La preparación es idempotente: solo crea o corrige lo que falte. El administrador de QA solo inicia sesión si hay que crear o corregir habitaciones, y la reserva solo se crea si `E2E-301` sigue libre en esas fechas.
+
+#### Casos
+
+| Grupo | Caso | Qué verifica |
+|---|---|---|
+| Listado de habitaciones | Carga inicial | El inventario aparece e incluye las 4 habitaciones de prueba |
+| | Datos de cada habitación | Número, tipo, descripción, capacidad ("3 personas"), tarifa en pesos y estado ("Disponible" / "Fuera de servicio"), y el resumen "4 habitaciones coinciden con los filtros." |
+| | Filtro por tipo | "Suite" deja solo `E2E-301` y muestra "1 habitación coincide…" |
+| | Filtro por estado | "Fuera de servicio" deja solo `E2E-401` |
+| | Filtro por capacidad mínima | 3 o más personas deja `E2E-301` y `E2E-401` |
+| | Sin coincidencias | Muestra "Ninguna habitación coincide" |
+| | Validación de precios | Precio máximo menor que el mínimo muestra el error y no consulta |
+| | Limpiar filtros | Vuelve a mostrar todo el inventario |
+| Disponibilidad por fechas | Fechas por defecto | Hoy → mañana muestra "1 noche" y excluye `E2E-401` |
+| | Resultados y total estimado | 3 noches: aparecen las habitaciones libres y `E2E-301` muestra tarifa $777.300 y total $2.331.900 |
+| | Fuera de servicio | `E2E-401` no aparece en ninguna búsqueda |
+| | Cruce con una reserva | En las fechas reservadas, `E2E-301` no aparece y las demás sí |
+| | Día de salida | Desde el día de check-out de la reserva, `E2E-301` vuelve a estar disponible |
+| | Filtros de tipo y huéspedes | "Suite" con 3 huéspedes solo devuelve suites con capacidad suficiente |
+| | Sin resultados | Precio máximo $0 muestra "No hay habitaciones disponibles" con el mensaje de criterios |
+| | Validación de fechas | Check-out anterior al check-in y check-in en el pasado muestran su mensaje |
+
+Localizadores: por ID (`rooms-title`, `filter-*`, `availability-*`), por CSS (`.rooms-table tbody tr`, `.availability-summary`, `.rooms-filters-error`, `.rooms-notice`) y por XPath (botones "Filtrar", "Limpiar" y "Consultar disponibilidad", y opciones del menú lateral).
+
+#### Ejecución
+
+Con el frontend de pruebas corriendo (`npm run dev:e2e`), en otra terminal:
+
+```bash
+cd frontend
+npm run test:e2e:rooms   # solo habitaciones y disponibilidad
+npm run test:e2e:suite   # todas las suites E2E (login + habitaciones y disponibilidad)
+```
+
+La suite inicia sesión una sola vez por la API (el login por la interfaz ya lo cubre su propia suite) y reutiliza ese token en el navegador, así que cada ejecución usa 1 intento de login (2 la primera vez, si hay que crear las habitaciones).
+
+Resultado ejecutado: **17/17 pruebas aprobadas** en Chrome contra la API de QA, en dos corridas seguidas (la segunda sin crear datos nuevos).
