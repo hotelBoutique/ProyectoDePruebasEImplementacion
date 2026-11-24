@@ -194,8 +194,8 @@ npm run test:unit
 
 El resultado actual es:
 
-- 6 suites aprobadas.
-- 13 pruebas unitarias aprobadas.
+- 8 suites aprobadas.
+- 40 pruebas unitarias aprobadas.
 - 0 pruebas fallidas.
 
 Las pruebas están en `frontend/tests/unit`. Usan Jest, React Testing Library y mocks de `frontend/src/services/api.js`; no hacen llamadas ni cambios reales en MongoDB. Cubren:
@@ -206,6 +206,12 @@ Las pruebas están en `frontend/tests/unit`. Usan Jest, React Testing Library y 
 - Reservaciones: validación obligatoria y confirmación.
 - Catálogo de productos: productos, estado vacío y error.
 - Comprobantes: listado y estado vacío.
+- Pagos realizados (`PaymentsPage.jsx`, 15 pruebas): resumen de cantidad y total recaudado, tabla con referencia, huésped, habitación, fecha, método, valor y estado, filtros y limpieza, paginación, estado vacío, error de la API, detalle de la liquidación (noches, tarifa, subtotal, consumos, cargos adicionales, total liquidado y pagado), cierre del detalle y apertura del comprobante.
+- Comprobante de pago (`PaymentReceipt.jsx`, 12 pruebas): encabezado con hotel, número y fecha de emisión, datos del huésped y la estadía, líneas por concepto, totales y método de pago, saldo visible solo si hay diferencia, singular de "noche", carga, error, impresión y cierre del diálogo (botón, Escape y clic fuera).
+
+Los datos de prueba de pagos y comprobantes están en `frontend/tests/unit/fixtures/payments.js`. Replican la forma de las respuestas del backend con valores ficticios y cálculos coherentes (por ejemplo, 1 noche × $180.000 + consumos $38.000 = $218.000).
+
+Cobertura de estos dos componentes: `PaymentReceipt.jsx` 100% de líneas y `PaymentsPage.jsx` 92,7% de líneas.
 
 Cobertura opcional:
 
