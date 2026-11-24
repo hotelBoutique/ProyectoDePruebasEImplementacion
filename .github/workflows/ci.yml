@@ -52,14 +52,100 @@ jobs:
           EOF
 
       - name: Ejecutar Jest
-        run: npm test -- --ci --coverage
+        run: npm run test:report -- --ci
 
       - name: Publicar cobertura
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jest-coverage
+          name: backend-jest-reports
           path: backend/coverage
+          if-no-files-found: ignore
+
+  integration:
+    name: Integración Jest con MongoDB
+    runs-on: ubuntu-latest
+    needs: jest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Iniciar MongoDB de pruebas como replica set
+        working-directory: .
+        run: |
+          docker run -d --name mongo-integration -p 27017:27017 mongo:8.0 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do
+            docker exec mongo-integration mongosh --quiet --eval "db.adminCommand('ping').ok" && break
+            sleep 1
+          done
+          docker exec mongo-integration mongosh --quiet --eval \
+            "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '127.0.0.1:27017' }] })"
+          for i in $(seq 1 30); do
+            [ "$(docker exec mongo-integration mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ] && break
+            sleep 1
+          done
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Configurar únicamente la base de integración
+        run: |
+          cat > .env.test <<EOF
+          MONGODB_URI=mongodb://127.0.0.1:27017/hotel_ci_test?replicaSet=rs0
+          JWT_SECRET=$(openssl rand -hex 32)
+          JWT_EXPIRES_IN=30m
+          EOF
+          mkdir -p test-reports
+
+      - name: Ejecutar integración real
+        run: npm run test:integration -- --json --outputFile=test-reports/jest-integration-results.json
+
+      - name: Publicar resultados de integración
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-results
+          path: backend/test-reports
+          if-no-files-found: ignore
+
+  frontend:
+    name: Tests unitarios frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificar configuración segura del runner Selenium
+        run: npm run test:e2e:config
+
+      - name: Ejecutar Jest y generar cobertura
+        run: npm run test:unit:report -- --ci
+
+      - name: Publicar resultados y cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-jest-reports
+          path: frontend/coverage
           if-no-files-found: ignore
 
   newman:
