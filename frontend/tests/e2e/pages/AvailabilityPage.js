@@ -10,7 +10,7 @@ export class AvailabilityPage extends BasePage {
     this.type = By.id('availability-type');
     this.guests = By.id('availability-guests');
     this.maxPrice = By.id('availability-max-price');
-    this.submit = By.xpath("//form//button[@type='submit' and (normalize-space()='Consultar disponibilidad' or normalize-space()='Consultando…')]");
+    this.submit = By.css('form.receptionist-form-card button[type="submit"]');
     this.results = By.css('[aria-labelledby="availability-results-title"]');
     this.summary = By.css('.availability-summary');
     this.rowsLocator = By.css('[aria-labelledby="availability-results-title"] tbody tr');

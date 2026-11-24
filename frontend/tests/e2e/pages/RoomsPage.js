@@ -12,8 +12,8 @@ export class RoomsPage extends BasePage {
     this.summary = By.css('.rooms-filters-summary');
     this.filterErrorMessage = By.css('.rooms-filters-error');
     this.refreshButton = By.css('button.receptionist-refresh');
-    this.filterButton = By.xpath("//form//button[normalize-space()='Filtrar']");
-    this.clearButton = By.xpath("//form//button[normalize-space()='Limpiar']");
+    this.filterButton = By.css('.rooms-filters .rooms-filters-actions button[type="submit"]');
+    this.clearButton = By.css('.rooms-filters .rooms-filters-actions button[type="button"]');
     this.fields = {
       status: By.id('filter-status'),
       type: By.id('filter-type'),
