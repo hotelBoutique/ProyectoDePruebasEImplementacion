@@ -132,17 +132,17 @@ Como referencia aproximada, se prueban 5 de los 7 módulos principales de rutas,
 
 ### Integración real con MongoDB/Mongoose
 
-Estado: implementada para usuarios y reservas.
+Estado: implementada para usuarios, reservas y seguridad.
 
-La suite `backend/src/integration-tests/usersReservations.integration.test.js` recorre el flujo completo:
+Las suites `backend/src/integration-tests/usersReservations.integration.test.js` y `backend/src/integration-tests/security.integration.test.js` recorren el flujo completo:
 
 ```text
 request HTTP → middleware real → controlador → servicio real → modelo real → MongoDB de pruebas
 ```
 
-La suite verifica autenticación y perfil, creación y listado de recepcionistas con control de roles, consulta de disponibilidad y creación/lectura de reservas persistidas. También comprueba el rechazo de una reserva solapada y que ADMIN no pueda crear reservas.
+Las pruebas verifican autenticación y perfil, creación y listado de recepcionistas, permisos de ADMIN y RECEPCIONISTA, protección de rutas, rechazo de tokens ausentes/inválidos/expirados, respuestas para errores HTTP, consulta de disponibilidad y creación/lectura de reservas persistidas. También comprueban el rechazo de una reserva solapada y que ADMIN no pueda crear reservas.
 
-La URI debe apuntar a una base cuyo nombre termine en `_test`; la configuración aborta si no cumple esa condición. Las reservas requieren MongoDB como replica set para soportar transacciones. La suite usa datos únicos por ejecución y limpia únicamente los registros que creó; no elimina la base de datos.
+La URI debe apuntar a una base cuyo nombre termine en `_test`; la configuración aborta si no cumple esa condición. Las reservas requieren MongoDB como replica set para soportar transacciones. Las suites usan datos únicos por ejecución y limpian únicamente los registros que crean; no eliminan la base de datos.
 
 Configura `MONGODB_TEST_URI` en el entorno o en `backend/.env.test` (archivo local ignorado por Git). Ejemplo para una instancia local `rs0`:
 
@@ -153,7 +153,7 @@ MONGODB_TEST_URI='mongodb://127.0.0.1:27017/proyectoSemestre_test?replicaSet=rs0
 
 La configuración de integración está en [`backend/jest.integration.config.js`](./backend/jest.integration.config.js). Las pruebas usan `app.js` directamente y no abren un puerto HTTP.
 
-La suite no reutiliza `.env.development` ni modifica la base `proyectoSemestre`.
+Las suites no reutilizan `.env.development` ni modifican la base `proyectoSemestre`.
 
 ## Ejecutar el servidor para una prueba manual
 
@@ -170,7 +170,7 @@ El servidor carga `.env.development`, conecta con MongoDB Atlas y expone la API 
 |---|---|---:|
 | Unitarias Jest | Implementadas | 136 pruebas; 81% de statements |
 | HTTP con Supertest y Stubs | Implementadas parcialmente | 5 de 7 módulos de rutas, aproximadamente 70% por módulos |
-| Integración con Mongoose/MongoDB real | Implementada para usuarios y reservas | Suite aislada; ampliar con más flujos |
+| Integración con Mongoose/MongoDB real | Implementada para usuarios, reservas y seguridad | 2 suites; ampliar con más flujos |
 | Flujos Big Bang completos | Pendiente | 0% implementado |
 
 ## Recomendación para la siguiente fase
