@@ -4,4 +4,5 @@ frontend/dist/
 .env.*
 !.env.example
 coverage/
+frontend/reports/
 AGENTS.md

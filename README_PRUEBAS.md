@@ -4,13 +4,18 @@ Este documento resume cómo ejecutar las pruebas del proyecto y cuál es su esta
 
 ## Requisitos
 
-Desde la carpeta `backend`:
+Requisitos comunes:
 
 ```bash
-npm install
+node --version
 ```
 
-Las pruebas unitarias usan mocks y no necesitan conectarse a MongoDB Atlas. Las pruebas HTTP también usan servicios simulados, por lo que no deben modificar datos reales.
+- Node.js 24 (igual que CI) y npm.
+- Dependencias instaladas con `npm ci` en `backend` y `frontend`.
+- Chrome instalado solo para Selenium; Selenium Manager resuelve el controlador.
+- MongoDB en replica set solo para integración real y para Newman.
+
+Las unitarias y las pruebas HTTP con stubs no conectan con MongoDB ni alteran datos.
 
 ## Pruebas unitarias
 
@@ -39,8 +44,10 @@ npm run test:unit
 
 ```bash
 cd backend
-npm run test:unit -- --coverage --coverageReporters=text
+npm run test:report
 ```
+
+Genera texto en consola, `backend/coverage/lcov.info`, `backend/coverage/lcov-report/` y `backend/coverage/jest-results.json`.
 
 ### Ejecutar una suite unitaria específica
 
@@ -52,13 +59,7 @@ npx jest src/services/receiptService.test.js --config jest.unit.config.js --runI
 
 ### Estado aproximado de unitarias
 
-Resultado actual:
-
-- 15 suites.
-- 136 pruebas aprobadas.
-- Aproximadamente 81% de statements cubiertos.
-- Aproximadamente 67% de branches cubiertos.
-- Aproximadamente 81% de líneas cubiertas.
+La salida más reciente de esta revisión se registra al final de este documento. No se fija un conteo permanente aquí porque cambia cuando se agregan casos.
 
 La cobertura es una referencia técnica, no garantiza por sí sola que todos los escenarios de negocio estén validados.
 
@@ -99,13 +100,7 @@ cd backend
 npm test -- --runInBand
 ```
 
-Resultado actual:
-
-- 20 suites.
-- 216 pruebas aprobadas.
-- Aproximadamente 84% de statements cubiertos.
-- Aproximadamente 68% de branches cubiertos.
-- Aproximadamente 84% de líneas cubiertas.
+`npm run test:report` también genera cobertura HTML/LCOV y el resultado JSON de esta suite Jest (unitarias y rutas simuladas).
 
 Con cobertura:
 
@@ -132,7 +127,7 @@ Como referencia aproximada, se prueban 5 de los 7 módulos principales de rutas,
 
 ### Integración real con MongoDB/Mongoose
 
-Estado: implementada para usuarios y reservas.
+Estado: implementada para usuarios, reservas, consumos, liquidación, pago y comprobante.
 
 La suite `backend/src/integration-tests/usersReservations.integration.test.js` recorre el flujo completo:
 
@@ -140,18 +135,19 @@ La suite `backend/src/integration-tests/usersReservations.integration.test.js` r
 request HTTP → middleware real → controlador → servicio real → modelo real → MongoDB de pruebas
 ```
 
-La suite verifica autenticación y perfil, creación y listado de recepcionistas con control de roles, consulta de disponibilidad y creación/lectura de reservas persistidas. También comprueba el rechazo de una reserva solapada y que ADMIN no pueda crear reservas.
+`usersReservations.integration.test.js` verifica autenticación y perfil, control de roles, disponibilidad y creación/lectura de reservas persistidas, incluido el rechazo de solapamientos. `consumptionsPayments.integration.test.js` recorre por API la creación y check-in de una reserva, consumos de catálogo y manuales, corrección, anulación, validaciones, check-out, consulta del pago y emisión del comprobante. Después comprueba directamente en MongoDB la liquidación, el stock, el estado de la habitación y los identificadores relacionados.
 
-La URI debe apuntar a una base cuyo nombre termine en `_test`; la configuración aborta si no cumple esa condición. Las reservas requieren MongoDB como replica set para soportar transacciones. La suite usa datos únicos por ejecución y limpia únicamente los registros que creó; no elimina la base de datos.
+La URI debe apuntar a una base cuyo nombre termine en `_test`; la configuración aborta antes de conectarse si no cumple esa condición. Las reservas, check-in, consumos de catálogo, correcciones/anulaciones y pagos usan transacciones: MongoDB debe operar como replica set o clúster compatible. La suite usa datos únicos y borra solo documentos específicos creados durante la ejecución; nunca elimina una base.
 
-Configura `MONGODB_TEST_URI` en el entorno o en `backend/.env.test` (archivo local ignorado por Git). Ejemplo para una instancia local `rs0`:
+Ejemplo PowerShell con una base aislada:
 
-```bash
+```powershell
 cd backend
-MONGODB_TEST_URI='mongodb://127.0.0.1:27017/proyectoSemestre_test?replicaSet=rs0' npm run test:integration
+$env:MONGODB_TEST_URI = "mongodb://127.0.0.1:27017/hotel_boutique_test?replicaSet=rs0"
+npm run test:integration
 ```
 
-La configuración de integración está en [`backend/jest.integration.config.js`](./backend/jest.integration.config.js). Las pruebas usan `app.js` directamente y no abren un puerto HTTP.
+También se puede guardar `MONGODB_TEST_URI` en `backend/.env.test`, que está ignorado por Git. No copies credenciales productivas ni uses `.env.development`. La configuración de integración está en [`backend/jest.integration.config.js`](./backend/jest.integration.config.js). Supertest llama a `app.js` sin abrir un puerto HTTP.
 
 La suite no reutiliza `.env.development` ni modifica la base `proyectoSemestre`.
 
@@ -168,16 +164,29 @@ El servidor carga `.env.development`, conecta con MongoDB Atlas y expone la API 
 
 | Tipo de prueba | Estado | Resultado o cobertura aproximada |
 |---|---|---:|
-| Unitarias Jest | Implementadas | 136 pruebas; 81% de statements |
-| HTTP con Supertest y Stubs | Implementadas parcialmente | 5 de 7 módulos de rutas, aproximadamente 70% por módulos |
-| Integración con Mongoose/MongoDB real | Implementada para usuarios y reservas | Suite aislada; ampliar con más flujos |
-| Flujos Big Bang completos | Pendiente | 0% implementado |
+| Unitarias Jest | Implementadas | Revisar resultado de la ejecución al final |
+| HTTP con Supertest y stubs | Implementadas | Rutas/controladores con middleware o servicios simulados |
+| Integración Mongoose/MongoDB real | Implementada | Usuarios, reservas, consumos, pago y comprobante; replica set requerido |
+| Big Bang de API | Implementada | Colección Postman/Newman; el reporte guardado tiene 447 checks aprobados |
+| Big Bang desde interfaz | Parcial | Selenium cubre login, habitaciones, disponibilidad y reserva; no automatiza aún check-in/consumo/check-out |
 
-## Recomendación para la siguiente fase
+## Estrategia Bottom-up y alcance Big Bang
 
-1. Mantener las unitarias y las pruebas HTTP con stubs aisladas.
-2. Ejecutar la integración con una base MongoDB separada del desarrollo y configurada como replica set.
-3. Ampliar la suite con check-in, check-out y pagos cuando se prioricen esos flujos.
+Las capas se validan de abajo hacia arriba, conservando el nivel real de cada suite:
+
+1. **Modelos (unitarias):** validaciones Mongoose y normalizaciones en `src/unit-tests/*Model*`; no abren una conexión.
+2. **Servicios (unitarias):** reglas de negocio y transacciones simuladas en `src/services/*.test.js`; mocks de modelos, producto, habitación y sesiones Mongo. No se presentan como persistencia real.
+3. **Rutas/controladores (integración HTTP Top-down con stubs):** Supertest llama endpoints, pero middleware/servicios se sustituyen. Útil para contrato, validación y autorización de rutas.
+4. **Servicios/modelos/DB reales (integración):** suites de `src/integration-tests/` conectan a una base `_test`, usan las rutas reales como punto de entrada y validan documentos guardados; Supertest sirve como driver HTTP. Los datos mínimos de usuario/habitación/producto se preparan en modelos para aislar el flujo bajo prueba.
+5. **API Big Bang (Postman/Newman):** colección en orden y sobre API activa, integra autenticación, permisos, disponibilidad, reserva, check-in, consumos, check-out, pago y recibo. Los IDs y fechas se pasan entre requests mediante variables del entorno. Esta es la prueba de flujo completo entre módulos.
+
+El frontend no es parte de la colección Postman ni de la integración Jest. La UI tiene unitarias de componentes con API simulada y Selenium real para login, habitaciones/disponibilidad y suites parciales de reserva; no existe aún un flujo Selenium que haga check-in, consumo y check-out. La colección Postman y el integration test cubren esos pasos en API, no en interfaz.
+
+## Evidencia Big Bang de Postman
+
+`backend/postman/Hotel-Boutique-API.postman_collection.json` incluye solicitudes ordenadas que cubren login, consulta de disponibilidad, reserva, check-in, consumo de catálogo, corrección/anulación, check-out, pagos y comprobante, además de validaciones y permisos. El reporte versionado `backend/postman/reportes/reporte-postman-hotel-boutique.json` registra una corrida del 23 de noviembre de 2026: 447 checks aprobados, 0 fallidos y 0 errores. Las capturas adjuntas también muestran ese resultado. Es evidencia histórica de una corrida local de Postman, no una ejecución de Newman ni una garantía del estado actual de QA.
+
+Newman ejecuta el mismo contrato con el environment local; nunca uses el environment de ejemplo con datos reales. La colección crea recursos y carece de endpoints de limpieza, por lo que ejecuta solo contra base de pruebas descartable/dedicada.
 
 No se deben incluir credenciales reales en este README ni en archivos versionados.
 
@@ -185,14 +194,18 @@ No se deben incluir credenciales reales en este README ni en archivos versionado
 
 ### Configuración Jest
 
-Desde `frontend`:
+Desde la raíz, instala las dependencias de cada paquete:
 
 ```bash
-npm install
-npm run test:unit
+cd backend
+npm ci
+cd ../frontend
+npm ci
 ```
 
-El resultado actual es:
+Para el entorno de ejecución se necesita Node.js 24. Las variables privadas se definen en la terminal o en archivos `.env.test` / `.env.e2e` locales ignorados por Git; no se copian secretos en el repositorio. Usa credenciales ficticias en la base `_test`, y credenciales de QA únicamente para las suites Selenium formales.
+
+Resultado de referencia previo, actualizado en el registro de ejecuciones al final:
 
 - 8 suites aprobadas.
 - 51 pruebas unitarias aprobadas.
@@ -234,34 +247,36 @@ Cobertura opcional:
 
 ```bash
 cd frontend
-npm run test:unit -- --coverage --coverageReporters=text
+npm run test:unit:report
 ```
+
+Genera `frontend/coverage/lcov.info`, `frontend/coverage/lcov-report/` y `frontend/coverage/jest-unit-results.json`.
 
 ### Pruebas Selenium con Page Object Model
 
 La implementación está separada en:
 
 - `frontend/tests/e2e/pages`: clases POM de login, dashboard, habitaciones, disponibilidad y reservas.
-- `frontend/tests/e2e/run.js`: casos ejecutables y control de cierre del navegador.
-- `frontend/tests/e2e/run.js`: usa esperas explícitas de Selenium y localizadores por ID, CSS y XPath.
+- `frontend/tests/e2e/run.js`: runner manual de login y navegación; cierra el navegador en `finally`.
+- `frontend/tests/e2e/login.e2e.test.js` y `rooms-availability.e2e.test.js`: suites Jest formales con POM y cierre del navegador en `afterAll`.
+- `frontend/tests/e2e/pages`: POMs; usan esperas explícitas y localizadores por ID, CSS y XPath.
 
 Instalación y navegador:
 
 ```bash
 cd frontend
-npm install
+npm ci
 ```
 
 Se necesita Google Chrome instalado. Selenium Manager puede obtener el controlador compatible si no está disponible en el sistema.
 
 Preparar el entorno aislado:
 
-1. Inicia el backend solo con una base de datos de pruebas:
+1. Inicia el backend con `backend/.env.test` apuntando a una base `_test` en replica set. Para `dev:test`, define `MONGODB_URI` en ese archivo; para Jest también puedes definir `MONGODB_TEST_URI`:
 
 ```bash
 cd backend
-npm install
-npm run dev
+npm run dev:test
 ```
 
 2. En otra terminal inicia el frontend:
@@ -271,7 +286,7 @@ cd frontend
 npm run dev
 ```
 
-No uses cuentas, reservaciones o datos de producción. Crea una cuenta y datos exclusivos en el entorno de pruebas.
+No ejecutes el runner manual sobre `.env.development`, Atlas de desarrollo ni producción. No uses cuentas, reservaciones o datos reales. Crea una cuenta y datos exclusivos en el entorno aislado.
 
 Variables opcionales:
 
@@ -299,7 +314,7 @@ $env:TEST_USER_PASSWORD = "<contraseña-de-prueba>"
 npm run test:e2e
 ```
 
-Configura las credenciales solo en la sesión de terminal actual y no las agregues a archivos versionados. Estos datos no son necesarios para ejecutar únicamente el login inválido.
+Configura las credenciales solo en la sesión de terminal actual y no las agregues a archivos versionados. El runner requiere que la API responda; el caso de login inválido ahora solo se aprueba con el mensaje exacto de rechazo, tono de error, sin token y en el formulario. Una caída de red ya no cuenta como login inválido aprobado.
 
 Para habilitar la creación real de una reserva, usa una base aislada y asigna:
 
@@ -316,17 +331,13 @@ cd frontend
 npm run test:e2e
 ```
 
-Estado ejecutado en este entorno:
+Evidencia histórica del runner anterior a la corrección del login inválido:
 
-- Navegador Chrome iniciado correctamente.
-- Login inválido ejecutado y aprobado.
-- Frontend levantado con Vite en `http://localhost:5173`.
-- Login válido no ejecutado en `run.js`: faltaron credenciales de prueba. (Ya se ejecuta en la suite formal de inicio de sesión; ver la siguiente sección.)
-- Navegación, consulta de habitaciones y disponibilidad no ejecutadas en `run.js`: requieren sesión válida. (Ya se ejecutan en la suite formal de habitaciones y disponibilidad; ver más abajo.)
-- Creación de reserva no ejecutada: requiere entorno de base aislado y datos identificados.
-- Check-in, consumo y check-out no ejecutados: requieren datos aislados y dependen de la reserva creada.
+- La corrida previa registró el login inválido como aprobado, pero aceptaba mensajes genéricos de conexión/API y no se considera evidencia suficiente tras la revisión.
+- Se corrigió el criterio para exigir el mensaje exacto de rechazo y el estado visual de error; hay que volver a ejecutar el runner contra una API de pruebas activa para validar ese caso.
+- No se volvió a ejecutar Selenium en esta revisión: falta `frontend/.env.e2e` y Chrome/servicios locales no se configuraron como entorno aislado.
 
-El navegador se cierra con `driver.quit()` en el bloque `finally`, tanto si la prueba pasa como si falla.
+El runner manual crea un JSON en `frontend/reports/e2e/` para cada ejecución y una captura PNG sanitizada al fallar (limpia inputs y sessionStorage antes de capturar). La captura/report se generan bajo demanda y la carpeta está ignorada por Git. En todos los casos intenta cerrar el navegador con `driver.quit()` en `finally`.
 
 ### Suite formal de inicio de sesión (Selenium + Jest)
 
@@ -367,7 +378,7 @@ Antes de abrir el navegador, la suite comprueba que existan las variables, despi
 
 Cada ejecución hace 5 intentos de login. La API permite 10 cada 15 minutos por persona, así que se puede correr la suite dos veces seguidas; después hay que esperar a que se renueve la ventana.
 
-Resultado ejecutado: **7/7 pruebas aprobadas** en Chrome contra la API de QA.
+Resultado histórico registrado: **7/7 pruebas aprobadas** en Chrome contra la API de QA. No se repitió esta suite en esta revisión porque no existe `frontend/.env.e2e` con credenciales en el entorno actual.
 
 ### Suite formal de habitaciones y disponibilidad (Selenium + Jest)
 
@@ -417,8 +428,75 @@ Con el frontend de pruebas corriendo (`npm run dev:e2e`), en otra terminal:
 cd frontend
 npm run test:e2e:rooms   # solo habitaciones y disponibilidad
 npm run test:e2e:suite   # todas las suites E2E (login + habitaciones y disponibilidad)
+npm run test:e2e:suite:report # suite formal y JSON en reports/e2e/jest-results.json
 ```
 
 La suite inicia sesión una sola vez por la API (el login por la interfaz ya lo cubre su propia suite) y reutiliza ese token en el navegador, así que cada ejecución usa 1 intento de login (2 la primera vez, si hay que crear las habitaciones).
 
-Resultado ejecutado: **17/17 pruebas aprobadas** en Chrome contra la API de QA, en dos corridas seguidas (la segunda sin crear datos nuevos).
+Resultado histórico registrado: **17/17 pruebas aprobadas** en Chrome contra la API de QA, en dos corridas seguidas (la segunda sin crear datos nuevos). No se repitió esta suite en esta revisión porque requiere credenciales de QA y preparaciones de datos autorizadas.
+
+#### Diferencia entre comandos Selenium
+
+- `npm run test:e2e`: runner manual `run.js`; smoke checks de login/navegación en la URL local configurada por `TEST_APP_URL`. No ejecuta Jest.
+- `npm run test:e2e:config`: prueba automatizada sin navegador que confirma que solo el texto exacto `true` habilita crear una reserva.
+- `npm run test:e2e:login`: suite Jest formal de login válido/inválido y validación del formulario.
+- `npm run test:e2e:rooms`: suite Jest formal de listado y disponibilidad con fixtures preparados en QA.
+- `npm run test:e2e:suite`: ambas suites Jest formales.
+- `npm run test:e2e:suite:report`: ambas suites formales y reporte JSON en `frontend/reports/e2e/jest-results.json`.
+
+Las suites formales apuntan a QA y comprueban disponibilidad de la API y frontend antes de abrir Chrome. Para pruebas de integración visual seguras también se requieren credenciales de QA válidas, frontend en `TEST_APP_URL` y permiso para preparar los fixtures documentados. No se habilitan automáticamente en CI porque esos secretos/datos no están configurados allí.
+
+## Ejecución segura de integración MongoDB
+
+Ejemplo de preparación local con Docker Desktop/replica set (no elimina ni limpia bases):
+
+```powershell
+docker run -d --name hotel-test-mongo -p 27017:27017 mongo:8.0 --replSet rs0 --bind_ip_all
+docker exec hotel-test-mongo mongosh --quiet --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '127.0.0.1:27017' }] })"
+cd backend
+$env:MONGODB_TEST_URI = "mongodb://127.0.0.1:27017/hotel_boutique_test?replicaSet=rs0"
+npm run test:integration
+```
+
+Si ya existe un contenedor o replica set, verifica su estado en vez de iniciar otro. No ejecutes estas suites contra una URI sin sufijo `_test`. La integración incluye transacciones; si MongoDB responde que las transacciones solo se permiten en replica set/mongos, habilita un replica set y vuelve a correr. Nunca intentes resolverlo borrando una base.
+
+Para iniciar la API local usada por el runner manual, coloca la URI segura en `backend/.env.test`:
+
+```text
+NODE_ENV=test
+MONGODB_URI=mongodb://127.0.0.1:27017/hotel_boutique_test?replicaSet=rs0
+JWT_SECRET=<secreto-local-de-prueba-de-al-menos-32-caracteres>
+JWT_EXPIRES_IN=30m
+```
+
+## Reportes y CI
+
+- Backend: `cd backend; npm run test:report` publica localmente cobertura HTML/LCOV y `coverage/jest-results.json`.
+- Frontend: `cd frontend; npm run test:unit:report` genera cobertura HTML/LCOV y `coverage/jest-unit-results.json`.
+- Integración local: crea `test-reports` y agrega `--json --outputFile=test-reports/jest-integration-results.json` al comando Jest si necesitas un JSON adicional.
+- Selenium manual y formal: `frontend/reports/e2e/`; solo el runner manual captura pantalla ante fallo. Las capturas son sanitizadas.
+- GitHub Actions ejecuta Jest backend, Jest + Mongo replica set de pruebas, Jest frontend y Newman; sube sus resultados como artefactos `backend-jest-reports`, `backend-integration-results`, `frontend-jest-reports` y `newman-resultados`.
+- Selenium no se ejecuta en Actions: necesita Chrome, credenciales restringidas de QA y autorización para preparar sus fixtures. No se consultó ni se declara una corrida de GitHub Actions en esta revisión.
+
+## Validación de QA en esta revisión
+
+La solicitud de solo lectura `GET https://hotel-boutique-api-pruebas.onrender.com/health` respondió HTTP 200 y JSON de salud. La autenticación, disponibilidad con sesión y flujos con datos no se ejecutaron: no existe `frontend/.env.e2e` ni credenciales de QA en este entorno. Para completarlos se requieren las credenciales de prueba de administrador y recepción indicadas por `frontend/tests/e2e/e2e.env.example`, permiso para usarlas y una sesión frontend en `npm run dev:e2e`. No se crearon ni modificaron datos de QA.
+
+## Resultados de la revisión (24 de noviembre de 2026)
+
+| Grupo | Resultado real | Observaciones |
+|---|---|---|
+| Backend Jest completo | **20 suites, 223 pruebas aprobadas; 0 fallidas** | `npm run test:report`; cobertura: statements 87,73%, branches 72,36%, líneas 87,54%. Incluye unitarias y rutas simuladas, excluye integración Mongo. |
+| Servicio de reservas/consumos | **1 suite, 50 pruebas aprobadas; 0 fallidas** | Ejecutada aparte y también incluida en Jest completo. |
+| Frontend Jest | **8 suites, 51 pruebas aprobadas; 0 fallidas** | `npm run test:unit:report`; cobertura global statements 29,71%, branches 18,07%, líneas 30,36%. |
+| Guarda `TEST_CREATE_RESERVATION` | **1 prueba aprobada; 0 fallidas** | `npm run test:e2e:config`; el valor de texto `"false"` mantiene deshabilitada la creación. |
+| Integración Jest/MongoDB | **2 pruebas aprobadas, 2 fallidas** | Dos pruebas sin transacciones (autenticación/permisos) pasaron. Las dos que crean reservas recibieron HTTP 503 al requerirse transacciones. El host Mongo local es standalone (`setName` ausente); no hay Docker ni ejecutable `mongod`. |
+| Protección URI de integración | **Rechazo seguro verificado** | Una URI cuyo nombre no termina en `_test` se rechazó antes de conectar. Sin URI, Jest no ejecutó aserciones. |
+| Postman/Newman | **No reejecutado en esta revisión** | Evidencia previa guardada: Postman 447 checks aprobados, 0 fallidos. No es una corrida nueva de Newman. |
+| Selenium | **No ejecutado en esta revisión** | Falta `frontend/.env.e2e` y las credenciales QA; las cifras 7/7 y 17/17 son registros históricos, no resultados de esta revisión. |
+| API de QA | **GET /health aprobado, HTTP 200** | Login, habitaciones protegidas y flujos con datos no ejecutados por falta de credenciales. |
+| GitHub Actions | **No consultado/ejecutado** | El workflow actualizado queda listo, pero no se afirma que un run remoto haya pasado. |
+
+La integración no se reporta como aprobada: la suite de consumos/pagos no alcanzó el flujo de checkout porque la creación de reserva recibió 503 de transacción en Mongo standalone. La URI usada para la ejecución local apuntaba a una base `_test`, y ambas suites limpian solo documentos propios; no se eliminó ninguna base. Para pasarla localmente se necesita MongoDB compatible con transacciones en replica set, `MONGODB_TEST_URI` terminado en `_test`, por ejemplo `mongodb://127.0.0.1:27017/hotel_boutique_test?replicaSet=rs0`, y ejecutar `cd backend; npm run test:integration`. La colección Postman/Newman requiere además una base desechable/dedicada porque crea recursos que no elimina.
+
+La regresión comprobada en esta revisión incluye autenticación/permisos, reservas/disponibilidad, consumos/cálculos/corrección/anulación, pagos y recibos en backend; y login, habitaciones, disponibilidad, reservas, pagos y comprobantes en pruebas de componentes frontend. La cobertura de UI para check-in/consumos/check-out sigue pendiente de Selenium; esos pasos están cubiertos por API, no por una automatización visual completa.
