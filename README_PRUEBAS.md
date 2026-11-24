@@ -195,23 +195,40 @@ npm run test:unit
 El resultado actual es:
 
 - 8 suites aprobadas.
-- 40 pruebas unitarias aprobadas.
+- 51 pruebas unitarias aprobadas.
 - 0 pruebas fallidas.
 
 Las pruebas están en `frontend/tests/unit`. Usan Jest, React Testing Library y mocks de `frontend/src/services/api.js`; no hacen llamadas ni cambios reales en MongoDB. Cubren:
 
-- Inicio de sesión válido e inválido.
-- Habitaciones: listado y error de carga.
-- Disponibilidad: resultado, estado vacío y consulta.
-- Reservaciones: validación obligatoria y confirmación.
+- Inicio de sesión: válido, credenciales inválidas, respuesta vacía de la API y falta de conexión con el servidor.
+- Habitaciones: listado, inventario vacío, respuesta sin lista y error de carga.
+- Disponibilidad: resultado, estado vacío, error con detalle de la API y error sin detalle.
+- Reservaciones: validación obligatoria, confirmación, periodo sin habitaciones, error en la búsqueda y conflicto 409 al confirmar (con actualización de la disponibilidad).
 - Catálogo de productos: productos, estado vacío y error.
-- Comprobantes: listado y estado vacío.
+- Comprobantes: listado, estado vacío, error con detalle de la API y error sin detalle.
 - Pagos realizados (`PaymentsPage.jsx`, 15 pruebas): resumen de cantidad y total recaudado, tabla con referencia, huésped, habitación, fecha, método, valor y estado, filtros y limpieza, paginación, estado vacío, error de la API, detalle de la liquidación (noches, tarifa, subtotal, consumos, cargos adicionales, total liquidado y pagado), cierre del detalle y apertura del comprobante.
 - Comprobante de pago (`PaymentReceipt.jsx`, 12 pruebas): encabezado con hotel, número y fecha de emisión, datos del huésped y la estadía, líneas por concepto, totales y método de pago, saldo visible solo si hay diferencia, singular de "noche", carga, error, impresión y cierre del diálogo (botón, Escape y clic fuera).
 
 Los datos de prueba de pagos y comprobantes están en `frontend/tests/unit/fixtures/payments.js`. Replican la forma de las respuestas del backend con valores ficticios y cálculos coherentes (por ejemplo, 1 noche × $180.000 + consumos $38.000 = $218.000).
 
 Cobertura de estos dos componentes: `PaymentReceipt.jsx` 100% de líneas y `PaymentsPage.jsx` 92,7% de líneas.
+
+### Simulación de respuestas de la API
+
+Cada suite reemplaza `frontend/src/services/api.js` con `jest.mock(...)`, así que ninguna prueba de componentes depende del backend ni de MongoDB. Todos los componentes probados cubren los tres tipos de respuesta:
+
+| Componente | Exitosa | Vacía | Fallida |
+|---|---|---|---|
+| Inicio de sesión (`App.jsx`) | Acceso al panel | `data: {}` sin token | Credenciales inválidas y falta de conexión (`TypeError`) |
+| `RoomsPage` | Listado | `rooms: []` y `data: {}` | Error de carga |
+| `AvailabilityPage` | Resultados | `rooms: []` | Error con `details` y sin detalle |
+| `ReservationsPage` | Reservación confirmada | `rooms: []` en la búsqueda | Error en la búsqueda y conflicto 409 al confirmar |
+| `ProductCatalogPage` | Productos | Catálogo vacío | Error de carga |
+| `ReceiptsPage` | Comprobantes | `payments: []` | Error con `details` y sin detalle |
+| `PaymentsPage` | Pagos y detalle | `payments: []` | Error del listado y del detalle |
+| `PaymentReceipt` | Comprobante | Saldo y datos opcionales vacíos | Error al generar el comprobante |
+
+Las respuestas exitosas se simulan con `mockResolvedValue`, y las fallidas con `mockRejectedValue` usando un `Error` con `details` o `status`, igual que los errores que lanza `api.js`.
 
 Cobertura opcional:
 
