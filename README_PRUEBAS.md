@@ -321,9 +321,50 @@ Estado ejecutado en este entorno:
 - Navegador Chrome iniciado correctamente.
 - Login inválido ejecutado y aprobado.
 - Frontend levantado con Vite en `http://localhost:5173`.
-- Login válido no ejecutado: faltaron credenciales de prueba.
+- Login válido no ejecutado en `run.js`: faltaron credenciales de prueba. (Ya se ejecuta en la suite formal de inicio de sesión; ver la siguiente sección.)
 - Navegación, consulta de habitaciones y disponibilidad no ejecutadas: requieren sesión válida.
 - Creación de reserva no ejecutada: requiere entorno de base aislado y datos identificados.
 - Check-in, consumo y check-out no ejecutados: requieren datos aislados y dependen de la reserva creada.
 
 El navegador se cierra con `driver.quit()` en el bloque `finally`, tanto si la prueba pasa como si falla.
+
+### Suite formal de inicio de sesión (Selenium + Jest)
+
+`frontend/tests/e2e/login.e2e.test.js` automatiza el inicio de sesión como una suite de Jest con Selenium WebDriver y Page Object Model (`LoginPage` y `DashboardPage`). Usa su propia configuración, `frontend/jest.e2e.config.cjs`, separada de las unitarias porque abre un navegador real.
+
+| Grupo | Caso | Qué verifica |
+|---|---|---|
+| Credenciales válidas | Administrador | Abre el panel, muestra `ROL: ADMIN` y el saludo, y guarda el token de sesión |
+| | Recepcionista | Abre el panel con `ROL: RECEPCIONISTA` y el saludo |
+| | Cerrar sesión | Vuelve al login con "Sesión cerrada correctamente.", borra el token y el servidor lo revoca (`/auth/me` responde 401) |
+| Credenciales inválidas | Contraseña incorrecta | Muestra "Correo o contraseña incorrectos" en tono de error, no abre el panel, no guarda token y conserva el correo para reintentar |
+| | Correo no registrado | Muestra el mismo mensaje, sin revelar si el correo existe |
+| Validación del formulario | Campos vacíos | El navegador bloquea el envío (`required`) y no aparece ningún mensaje de la API |
+| | Correo sin formato | El navegador bloquea el envío (`type="email"`) |
+
+Localizadores: por ID (`admin-email`, `admin-password`, `dashboard-title`), por CSS (`.auth-submit`, `.auth-feedback .feedback-message`, `.sidebar-role`, `.dashboard-layout`) y por XPath (botón "Cerrar sesión" y formulario de acceso).
+
+#### Configuración
+
+Las pruebas usan la **API de QA** (`hotel-boutique-api-pruebas.onrender.com`, base `proyectoSemestre_pruebas`), nunca la de producción.
+
+1. Copia `frontend/tests/e2e/e2e.env.example` como `frontend/.env.e2e` y completa las contraseñas de las cuentas de QA (`qa-admin@hotelboutique.test` y `qa-recepcion@hotelboutique.test`). Git ignora `.env.e2e`; no subas credenciales.
+2. En una terminal, inicia el frontend conectado a la API de QA (puerto 5174):
+
+```bash
+cd frontend
+npm run dev:e2e
+```
+
+3. En otra terminal, ejecuta la suite:
+
+```bash
+cd frontend
+npm run test:e2e:login
+```
+
+Antes de abrir el navegador, la suite comprueba que existan las variables, despierta la API de QA (Render puede tardar hasta un minuto) y confirma que el frontend responde; si algo falta, indica qué hacer. Para ver el navegador mientras corre, agrega `SELENIUM_HEADLESS=false` en `.env.e2e`.
+
+Cada ejecución hace 5 intentos de login. La API permite 10 cada 15 minutos por persona, así que se puede correr la suite dos veces seguidas; después hay que esperar a que se renueve la ventana.
+
+Resultado ejecutado: **7/7 pruebas aprobadas** en Chrome contra la API de QA.
