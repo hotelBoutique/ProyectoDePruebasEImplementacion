@@ -15,7 +15,7 @@
 
 <img src="repository_Sources/hotelVid.gif" alt="Demostración de Hotel Boutique" width="850">
 
-[![Abrir entorno en Postman](https://img.shields.io/badge/Postman-Abrir_entorno_compartido-FF6C37?logo=postman&logoColor=white)](https://www.postman.com/imnotseb670-8749507/workspace/testing-pruebas-para-hotel/environment/57446888-06f53965-c57a-4bcf-ad37-e9e03bd9e354?action=share&creator=57446888&active-environment=57446888-06f53965-c57a-4bcf-ad37-e9e03bd9e354)
+[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/53469956-ef359668-d070-46f1-9223-41779f0be83b?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D53469956-ef359668-d070-46f1-9223-41779f0be83b%26entityType%3Dcollection%26workspaceId%3Daf4caedf-9f34-4bff-a86c-be32128652ac#?env%5BHotel%20Boutique%20QA%20(Render)%5D=W3sia2V5IjoiYmFzZVVybCIsInZhbHVlIjoiaHR0cHM6Ly9ob3RlbC1ib3V0aXF1ZS1hcGktcHJ1ZWJhcy5vbnJlbmRlci5jb20iLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoiZGVmYXVsdCJ9LHsia2V5IjoibWF4UmVzcG9uc2VNcyIsInZhbHVlIjoiMTAwMDAiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoiZGVmYXVsdCJ9LHsia2V5IjoiYWRtaW5FbWFpbCIsInZhbHVlIjoicWEtYWRtaW5AaG90ZWxib3V0aXF1ZS50ZXN0IiwiZW5hYmxlZCI6dHJ1ZSwidHlwZSI6ImRlZmF1bHQifSx7ImtleSI6ImFkbWluUGFzc3dvcmQiLCJ2YWx1ZSI6IkhiLVFBLW11OEUtclhIOCIsImVuYWJsZWQiOnRydWUsInR5cGUiOiJkZWZhdWx0In0seyJrZXkiOiJ0ZXN0UmVjZXB0aW9uUGFzc3dvcmQiLCJ2YWx1ZSI6IlJlY2VwY2lvbi1RQS0xIiwiZW5hYmxlZCI6dHJ1ZSwidHlwZSI6ImRlZmF1bHQifSx7ImtleSI6InJvdGF0ZWRSZWNlcHRpb25QYXNzd29yZCIsInZhbHVlIjoiUmVjZXBjaW9uLVFBLTIiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoiZGVmYXVsdCJ9LHsia2V5IjoibWFuYWdlZFRlc3RQYXNzd29yZCIsInZhbHVlIjoiUmVjZXBjaW9uLVFBLTMiLCJlbmFibGVkIjp0cnVlLCJ0eXBlIjoiZGVmYXVsdCJ9XQ==)
 
 </div>
 
@@ -151,10 +151,10 @@ npx --yes newman run backend/postman/Hotel-Boutique-API.postman_collection.json 
 
 ## API de pruebas desplegada
 
-Para ejecutar la colección desde el entorno compartido sin configurar el proyecto localmente:
+Para ejecutar la colección sin configurar el proyecto localmente, usa el botón **Run in Postman** del inicio de este README:
 
-1. Abre el entorno `testing-pruebas-para-hotel` en tu workspace de Postman.
-2. En Environments, actualiza los valores y guarda con `Ctrl+S`.
+1. Pulsa el botón e inicia sesión en Postman (la cuenta gratuita sirve).
+2. Elige **Fork Collection** y selecciona tu workspace. Postman copia la colección y crea el entorno **Hotel Boutique QA (Render)** con estos valores ya cargados:
 
 | Variable | Valor |
 |---|---|
@@ -163,7 +163,7 @@ Para ejecutar la colección desde el entorno compartido sin configurar el proyec
 | `adminEmail` | `qa-admin@hotelboutique.test` |
 | `adminPassword` | `Hb-QA-mu8E-rXH8` |
 
-Las variables `testReceptionPassword`, `rotatedReceptionPassword` y `managedTestPassword` pueden mantenerse como estén si tienen al menos 8 caracteres y la segunda contraseña es distinta a la primera.
+El entorno también trae `testReceptionPassword`, `rotatedReceptionPassword` y `managedTestPassword`, que la colección usa para crear recepcionistas de prueba. En la esquina superior derecha de Postman, selecciona el entorno **Hotel Boutique QA (Render)** antes de ejecutar.
 
 Estas credenciales existen únicamente en la base de pruebas. No introduzcas credenciales de producción, como `administrador@hotelboutique.com`, ni la URL de producción `hotel-boutique-api.onrender.com`. El workspace público permite que cualquier usuario vea sus valores.
 
