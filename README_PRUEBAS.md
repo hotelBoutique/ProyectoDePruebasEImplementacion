@@ -127,19 +127,26 @@ Como referencia aproximada, se prueban 5 de los 7 módulos principales de rutas,
 
 ### Integración real con MongoDB/Mongoose
 
-Estado: implementada para usuarios, reservas, consumos, liquidación, pago y comprobante.
+Estado: implementada para usuarios, reservas, seguridad, consumos, liquidación, pagos y comprobantes.
 
-La suite `backend/src/integration-tests/usersReservations.integration.test.js` recorre el flujo completo:
+Las tres suites `backend/src/integration-tests/` recorren el flujo completo:
 
 ```text
 request HTTP → middleware real → controlador → servicio real → modelo real → MongoDB de pruebas
 ```
 
-`usersReservations.integration.test.js` verifica autenticación y perfil, control de roles, disponibilidad y creación/lectura de reservas persistidas, incluido el rechazo de solapamientos. `consumptionsPayments.integration.test.js` recorre por API la creación y check-in de una reserva, consumos de catálogo y manuales, corrección, anulación, validaciones, check-out, consulta del pago y emisión del comprobante. Después comprueba directamente en MongoDB la liquidación, el stock, el estado de la habitación y los identificadores relacionados.
+`usersReservations.integration.test.js` verifica autenticación y perfil, control de roles, disponibilidad y creación/lectura de reservas persistidas, incluido el rechazo de solapamientos. `security.integration.test.js` verifica las restricciones por rol, el rechazo de tokens ausentes, inválidos y expirados, y las respuestas HTTP de error. `consumptionsPayments.integration.test.js` recorre por API la creación y check-in de una reserva, consumos de catálogo y manuales, corrección, anulación, validaciones, check-out, consulta del pago y emisión del comprobante. Después comprueba en MongoDB la liquidación, el stock, el estado de la habitación y los identificadores relacionados.
 
-La URI debe apuntar a una base cuyo nombre termine en `_test`; la configuración aborta antes de conectarse si no cumple esa condición. Las reservas, check-in, consumos de catálogo, correcciones/anulaciones y pagos usan transacciones: MongoDB debe operar como replica set o clúster compatible. La suite usa datos únicos y borra solo documentos específicos creados durante la ejecución; nunca elimina una base.
+La URI debe apuntar a una base cuyo nombre termine en `_test`; la configuración aborta antes de conectarse si no cumple esa condición. Las reservas, check-in, consumos de catálogo, correcciones/anulaciones y pagos usan transacciones: MongoDB debe operar como replica set o clúster compatible. Las suites usan datos únicos y eliminan únicamente documentos específicos creados durante la ejecución; nunca eliminan una base.
 
-Ejemplo PowerShell con una base aislada:
+Configura `MONGODB_TEST_URI` en el entorno o en `backend/.env.test`, que está ignorado por Git. No uses `.env.development` ni credenciales productivas. Ejemplo Bash:
+
+```bash
+cd backend
+MONGODB_TEST_URI='mongodb://127.0.0.1:27017/hotel_boutique_test?replicaSet=rs0' npm run test:integration
+```
+
+Ejemplo PowerShell para la misma base aislada:
 
 ```powershell
 cd backend
@@ -149,7 +156,7 @@ npm run test:integration
 
 También se puede guardar `MONGODB_TEST_URI` en `backend/.env.test`, que está ignorado por Git. No copies credenciales productivas ni uses `.env.development`. La configuración de integración está en [`backend/jest.integration.config.js`](./backend/jest.integration.config.js). Supertest llama a `app.js` sin abrir un puerto HTTP.
 
-La suite no reutiliza `.env.development` ni modifica la base `proyectoSemestre`.
+Las suites no reutilizan `.env.development` ni modifican la base `proyectoSemestre`.
 
 ## Ejecutar el servidor para una prueba manual
 
@@ -164,9 +171,9 @@ El servidor carga `.env.development`, conecta con MongoDB Atlas y expone la API 
 
 | Tipo de prueba | Estado | Resultado o cobertura aproximada |
 |---|---|---:|
-| Unitarias Jest | Implementadas | Revisar resultado de la ejecución al final |
+| Unitarias Jest | Implementadas | Consultar el resultado de la ejecución vigente |
 | HTTP con Supertest y stubs | Implementadas | Rutas/controladores con middleware o servicios simulados |
-| Integración Mongoose/MongoDB real | Implementada | Usuarios, reservas, consumos, pago y comprobante; replica set requerido |
+| Integración Mongoose/MongoDB real | Implementada | Usuarios, reservas, seguridad, consumos, pagos y comprobantes; replica set requerido |
 | Big Bang de API | Implementada | Colección Postman/Newman; el reporte guardado tiene 447 checks aprobados |
 | Big Bang desde interfaz | Parcial | Selenium cubre login, habitaciones, disponibilidad y reserva; no automatiza aún check-in/consumo/check-out |
 
