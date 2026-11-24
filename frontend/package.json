@@ -12,6 +12,8 @@
     "test:unit:watch": "jest --config jest.config.cjs --watch",
     "test:e2e": "node tests/e2e/run.js",
     "test:e2e:login": "jest --config jest.e2e.config.cjs --runInBand tests/e2e/login.e2e.test.js",
+    "test:e2e:rooms": "jest --config jest.e2e.config.cjs --runInBand tests/e2e/rooms-availability.e2e.test.js",
+    "test:e2e:suite": "jest --config jest.e2e.config.cjs --runInBand",
     "dev:e2e": "vite --mode e2e --port 5174"
   },
   "dependencies": {
