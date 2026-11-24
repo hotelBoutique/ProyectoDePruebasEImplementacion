@@ -5,12 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon src/server.js",
+    "dev:test": "cross-env NODE_ENV=test nodemon src/server.js",
     "start": "node src/server.js",
     "migrate:roles": "node src/scripts/migrateUserRoles.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
     "test": "cross-env NODE_ENV=test jest --config jest.config.js --detectOpenHandles",
     "test:unit": "cross-env NODE_ENV=test jest --config jest.unit.config.js --runInBand",
-    "test:integration": "cross-env NODE_ENV=test jest --config jest.integration.config.js --runInBand"
+    "test:integration": "cross-env NODE_ENV=test jest --config jest.integration.config.js --runInBand",
+    "test:report": "cross-env NODE_ENV=test jest --config jest.config.js --runInBand --detectOpenHandles --coverage --coverageReporters=text --coverageReporters=lcov --json --outputFile=coverage/jest-results.json"
   },
   "keywords": [],
   "author": "",

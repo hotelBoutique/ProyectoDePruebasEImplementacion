@@ -39,6 +39,8 @@ const {
     getAvailableRooms,
     getPendingCheckOuts,
     getPendingCheckIns,
+    updateReservationConsumption,
+    voidReservationConsumption,
     updateReservation
 } = require('./reservationService');
 
@@ -379,6 +381,161 @@ describe('reservationService', () => {
             },
             { new: true, runValidators: true }
         );
+    });
+
+    it.each(['reservada', 'cancelada', 'finalizada'])(
+        'does not register a manual consumption for a %s reservation',
+        async status => {
+            Reservation.findOneAndUpdate.mockResolvedValue(null);
+            Reservation.findById.mockReturnValue({
+                select: jest.fn().mockResolvedValue({ status })
+            });
+
+            await expect(addReservationConsumption('reservation-id', {
+                description: 'Lavandería',
+                quantity: 1,
+                unitPrice: 12.5
+            })).rejects.toMatchObject({
+                statusCode: 409,
+                message: expect.stringContaining('check-in activo')
+            });
+
+            expect(Reservation.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: 'reservation-id', status: 'ocupada' },
+                expect.any(Object),
+                expect.any(Object)
+            );
+        }
+    );
+
+    it('corrects a catalog consumption subtotal and adjusts stock by the quantity difference', async () => {
+        const session = createSessionMock();
+        const consumption = {
+            product: 'product-id',
+            description: 'Agua mineral',
+            quantity: 2,
+            unitPrice: 2500,
+            subtotal: 5000,
+            amount: 5000,
+            status: 'registrado'
+        };
+        const reservation = {
+            status: 'ocupada',
+            consumptions: { id: jest.fn().mockReturnValue(consumption) },
+            save: jest.fn().mockResolvedValue({ _id: 'reservation-id' })
+        };
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue(reservation)
+        });
+        Product.updateOne.mockResolvedValue({ matchedCount: 1 });
+
+        await expect(updateReservationConsumption(
+            'reservation-id',
+            'consumption-id',
+            { description: 'Agua corregida', quantity: 4, unitPrice: 1250.25 }
+        )).resolves.toMatchObject({ _id: 'reservation-id' });
+
+        expect(consumption).toMatchObject({
+            description: 'Agua corregida',
+            quantity: 4,
+            unitPrice: 1250.25,
+            subtotal: 5001,
+            amount: 5001
+        });
+        expect(Product.updateOne).toHaveBeenCalledWith(
+            { _id: 'product-id', stock: { $gte: 2 } },
+            { $inc: { stock: -2 } },
+            { session }
+        );
+        expect(reservation.save).toHaveBeenCalledWith({ session });
+        expect(session.endSession).toHaveBeenCalled();
+    });
+
+    it('rejects invalid consumption correction fields and quantities without persisting changes', async () => {
+        await expect(updateReservationConsumption(
+            'reservation-id',
+            'consumption-id',
+            { subtotal: 100 }
+        )).rejects.toMatchObject({ statusCode: 400 });
+        expect(mongoose.startSession).not.toHaveBeenCalled();
+
+        await expect(updateReservationConsumption(
+            'reservation-id',
+            'consumption-id',
+            { quantity: 1.5 }
+        )).rejects.toMatchObject({ statusCode: 400 });
+
+        expect(mongoose.startSession).toHaveBeenCalledTimes(1);
+        expect(Reservation.findById).toHaveBeenCalledTimes(1);
+        expect(Product.updateOne).not.toHaveBeenCalled();
+    });
+
+    it('voids a catalog consumption, restores stock, and records the audit details', async () => {
+        const session = createSessionMock();
+        const consumption = {
+            product: 'product-id',
+            quantity: 3,
+            status: 'registrado'
+        };
+        const reservation = {
+            status: 'ocupada',
+            consumptions: { id: jest.fn().mockReturnValue(consumption) },
+            save: jest.fn().mockResolvedValue({ _id: 'reservation-id' })
+        };
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue(reservation)
+        });
+
+        await expect(voidReservationConsumption(
+            'reservation-id',
+            'consumption-id',
+            ' Error de registro ',
+            'receptionist-id'
+        )).resolves.toMatchObject({ _id: 'reservation-id' });
+
+        expect(consumption).toMatchObject({
+            status: 'anulado',
+            voidReason: 'Error de registro',
+            voidedBy: 'receptionist-id',
+            voidedAt: expect.any(Date)
+        });
+        expect(Product.updateOne).toHaveBeenCalledWith(
+            { _id: 'product-id' },
+            { $inc: { stock: 3 } },
+            { session }
+        );
+        expect(reservation.save).toHaveBeenCalledWith({ session });
+        expect(session.endSession).toHaveBeenCalled();
+    });
+
+    it('rejects voiding a consumption without a valid reason or active stay', async () => {
+        await expect(voidReservationConsumption(
+            'reservation-id',
+            'consumption-id',
+            'no',
+            'receptionist-id'
+        )).rejects.toMatchObject({ statusCode: 400 });
+        expect(mongoose.startSession).not.toHaveBeenCalled();
+
+        const session = createSessionMock();
+        Reservation.findById.mockReturnValue({
+            session: jest.fn().mockResolvedValue({
+                status: 'finalizada',
+                consumptions: { id: jest.fn() }
+            })
+        });
+
+        await expect(voidReservationConsumption(
+            'reservation-id',
+            'consumption-id',
+            'Duplicado',
+            'receptionist-id'
+        )).rejects.toMatchObject({
+            statusCode: 409,
+            message: expect.stringContaining('antes de cerrar la cuenta')
+        });
+        expect(Product.updateOne).not.toHaveBeenCalled();
+        expect(session.endSession).toHaveBeenCalled();
     });
 
     it('creates a reservation atomically with a calculated total', async () => {
@@ -724,6 +881,13 @@ describe('reservationService', () => {
                 unitPrice: 25,
                 subtotal: 50,
                 amount: 50
+            }, {
+                description: 'Anulado',
+                quantity: 1,
+                unitPrice: 999,
+                subtotal: 999,
+                amount: 999,
+                status: 'anulado'
             }]
         };
         Reservation.findById.mockReturnValue({
@@ -748,7 +912,7 @@ describe('reservationService', () => {
                     settlement: expect.objectContaining({
                         roomSubtotal: 100,
                         consumptionsTotal: 50,
-                        consumptions: reservation.consumptions,
+                        consumptions: [reservation.consumptions[0]],
                         additionalChargesTotal: 0,
                         totalAmount: 150,
                         paidAmount: 150
