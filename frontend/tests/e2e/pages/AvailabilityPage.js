@@ -43,6 +43,10 @@ export class AvailabilityPage extends BasePage {
     return this.text(this.results);
   }
 
+  async waitForResults(timeout = 30000) {
+    return this.visible(this.results, timeout);
+  }
+
   // Espera a que el resumen corresponda a la búsqueda pedida (p. ej. "2 noches · …").
   async waitForSummary(predicate, message, timeout = 30000) {
     return this.waitFor(() => this.text(this.summary, 2000), predicate, message, timeout);
@@ -60,8 +64,18 @@ export class AvailabilityPage extends BasePage {
     }));
   }
 
+  async waitForRows(predicate, message, timeout = 30000) {
+    await this.waitForResults(timeout);
+    return this.waitFor(() => this.rows(), predicate, message, timeout);
+  }
+
   async emptyStateText() {
     return this.text(this.emptyState);
+  }
+
+  async waitForEmptyState(timeout = 30000) {
+    await this.waitForResults(timeout);
+    return this.waitFor(() => this.text(this.emptyState, 2000), Boolean, 'No apareció el estado vacío de disponibilidad', timeout);
   }
 
   async noticeText(timeout = 10000) {
