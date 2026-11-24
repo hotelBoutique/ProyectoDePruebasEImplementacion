@@ -7,7 +7,7 @@ export class ReservationsPage extends BasePage {
     this.title = By.id('reservations-title');
     this.checkIn = By.css('.reservation-date-grid .form-field:first-child input[type="date"]');
     this.checkOut = By.css('.reservation-date-grid .form-field:nth-child(2) input[type="date"]');
-    this.searchButton = By.xpath("//button[@type='button' and (normalize-space()='Buscar habitaciones' or normalize-space()='Buscando…')]");
+    this.searchButton = By.css('.reservation-search-footer button[type="button"]');
     this.availableRoomsTitle = By.id('available-rooms-title');
     this.roomOptions = By.css('button.reservation-room-option');
     this.emptyRooms = By.css('.reservation-empty-state');
@@ -18,7 +18,7 @@ export class ReservationsPage extends BasePage {
       identification: By.css('input[name="identification"]'),
     };
     this.nightlyRate = By.css('input[name="nightlyRate"]');
-    this.confirmButton = By.xpath("//button[@type='submit' and (normalize-space()='Confirmar reservación' or normalize-space()='Guardando…')]");
+    this.confirmButton = By.css('form.receptionist-form-card button[type="submit"]');
     this.receipt = By.css('.reservation-receipt');
     this.notice = By.css('.rooms-notice');
     this.inlineError = By.css('.reservation-inline-error');
