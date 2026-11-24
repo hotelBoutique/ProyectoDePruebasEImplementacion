@@ -31,6 +31,32 @@ export class BasePage {
     await element.clear();
     await element.sendKeys(value);
   }
+
+  // Asigna el valor de un input o select controlado por React y dispara el evento que React escucha.
+  // Se usa en fechas y listas, donde escribir con el teclado depende del idioma del navegador.
+  async setValue(locator, value, timeout = 10000) {
+    const element = await this.visible(locator, timeout);
+    await this.driver.executeScript(`
+      const element = arguments[0];
+      const prototype = element.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+      Object.getOwnPropertyDescriptor(prototype, 'value').set.call(element, arguments[1]);
+      element.dispatchEvent(new Event(element.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }));
+    `, element, String(value ?? ''));
+  }
+
+  // Repite la lectura hasta que cumpla la condición; útil cuando la página vuelve a consultar la API.
+  async waitFor(read, predicate, message, timeout = 30000) {
+    let last;
+    await this.driver.wait(async () => {
+      try {
+        last = await read();
+        return predicate(last);
+      } catch {
+        return false;
+      }
+    }, timeout, message);
+    return last;
+  }
 }
 
 export async function createBrowser() {
