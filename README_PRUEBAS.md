@@ -92,7 +92,7 @@ Estas pruebas corresponden a una integración HTTP Top-down. No prueban la persi
 
 ## Pruebas generales del backend
 
-El comando principal ejecuta todas las pruebas Jest detectadas por el proyecto:
+El comando principal ejecuta las pruebas unitarias y HTTP con stubs. La integración real con MongoDB se ejecuta por separado:
 
 ```bash
 cd backend
@@ -102,7 +102,7 @@ npm test -- --runInBand
 Resultado actual:
 
 - 20 suites.
-- 210 pruebas aprobadas.
+- 216 pruebas aprobadas.
 - Aproximadamente 84% de statements cubiertos.
 - Aproximadamente 68% de branches cubiertos.
 - Aproximadamente 84% de líneas cubiertas.
@@ -132,17 +132,28 @@ Como referencia aproximada, se prueban 5 de los 7 módulos principales de rutas,
 
 ### Integración real con MongoDB/Mongoose
 
-Estado: pendiente.
+Estado: implementada para usuarios y reservas.
 
-Actualmente no existe una suite que conecte Mongoose a MongoDB Atlas durante Jest y ejecute el flujo completo:
+La suite `backend/src/integration-tests/usersReservations.integration.test.js` recorre el flujo completo:
 
 ```text
-request HTTP → middleware real → controlador → servicio real → modelo real → MongoDB
+request HTTP → middleware real → controlador → servicio real → modelo real → MongoDB de pruebas
 ```
 
-Por ese motivo, la integración real contra la base de datos se considera aproximadamente **0% implementada**, aunque la conexión de la aplicación a Atlas sí fue verificada fuera de Jest.
+La suite verifica autenticación y perfil, creación y listado de recepcionistas con control de roles, consulta de disponibilidad y creación/lectura de reservas persistidas. También comprueba el rechazo de una reserva solapada y que ADMIN no pueda crear reservas.
 
-No se deben ejecutar pruebas destructivas contra la base `proyectoSemestre`. Para implementar esta fase se necesitaría un entorno o base de datos de pruebas aislado, con limpieza controlada de los documentos creados.
+La URI debe apuntar a una base cuyo nombre termine en `_test`; la configuración aborta si no cumple esa condición. Las reservas requieren MongoDB como replica set para soportar transacciones. La suite usa datos únicos por ejecución y limpia únicamente los registros que creó; no elimina la base de datos.
+
+Configura `MONGODB_TEST_URI` en el entorno o en `backend/.env.test` (archivo local ignorado por Git). Ejemplo para una instancia local `rs0`:
+
+```bash
+cd backend
+MONGODB_TEST_URI='mongodb://127.0.0.1:27017/proyectoSemestre_test?replicaSet=rs0' npm run test:integration
+```
+
+La configuración de integración está en [`backend/jest.integration.config.js`](./backend/jest.integration.config.js). Las pruebas usan `app.js` directamente y no abren un puerto HTTP.
+
+La suite no reutiliza `.env.development` ni modifica la base `proyectoSemestre`.
 
 ## Ejecutar el servidor para una prueba manual
 
@@ -159,17 +170,14 @@ El servidor carga `.env.development`, conecta con MongoDB Atlas y expone la API 
 |---|---|---:|
 | Unitarias Jest | Implementadas | 136 pruebas; 81% de statements |
 | HTTP con Supertest y Stubs | Implementadas parcialmente | 5 de 7 módulos de rutas, aproximadamente 70% por módulos |
-| Integración con Mongoose/MongoDB real | Pendiente | 0% en Jest |
+| Integración con Mongoose/MongoDB real | Implementada para usuarios y reservas | Suite aislada; ampliar con más flujos |
 | Flujos Big Bang completos | Pendiente | 0% implementado |
 
 ## Recomendación para la siguiente fase
 
-1. Mantener las unitarias aisladas con mocks.
-2. Crear un entorno de pruebas de MongoDB separado del desarrollo.
-3. Añadir una configuración Jest exclusiva para integración.
-4. Conectar Mongoose antes de la suite y cerrar la conexión después.
-5. Crear y limpiar únicamente datos identificados por cada prueba.
-6. Añadir flujos completos de usuarios, reservas, check-in, check-out y pagos.
+1. Mantener las unitarias y las pruebas HTTP con stubs aisladas.
+2. Ejecutar la integración con una base MongoDB separada del desarrollo y configurada como replica set.
+3. Ampliar la suite con check-in, check-out y pagos cuando se prioricen esos flujos.
 
 No se deben incluir credenciales reales en este README ni en archivos versionados.
 

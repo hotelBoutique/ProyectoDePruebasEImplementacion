@@ -8,8 +8,9 @@
     "start": "node src/server.js",
     "migrate:roles": "node src/scripts/migrateUserRoles.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
-    "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
-    "test:unit": "cross-env NODE_ENV=test jest --config jest.unit.config.js --runInBand"
+    "test": "cross-env NODE_ENV=test jest --config jest.config.js --detectOpenHandles",
+    "test:unit": "cross-env NODE_ENV=test jest --config jest.unit.config.js --runInBand",
+    "test:integration": "cross-env NODE_ENV=test jest --config jest.integration.config.js --runInBand"
   },
   "keywords": [],
   "author": "",
