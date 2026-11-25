@@ -175,7 +175,74 @@ El servidor carga `.env.development`, conecta con MongoDB Atlas y expone la API 
 | HTTP con Supertest y stubs | Implementadas | Rutas/controladores con middleware o servicios simulados |
 | Integración Mongoose/MongoDB real | Implementada | Usuarios, reservas, seguridad, consumos, pagos y comprobantes; replica set requerido |
 | Big Bang de API | Implementada | Colección Postman/Newman; el reporte guardado tiene 447 checks aprobados |
-| Big Bang desde interfaz | Parcial | Selenium cubre login, habitaciones, disponibilidad y reserva; no automatiza aún check-in/consumo/check-out |
+| Big Bang desde interfaz | Parcial | Las suites Selenium formales cubren login, habitaciones y disponibilidad; el runner manual permite crear una reserva bajo habilitación explícita. No automatiza aún check-in/consumo/check-out |
+
+## Estrategia de regresión
+
+La regresión protege los flujos existentes cuando se modifica una funcionalidad, un contrato de API, una regla compartida o la configuración de pruebas. Se eligen las suites por impacto y riesgo; las pruebas de nivel inferior no reemplazan las que validan persistencia o interacción real.
+
+### Selección según el cambio
+
+| Área modificada | Regresión mínima recomendada | Ampliar la regresión cuando… |
+|---|---|---|
+| Autenticación, sesión, usuarios, roles o protección de rutas | Backend Jest completo; unitarias de `App.jsx`; integración `security.integration.test.js` y `usersReservations.integration.test.js` | El cambio afecte el acceso desde navegador: ejecutar también `npm run test:e2e:login`. |
+| Habitaciones, disponibilidad o reservaciones | Backend Jest completo; integración `usersReservations.integration.test.js`; unitarias de `RoomsPage`, `AvailabilityPage` y `ReservationsPage` | Cambien selectores o navegación: ejecutar `npm run test:e2e:rooms`. Si cambia el contrato o el flujo API, ejecutar también Newman. |
+| Productos, consumos, liquidaciones, pagos o comprobantes | Backend Jest completo; integración `consumptionsPayments.integration.test.js`; unitarias de los componentes frontend afectados | Cambien endpoints o el recorrido entre módulos: ejecutar Newman sobre un entorno aislado. |
+| Reportes y consultas agregadas | Suite unitaria del servicio y ruta afectada; pruebas del componente si existe | Cambien cálculos compartidos, permisos o respuestas usadas por otros módulos: ampliar a backend Jest completo y Newman. |
+| Page Objects, localizadores o navegación Selenium | Ejecutar `npm run test:e2e:login` para login/dashboard, `npm run test:e2e:rooms` para habitaciones/disponibilidad o el runner manual para creación de reservas | Cambie una abstracción compartida como `BasePage`: ejecutar `npm run test:e2e:suite` y, si aplica, el flujo manual de reserva. |
+| Dependencias, configuración de Jest/Vite, CI, middleware común o contratos transversales | Regresión completa: backend, frontend, integración MongoDB, build y CI | Selenium y Newman requieren sus entornos y datos de prueba aislados; registrarlos como no ejecutados si no están disponibles. |
+
+### Orden sugerido para una regresión completa
+
+1. **Backend sin base de datos:** ejecuta unitarias, servicios, utilidades y rutas HTTP con stubs. El comando de CI también genera el reporte de cobertura:
+
+   ```bash
+   cd backend
+   npm run test:report -- --ci
+   ```
+
+2. **Frontend con API simulada:** ejecuta las pruebas de componentes y la validación de configuración del runner E2E. Para cambios frontend, confirma además que Vite compile:
+
+   ```bash
+   cd frontend
+   npm run test:e2e:config
+   npm run test:unit:report -- --ci
+   npm run build
+   ```
+
+3. **Persistencia real:** cuando el cambio toque MongoDB, transacciones, modelos o flujos entre servicios, ejecuta integración con MongoDB como replica set. Configura `MONGODB_TEST_URI` o `backend/.env.test` con una base cuyo nombre termine en `_test` antes de correr:
+
+   ```bash
+   cd backend
+   npm run test:integration
+   ```
+
+   La configuración rechaza otras bases. Estas suites limpian solo los documentos que crean; no eliminan la base.
+
+4. **Interfaz real:** para cambios en interacción, permisos visibles, navegación o selectores, configura `frontend/.env.e2e` con cuentas y API de QA autorizadas, inicia el frontend con `npm run dev:e2e` y ejecuta la suite que corresponda:
+
+   ```bash
+   cd frontend
+   npm run test:e2e:login
+   npm run test:e2e:rooms
+   # O ambas suites formales:
+   npm run test:e2e:suite
+   ```
+
+   Selenium no forma parte actualmente de GitHub Actions. La suite formal cubre login, habitaciones y disponibilidad; la creación de una reservación se prueba de forma opcional con `npm run test:e2e` y `TEST_CREATE_RESERVATION=true`. No apuntes estas suites a producción ni a cuentas o datos reales; habilita la creación solo con una base aislada y datos identificados.
+
+5. **Contrato completo de API:** ejecuta la colección con Newman cuando cambie un endpoint, permisos o el flujo entre módulos. La colección crea registros y no dispone de limpieza completa; úsala solo con el entorno local de CI o una base desechable/dedicada. El job `newman` de GitHub Actions muestra la configuración reproducible.
+
+6. **Cierre:** revisa el resultado de cada suite seleccionada y los artefactos generados. Antes de integrar, exige que todos los jobs aplicables de CI estén aprobados. Anota explícitamente cualquier suite no ejecutada por falta de Chrome, servicio, credenciales o base compatible; no la marques como aprobada por inferencia.
+
+### Criterios para cerrar una regresión
+
+- Las suites relacionadas con las áreas modificadas terminan sin fallos; las validaciones de infraestructura se distinguen de fallos de producto.
+- Cuando se cambia persistencia o una transacción, se ejecuta la integración real y se confirma que la URI usa una base `_test` en replica set.
+- Cuando se cambia una interacción crítica, se ejecuta Selenium en QA autorizado; las unitarias frontend con mocks no se presentan como prueba de navegador.
+- Cuando se modifica el contrato o una cadena completa de API, Newman pasa en un entorno aislado y sus datos no afectan cuentas reales.
+- La CI aplicable queda verde, y los reportes/cobertura se revisan sin depender solo del porcentaje global.
+- Credenciales, tokens, variables privadas y datos personales de QA no se agregan a Git ni a los reportes compartidos.
 
 ## Estrategia Bottom-up y alcance Big Bang
 
