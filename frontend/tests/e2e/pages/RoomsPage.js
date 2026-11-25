@@ -87,4 +87,62 @@ export class RoomsPage extends BasePage {
   async filterError() {
     return this.text(this.filterErrorMessage);
   }
+
+  // --- Gestión del administrador: registrar, editar y desactivar ---
+
+  async titleText() {
+    return this.text(this.title);
+  }
+
+  // Completa el formulario de habitación; los campos que no se pasan no se tocan.
+  async fillRoomForm(values) {
+    const ids = {
+      number: 'room-number',
+      type: 'room-type',
+      description: 'room-description',
+      capacity: 'room-capacity',
+      price: 'room-price',
+      status: 'room-status',
+    };
+    for (const [field, id] of Object.entries(ids)) {
+      if (values[field] !== undefined) await this.setValue(By.id(id), values[field]);
+    }
+  }
+
+  async submitRoomForm() {
+    await this.click(By.css('form.receptionist-form-card button[type="submit"]'));
+  }
+
+  async roomFormHeading() {
+    return this.text(By.css('form.receptionist-form-card .receptionist-form-heading h2'));
+  }
+
+  row(number) {
+    return By.xpath(`//table[contains(concat(' ', normalize-space(@class), ' '), ' rooms-table ')]//tbody/tr[td[1][normalize-space(.)='${number}']]`);
+  }
+
+  async waitForRoom(number, timeout = 30000) {
+    return this.visible(this.row(number), timeout);
+  }
+
+  async rowFor(number) {
+    await this.waitForRoom(number);
+    const rows = await this.rows();
+    return rows.find((row) => row.number === number);
+  }
+
+  async editRoom(number) {
+    const row = await this.waitForRoom(number);
+    await row.findElement(By.css('button.receptionist-edit-action')).click();
+  }
+
+  async deactivateRoom(number) {
+    const row = await this.waitForRoom(number);
+    await row.findElement(By.css('button.receptionist-deactivate-action')).click();
+  }
+
+  async canDeactivate(number) {
+    const row = await this.waitForRoom(number);
+    return (await row.findElements(By.css('button.receptionist-deactivate-action'))).length > 0;
+  }
 }

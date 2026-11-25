@@ -175,7 +175,7 @@ El servidor carga `.env.development`, conecta con MongoDB Atlas y expone la API 
 | HTTP con Supertest y stubs | Implementadas | Rutas/controladores con middleware o servicios simulados |
 | Integración Mongoose/MongoDB real | Implementada | Usuarios, reservas, seguridad, consumos, pagos y comprobantes; replica set requerido |
 | Big Bang de API | Implementada | Colección Postman/Newman; el reporte guardado tiene 447 checks aprobados |
-| Big Bang desde interfaz | Implementada | Las suites Selenium formales cubren login, habitaciones, disponibilidad y el flujo completo de recepción: reservación, check-in, consumo, pago y check-out, y comprobante |
+| Big Bang desde interfaz | Implementada | Las suites Selenium formales cubren login, habitaciones, disponibilidad, el flujo completo de recepción (reservación, check-in, consumo, pago y check-out, y comprobante) y la gestión del administrador (habitaciones, productos, usuarios y reportes) |
 
 ## Estrategia de regresión
 
@@ -185,11 +185,11 @@ La regresión protege los flujos existentes cuando se modifica una funcionalidad
 
 | Área modificada | Regresión mínima recomendada | Ampliar la regresión cuando… |
 |---|---|---|
-| Autenticación, sesión, usuarios, roles o protección de rutas | Backend Jest completo; unitarias de `App.jsx`; integración `security.integration.test.js` y `usersReservations.integration.test.js` | El cambio afecte el acceso desde navegador: ejecutar también `npm run test:e2e:login`. |
-| Habitaciones, disponibilidad o reservaciones | Backend Jest completo; integración `usersReservations.integration.test.js`; unitarias de `RoomsPage`, `AvailabilityPage` y `ReservationsPage` | Cambien selectores o navegación: ejecutar `npm run test:e2e:rooms`. Si cambia el contrato o el flujo API, ejecutar también Newman. |
-| Productos, consumos, liquidaciones, pagos o comprobantes | Backend Jest completo; integración `consumptionsPayments.integration.test.js`; unitarias de los componentes frontend afectados | Cambien endpoints o el recorrido entre módulos: ejecutar Newman sobre un entorno aislado. Cambien pantallas de check-in, consumo, check-out o comprobantes: ejecutar `npm run test:e2e:reception`. |
-| Reportes y consultas agregadas | Suite unitaria del servicio y ruta afectada; pruebas del componente si existe | Cambien cálculos compartidos, permisos o respuestas usadas por otros módulos: ampliar a backend Jest completo y Newman. |
-| Page Objects, localizadores o navegación Selenium | Ejecutar `npm run test:e2e:login` para login/dashboard, `npm run test:e2e:rooms` para habitaciones/disponibilidad o `npm run test:e2e:reception` para reservación, check-in, consumo, pago y check-out | Cambie una abstracción compartida como `BasePage`: ejecutar `npm run test:e2e:suite` y, si aplica, el flujo manual de reserva. |
+| Autenticación, sesión, usuarios, roles o protección de rutas | Backend Jest completo; unitarias de `App.jsx`; integración `security.integration.test.js` y `usersReservations.integration.test.js` | El cambio afecte el acceso desde navegador: ejecutar también `npm run test:e2e:login`. Cambie la gestión de recepcionistas: ejecutar `npm run test:e2e:admin`. |
+| Habitaciones, disponibilidad o reservaciones | Backend Jest completo; integración `usersReservations.integration.test.js`; unitarias de `RoomsPage`, `AvailabilityPage` y `ReservationsPage` | Cambien selectores o navegación: ejecutar `npm run test:e2e:rooms`. Cambie el registro, la edición o la desactivación de habitaciones: ejecutar `npm run test:e2e:admin`. Si cambia el contrato o el flujo API, ejecutar también Newman. |
+| Productos, consumos, liquidaciones, pagos o comprobantes | Backend Jest completo; integración `consumptionsPayments.integration.test.js`; unitarias de los componentes frontend afectados | Cambien endpoints o el recorrido entre módulos: ejecutar Newman sobre un entorno aislado. Cambien pantallas de check-in, consumo, check-out o comprobantes: ejecutar `npm run test:e2e:reception`. Cambie el catálogo del administrador: ejecutar `npm run test:e2e:admin`. |
+| Reportes y consultas agregadas | Suite unitaria del servicio y ruta afectada; pruebas del componente si existe | Cambien cálculos compartidos, permisos o respuestas usadas por otros módulos: ampliar a backend Jest completo y Newman. Cambien las pantallas de reportes del administrador: ejecutar `npm run test:e2e:admin`. |
+| Page Objects, localizadores o navegación Selenium | Ejecutar `npm run test:e2e:login` para login/dashboard, `npm run test:e2e:rooms` para habitaciones/disponibilidad, `npm run test:e2e:reception` para reservación, check-in, consumo, pago y check-out o `npm run test:e2e:admin` para la gestión del administrador | Cambie una abstracción compartida como `BasePage`: ejecutar `npm run test:e2e:suite` y, si aplica, el flujo manual de reserva. |
 | Dependencias, configuración de Jest/Vite, CI, middleware común o contratos transversales | Regresión completa: backend, frontend, integración MongoDB, build y CI | Selenium y Newman requieren sus entornos y datos de prueba aislados; registrarlos como no ejecutados si no están disponibles. |
 
 ### Orden sugerido para una regresión completa
@@ -226,11 +226,12 @@ La regresión protege los flujos existentes cuando se modifica una funcionalidad
    npm run test:e2e:login
    npm run test:e2e:rooms
    npm run test:e2e:reception
+   npm run test:e2e:admin
    # O todas las suites formales:
    npm run test:e2e:suite
    ```
 
-   Selenium no forma parte actualmente de GitHub Actions. Las suites formales cubren login, habitaciones, disponibilidad y el flujo completo de recepción; la creación de una reservación se prueba de forma opcional con `npm run test:e2e` y `TEST_CREATE_RESERVATION=true`. No apuntes estas suites a producción ni a cuentas o datos reales; habilita la creación solo con una base aislada y datos identificados.
+   Selenium no forma parte actualmente de GitHub Actions. Las suites formales cubren login, habitaciones, disponibilidad, el flujo completo de recepción y la gestión del administrador; la creación de una reservación se prueba de forma opcional con `npm run test:e2e` y `TEST_CREATE_RESERVATION=true`. No apuntes estas suites a producción ni a cuentas o datos reales; habilita la creación solo con una base aislada y datos identificados.
 
 5. **Contrato completo de API:** ejecuta la colección con Newman cuando cambie un endpoint, permisos o el flujo entre módulos. La colección crea registros y no dispone de limpieza completa; úsala solo con el entorno local de CI o una base desechable/dedicada. El job `newman` de GitHub Actions muestra la configuración reproducible.
 
@@ -255,7 +256,7 @@ Las capas se validan de abajo hacia arriba, conservando el nivel real de cada su
 4. **Servicios/modelos/DB reales (integración):** suites de `src/integration-tests/` conectan a una base `_test`, usan las rutas reales como punto de entrada y validan documentos guardados; Supertest sirve como driver HTTP. Los datos mínimos de usuario/habitación/producto se preparan en modelos para aislar el flujo bajo prueba.
 5. **API Big Bang (Postman/Newman):** colección en orden y sobre API activa, integra autenticación, permisos, disponibilidad, reserva, check-in, consumos, check-out, pago y recibo. Los IDs y fechas se pasan entre requests mediante variables del entorno. Esta es la prueba de flujo completo entre módulos.
 
-El frontend no es parte de la colección Postman ni de la integración Jest. La UI tiene unitarias de componentes con API simulada y Selenium real para login, habitaciones/disponibilidad y el flujo completo de recepción (`reception-flow.e2e.test.js`: reservación, check-in, consumo, pago y check-out, y comprobante). La colección Postman y el integration test cubren los mismos pasos en API; la suite Selenium los recorre desde la interfaz.
+El frontend no es parte de la colección Postman ni de la integración Jest. La UI tiene unitarias de componentes con API simulada y Selenium real para login, habitaciones/disponibilidad, el flujo completo de recepción (`reception-flow.e2e.test.js`: reservación, check-in, consumo, pago y check-out, y comprobante) y la gestión del administrador (`admin-management.e2e.test.js`: habitaciones, productos, usuarios y reportes). La colección Postman y el integration test cubren los mismos pasos en API; la suite Selenium los recorre desde la interfaz.
 
 ## Evidencia Big Bang de Postman
 
@@ -331,9 +332,9 @@ Genera `frontend/coverage/lcov.info`, `frontend/coverage/lcov-report/` y `fronte
 
 La implementación está separada en:
 
-- `frontend/tests/e2e/pages`: clases POM de login, dashboard, habitaciones, disponibilidad, reservas, check-in, consumos, pago y check-out, y comprobantes.
+- `frontend/tests/e2e/pages`: clases POM de login, dashboard, habitaciones, disponibilidad, reservas, check-in, consumos, pago y check-out, comprobantes, catálogo de productos, recepcionistas y reportes del administrador.
 - `frontend/tests/e2e/run.js`: runner manual de login y navegación; cierra el navegador en `finally`.
-- `frontend/tests/e2e/login.e2e.test.js`, `rooms-availability.e2e.test.js` y `reception-flow.e2e.test.js`: suites Jest formales con POM y cierre del navegador en `afterAll`.
+- `frontend/tests/e2e/login.e2e.test.js`, `rooms-availability.e2e.test.js`, `reception-flow.e2e.test.js` y `admin-management.e2e.test.js`: suites Jest formales con POM y cierre del navegador en `afterAll`.
 - `frontend/tests/e2e/pages`: POMs; usan esperas explícitas y localizadores por ID, CSS y XPath.
 
 Instalación y navegador:
@@ -526,6 +527,7 @@ Resultado histórico registrado: **17/17 pruebas aprobadas** en Chrome contra la
 - `npm run test:e2e:login`: suite Jest formal de login válido/inválido y validación del formulario.
 - `npm run test:e2e:rooms`: suite Jest formal de listado y disponibilidad con fixtures preparados en QA.
 - `npm run test:e2e:reception`: suite Jest formal del flujo de recepción (reservación, check-in, consumo, pago y check-out).
+- `npm run test:e2e:admin`: suite Jest formal de la gestión del administrador (habitaciones, productos, usuarios y reportes).
 - `npm run test:e2e:suite`: todas las suites Jest formales.
 - `npm run test:e2e:suite:report`: todas las suites formales y reporte JSON en `frontend/reports/e2e/jest-results.json`.
 
@@ -573,6 +575,62 @@ npm run test:e2e:reception
 ```
 
 Cada ejecución usa 1 intento de login de la API (2 si hay que crear o corregir datos como administrador) y deja en QA una estadía finalizada con su comprobante, identificada por el prefijo `Huésped E2E Recepción`.
+
+### Suite formal de gestión del administrador (Selenium + Jest)
+
+`frontend/tests/e2e/admin-management.e2e.test.js` (HB-47) verifica desde la interfaz, como administrador de QA, la gestión de habitaciones, productos y usuarios, y los reportes de ocupación, ingresos y ventas. Usa los Page Objects `RoomsPage`, `ProductCatalogPage`, `ReceptionistsPage`, `AdminReportPage` y `DashboardPage`.
+
+La API no permite borrar habitaciones, productos ni usuarios. Por eso cada corrida crea desde la interfaz registros con un identificador único y los deja **desactivados** al terminar:
+
+| Registro | Valor | Estado final |
+|---|---|---|
+| Habitación | `E2E-A<id>`, Suite, 3 personas, tarifa en el rango 999.xxx (distinto del de las demás suites) | Fuera de servicio |
+| Producto | `Producto E2E Admin <id>`, categoría `Minibar E2E` | Inactivo |
+| Recepcionista | `Recepcionista E2E <id>`, correo `e2e.admin.<id>@example.test` | Inactiva |
+
+Para que los reportes tengan resultados conocidos, antes de abrir el navegador se prepara por API:
+
+- El inventario `E2E-101` a `E2E-401` con la reserva futura de `E2E-301` (las mismas funciones que la suite de disponibilidad).
+- Una estadía de hoy en `E2E-R01`, con 2 unidades de `Agua E2E Recepción` y pagada por transferencia (las mismas funciones que la suite de recepción). El huésped se llama `Huésped E2E Reportes <id>`.
+
+| Módulo | Caso | Resultado esperado |
+|---|---|---|
+| Habitaciones | Datos obligatorios | Sin número, tipo ni precio muestra la lista de campos que faltan |
+| | Capacidad inválida | Capacidad 0 muestra "La capacidad debe ser un número entero mayor o igual a 1." |
+| | Registro | "La habitación se registró correctamente." |
+| | Número repetido | "Ya existe una habitación con ese número" |
+| | Inventario | La habitación aparece con tipo, descripción, capacidad, tarifa y estado Disponible |
+| | Edición | Cambiar la tarifa a $999.200 y el estado a Mantenimiento se refleja en el listado |
+| | Desactivación | Queda fuera de servicio y desaparece el botón Desactivar |
+| Productos | Datos obligatorios | Sin nombre, categoría ni precio muestra el mensaje de campos obligatorios |
+| | Existencias negativas | Existencias -1 muestra "Las existencias deben ser un número entero mayor o igual a 0." |
+| | Registro | Mensaje de éxito y el formulario queda vacío |
+| | Nombre repetido | "Ya existe un producto con ese nombre" |
+| | Catálogo | La búsqueda por nombre devuelve el producto con categoría, precio, existencias y estado Activo |
+| | Edición | Precio $10.500 y 4 existencias, marcadas como "4 · Bajo" |
+| | Desactivación | Queda Inactivo y el botón cambia a Activar |
+| Usuarios | Correo inválido | El navegador no envía el formulario (validación nativa `type="email"`) |
+| | Creación | Vuelve al listado con la cuenta Activa |
+| | Correo repetido | "El correo ya está registrado" |
+| | Edición | El nuevo nombre aparece en el listado |
+| | Desactivación | La cuenta queda Inactiva y la API rechaza su inicio de sesión con "La cuenta está desactivada" |
+| Reportes | Fechas invertidas | El navegador no genera el reporte de ocupación si la fecha final es anterior a la inicial |
+| | Ocupación | En la fecha de la reserva futura, `E2E-101` y `E2E-201` figuran disponibles y `E2E-301`, `E2E-401` y la habitación desactivada no; los contadores coinciden con la API |
+| | Ingresos | La estadía de hoy aparece con alojamiento $888.100, productos $17.600 y su total; los totales coinciden con la API |
+| | Ventas | `Agua E2E Recepción` aparece con las unidades e ingresos del día; los totales coinciden con la API |
+
+Los reportes de ingresos y ventas suman todos los pagos del día en QA, así que la suite compara la interfaz con la respuesta de la API en lugar de fijar totales. Si otra persona registra un pago justo entre las dos lecturas, la comparación puede fallar; basta con repetir la corrida.
+
+Con el frontend de pruebas corriendo (`npm run dev:e2e`), en otra terminal:
+
+```bash
+cd frontend
+npm run test:e2e:admin
+```
+
+Cada ejecución usa 3 intentos de login de la API (administrador, recepción y la comprobación de la cuenta desactivada).
+
+La API de QA permite 100 solicitudes cada 15 minutos por dirección IP, y ese límite se comparte con cualquier otra persona que la use desde la misma red. Las cuatro suites formales juntas (`npm run test:e2e:suite`) pueden superarlo: si aparecen errores `429` o "La API respondió con estado 429", no es un fallo de la aplicación. Espera el reinicio del límite (la cabecera `ratelimit-reset` indica los segundos) y ejecuta las suites por separado: `test:e2e:admin`, `test:e2e:reception`, `test:e2e:rooms` y `test:e2e:login`.
 
 ### UAT local: Smoke y Sanity
 

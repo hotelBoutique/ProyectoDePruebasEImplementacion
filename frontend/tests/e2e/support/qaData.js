@@ -267,3 +267,69 @@ export async function prepareReceptionFlow(receptionToken) {
     await admin.release();
   }
 }
+
+// ---------------------------------------------------------------------------
+// Datos de la suite del administrador (admin-management): habitaciones, productos, usuarios y reportes.
+
+// Lectura directa de la API, para comparar lo que muestra la interfaz con lo que responde el servidor.
+export async function apiGet(path, token) {
+  return request('GET', path, token);
+}
+
+// Las habitaciones que crea la suite del administrador usan el rango 999.xxx, distinto de las demás suites.
+export const ADMIN_PRICE_RANGE = { min: 999000, max: 999999 };
+
+// Registros únicos por corrida. La API no permite borrar habitaciones, productos ni usuarios,
+// así que la suite los deja desactivados al terminar y con el prefijo E2E para identificarlos.
+export function adminRecords(runId = Date.now().toString(36)) {
+  return {
+    room: {
+      number: `E2E-A${runId}`,
+      type: 'Suite',
+      description: 'Habitación de prueba E2E del administrador',
+      capacity: '3',
+      price: '999100',
+      status: 'disponible',
+    },
+    product: {
+      name: `Producto E2E Admin ${runId}`,
+      category: 'Minibar E2E',
+      description: 'Producto de prueba E2E del administrador',
+      price: '9900',
+      stock: '30',
+    },
+    receptionist: {
+      name: `Recepcionista E2E ${runId}`,
+      email: `e2e.admin.${runId}@example.test`,
+      password: `Recepcion-E2E-${runId}`,
+    },
+  };
+}
+
+// Registra por API una estadía completa y pagada hoy en la habitación del flujo de recepción
+// (reserva → check-in → consumo → check-out), para que los reportes de ingresos y ventas tengan
+// un pago conocido. Devuelve el total cobrado.
+export async function completeStayByApi(receptionToken, { room, product, guest, quantity = 2 }) {
+  const created = await request('POST', '/reservations', receptionToken, {
+    guest,
+    roomId: room._id,
+    checkIn: dateOnly(0),
+    checkOut: dateOnly(1),
+    nightlyRate: room.price,
+  });
+  const reservationId = created.data.reservation._id;
+  await request('POST', `/reservations/${reservationId}/check-in`, receptionToken);
+  await request('POST', `/reservations/${reservationId}/consumptions`, receptionToken, {
+    productId: product._id,
+    quantity,
+  });
+
+  const pending = await request('GET', '/reservations/check-outs/pending', receptionToken);
+  const stay = (pending.data?.reservations || []).find((reservation) => reservation._id === reservationId);
+  await request('POST', `/reservations/${reservationId}/check-out`, receptionToken, {
+    additionalCharges: [],
+    paidAmount: stay.settlementEstimate.totalDue,
+    paymentMethod: 'transferencia',
+  });
+  return { reservationId, total: stay.settlementEstimate.totalDue };
+}

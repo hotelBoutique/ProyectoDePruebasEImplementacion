@@ -15,6 +15,7 @@
     "test:e2e:config": "node --test tests/e2e/runConfig.test.js",
     "test:e2e:login": "jest --config jest.e2e.config.cjs --runInBand tests/e2e/login.e2e.test.js",
     "test:e2e:rooms": "jest --config jest.e2e.config.cjs --runInBand tests/e2e/rooms-availability.e2e.test.js",
+    "test:e2e:admin": "jest --config jest.e2e.config.cjs --runInBand tests/e2e/admin-management.e2e.test.js",
     "test:e2e:reception": "jest --config jest.e2e.config.cjs --runInBand tests/e2e/reception-flow.e2e.test.js",
     "test:e2e:suite": "jest --config jest.e2e.config.cjs --runInBand",
     "test:e2e:suite:report": "node -e \"require('node:fs').mkdirSync('reports/e2e',{recursive:true})\" && jest --config jest.e2e.config.cjs --runInBand --json --outputFile=reports/e2e/jest-results.json",

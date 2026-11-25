@@ -32,7 +32,7 @@ export class BasePage {
     await element.sendKeys(value);
   }
 
-  // Asigna el valor de un input o select controlado por React y dispara el evento que React escucha.
+  // Asigna el valor de un input, select o textarea controlado por React y dispara el evento que React escucha.
   // Se usa en fechas y listas, donde escribir con el teclado depende del idioma del navegador.
   async setValue(locator, value, timeout = 10000) {
     const element = await this.visible(locator, timeout);
@@ -43,7 +43,8 @@ export class BasePage {
   async setElementValue(element, value) {
     await this.driver.executeScript(`
       const element = arguments[0];
-      const prototype = element.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+      const prototypes = { SELECT: HTMLSelectElement.prototype, TEXTAREA: HTMLTextAreaElement.prototype };
+      const prototype = prototypes[element.tagName] || HTMLInputElement.prototype;
       Object.getOwnPropertyDescriptor(prototype, 'value').set.call(element, arguments[1]);
       element.dispatchEvent(new Event(element.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }));
     `, element, String(value ?? ''));
