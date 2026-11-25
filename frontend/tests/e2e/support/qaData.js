@@ -1,4 +1,5 @@
-// Datos de prueba fijos para las suites E2E, creados en la API de QA (base proyectoSemestre_pruebas).
+// Datos fijos para las suites E2E, creados en la API y base de pruebas indicadas por TEST_API_URL.
+// La UAT local valida antes que la API y MongoDB apunten a loopback y a una base _test.
 // Es idempotente: solo crea o corrige lo que falte, así que se puede ejecutar en cada corrida.
 // Las habitaciones usan el prefijo "E2E-" y precios únicos (777.xxx) para distinguirlas
 // de los datos que dejan otras pruebas (por ejemplo, la colección de Postman).
@@ -54,6 +55,24 @@ export async function apiLogout(token) {
   } catch {
     // Si el token ya no es válido no hay nada que revocar.
   }
+}
+
+export async function ensureReceptionist(adminToken, account) {
+  const response = await request('GET', '/users', adminToken);
+  const users = response.data?.users || [];
+  const existing = users.find((user) => user.email?.toLowerCase() === account.email.toLowerCase());
+
+  if (!existing) {
+    const created = await request('POST', '/users', adminToken, account);
+    return created.data?.user;
+  }
+
+  if (!existing.isActive) {
+    const activated = await request('PATCH', `/users/${existing._id}/status`, adminToken, { isActive: true });
+    return activated.data?.user;
+  }
+
+  return existing;
 }
 
 async function listE2ERooms(token) {

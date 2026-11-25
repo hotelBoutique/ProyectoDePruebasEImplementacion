@@ -17,7 +17,12 @@
     "test:e2e:rooms": "jest --config jest.e2e.config.cjs --runInBand tests/e2e/rooms-availability.e2e.test.js",
     "test:e2e:suite": "jest --config jest.e2e.config.cjs --runInBand",
     "test:e2e:suite:report": "node -e \"require('node:fs').mkdirSync('reports/e2e',{recursive:true})\" && jest --config jest.e2e.config.cjs --runInBand --json --outputFile=reports/e2e/jest-results.json",
-    "dev:e2e": "vite --mode e2e --port 5174"
+    "dev:e2e": "vite --mode e2e --port 5174",
+    "dev:uat": "vite --mode uat --host 127.0.0.1 --port 5174 --strictPort",
+    "test:uat:config": "node --test tests/e2e/uatLocalConfig.test.js",
+    "test:uat:smoke": "node -e \"require('node:fs').mkdirSync('reports/uat',{recursive:true})\" && jest --config jest.uat.config.cjs --runInBand tests/e2e/uat/smoke.uat.test.js --json --outputFile=reports/uat/smoke-results.json",
+    "test:uat:sanity": "node -e \"require('node:fs').mkdirSync('reports/uat',{recursive:true})\" && jest --config jest.uat.config.cjs --runInBand tests/e2e/uat/sanity.uat.test.js --json --outputFile=reports/uat/sanity-results.json",
+    "test:uat": "npm run test:uat:config && npm run test:uat:smoke && npm run test:uat:sanity"
   },
   "dependencies": {
     "react": "^19.0.0",
