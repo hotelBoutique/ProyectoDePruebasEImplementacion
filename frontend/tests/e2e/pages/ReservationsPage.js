@@ -95,6 +95,16 @@ export class ReservationsPage extends BasePage {
     return this.text(this.receipt);
   }
 
+  // Datos del comprobante "Reservación registrada" como { Huésped, Habitación, Check-in, ... }.
+  async receiptDetails(timeout = 30000) {
+    return this.definitions(this.receipt, timeout);
+  }
+
+  async nightlyRateValue() {
+    const input = await this.visible(this.nightlyRate);
+    return input.getAttribute('value');
+  }
+
   async errorText(timeout = 10000) {
     return this.waitFor(async () => {
       for (const locator of [this.notice, this.inlineError]) {
