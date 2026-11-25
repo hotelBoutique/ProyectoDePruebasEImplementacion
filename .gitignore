@@ -3,6 +3,9 @@ frontend/dist/
 .env
 .env.*
 !.env.example
+# Archivos de entorno con otros nombres (p. ej. e2e.env, uat.local.env).
+# Las plantillas *.env.example siguen versionándose.
+*.env
 coverage/
 frontend/reports/
 AGENTS.md
