@@ -335,7 +335,7 @@ Evidencia histórica del runner anterior a la corrección del login inválido:
 
 - La corrida previa registró el login inválido como aprobado, pero aceptaba mensajes genéricos de conexión/API y no se considera evidencia suficiente tras la revisión.
 - Se corrigió el criterio para exigir el mensaje exacto de rechazo y el estado visual de error; hay que volver a ejecutar el runner contra una API de pruebas activa para validar ese caso.
-- No se volvió a ejecutar Selenium en esta revisión: falta `frontend/.env.e2e` y Chrome/servicios locales no se configuraron como entorno aislado.
+- El runner manual (`npm run test:e2e`) no se ejecutó en esta validación; la suite formal Jest de login sí se ejecutó por separado y su resultado está registrado abajo.
 
 El runner manual crea un JSON en `frontend/reports/e2e/` para cada ejecución y una captura PNG sanitizada al fallar (limpia inputs y sessionStorage antes de capturar). La captura/report se generan bajo demanda y la carpeta está ignorada por Git. En todos los casos intenta cerrar el navegador con `driver.quit()` en `finally`.
 
@@ -355,30 +355,39 @@ El runner manual crea un JSON en `frontend/reports/e2e/` para cada ejecución y 
 
 Localizadores: por ID (`admin-email`, `admin-password`, `dashboard-title`), por CSS (`.auth-submit`, `.auth-feedback .feedback-message`, `.sidebar-role`, `.dashboard-layout`) y por XPath (botón "Cerrar sesión" y formulario de acceso).
 
-#### Configuración
+#### Configuración local segura
 
-Las pruebas usan la **API de QA** (`hotel-boutique-api-pruebas.onrender.com`, base `proyectoSemestre_pruebas`), nunca la de producción.
+Para una corrida local usa exclusivamente la API local conectada a la base de pruebas que hayas autorizado; no apuntes Selenium a producción ni a una base compartida con usuarios reales.
 
-1. Copia `frontend/tests/e2e/e2e.env.example` como `frontend/.env.e2e` y completa las contraseñas de las cuentas de QA (`qa-admin@hotelboutique.test` y `qa-recepcion@hotelboutique.test`). Git ignora `.env.e2e`; no subas credenciales.
-2. En una terminal, inicia el frontend conectado a la API de QA (puerto 5174):
+1. Configura `frontend/.env.e2e` desde `frontend/tests/e2e/e2e.env.example` con `TEST_API_URL=http://localhost:3000`, `TEST_APP_URL=http://localhost:5174` y credenciales de cuentas E2E locales. No copies el archivo al repositorio ni compartas sus valores.
+2. Inicia el backend en `backend` con el archivo `.env.development` apuntando a la base autorizada de pruebas. Para permitir repeticiones de login E2E sin cambiar el límite predeterminado de la aplicación, establece `AUTH_LOGIN_RATE_LIMIT_MAX=50` solo en el proceso local:
+
+```powershell
+cd backend
+$env:AUTH_LOGIN_RATE_LIMIT_MAX = "50"
+npm run dev
+```
+
+El límite sigue siendo 10 intentos por 15 minutos si no se configura esa variable; no la establezcas en producción.
+3. En otra terminal, inicia el frontend en el puerto 5174:
 
 ```bash
 cd frontend
 npm run dev:e2e
 ```
 
-3. En otra terminal, ejecuta la suite:
+4. En otra terminal, ejecuta la suite:
 
 ```bash
 cd frontend
 npm run test:e2e:login
 ```
 
-Antes de abrir el navegador, la suite comprueba que existan las variables, despierta la API de QA (Render puede tardar hasta un minuto) y confirma que el frontend responde; si algo falta, indica qué hacer. Para ver el navegador mientras corre, agrega `SELENIUM_HEADLESS=false` en `.env.e2e`.
+Antes de abrir el navegador, la suite comprueba que existan las variables y que la API y el frontend respondan; si algo falta, indica qué hacer. Para ver el navegador mientras corre, agrega `SELENIUM_HEADLESS=false` en `.env.e2e`.
 
-Cada ejecución hace 5 intentos de login. La API permite 10 cada 15 minutos por persona, así que se puede correr la suite dos veces seguidas; después hay que esperar a que se renueve la ventana.
+La suite hace cinco solicitudes de login. El límite es configurable mediante `AUTH_LOGIN_RATE_LIMIT_MAX` para desarrollo local, con valor predeterminado de 10 cada 15 minutos.
 
-Resultado histórico registrado: **7/7 pruebas aprobadas** en Chrome contra la API de QA. No se repitió esta suite en esta revisión porque no existe `frontend/.env.e2e` con credenciales en el entorno actual.
+Última ejecución formal local: **7/7 pruebas aprobadas** en Chrome. La primera corrida encontró dos problemas de configuración de la prueba (se esperaba el nombre completo aunque la UI muestra el primer nombre, y el límite local de login ya estaba consumido). Se corrigió la expectativa y se reinició la API local con `AUTH_LOGIN_RATE_LIMIT_MAX=50`; el valor predeterminado de la API sigue siendo 10.
 
 ### Suite formal de habitaciones y disponibilidad (Selenium + Jest)
 
@@ -493,7 +502,8 @@ La solicitud de solo lectura `GET https://hotel-boutique-api-pruebas.onrender.co
 | Integración Jest/MongoDB | **2 pruebas aprobadas, 2 fallidas** | Dos pruebas sin transacciones (autenticación/permisos) pasaron. Las dos que crean reservas recibieron HTTP 503 al requerirse transacciones. El host Mongo local es standalone (`setName` ausente); no hay Docker ni ejecutable `mongod`. |
 | Protección URI de integración | **Rechazo seguro verificado** | Una URI cuyo nombre no termina en `_test` se rechazó antes de conectar. Sin URI, Jest no ejecutó aserciones. |
 | Postman/Newman | **No reejecutado en esta revisión** | Evidencia previa guardada: Postman 447 checks aprobados, 0 fallidos. No es una corrida nueva de Newman. |
-| Selenium | **No ejecutado en esta revisión** | Falta `frontend/.env.e2e` y las credenciales QA; las cifras 7/7 y 17/17 son registros históricos, no resultados de esta revisión. |
+| Selenium login formal | **7 pruebas aprobadas; 0 fallidas** | Corrida nueva contra frontend/API locales con cuentas E2E; primera ejecución falló por expectativa del saludo y rate limit, luego de ajustar ambos pasó 7/7. |
+| Selenium habitaciones / runner manual | **No ejecutados en esta validación** | Requieren sus datos y preparación propia; la corrida de login no valida estas suites. |
 | API de QA | **GET /health aprobado, HTTP 200** | Login, habitaciones protegidas y flujos con datos no ejecutados por falta de credenciales. |
 | GitHub Actions | **No consultado/ejecutado** | El workflow actualizado queda listo, pero no se afirma que un run remoto haya pasado. |
 

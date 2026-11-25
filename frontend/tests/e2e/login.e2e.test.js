@@ -17,6 +17,7 @@ const {
 } = process.env;
 
 const INVALID_CREDENTIALS_MESSAGE = 'Correo o contraseña incorrectos';
+const firstName = name => name.trim().split(/\s+/)[0];
 
 let driver;
 let loginPage;
@@ -42,7 +43,7 @@ describe('Inicio de sesión con credenciales válidas', () => {
 
     await dashboard.waitForDashboard();
     expect(await dashboard.role()).toBe('ROL: ADMIN');
-    expect(await dashboard.greeting()).toBe(`Hola, ${TEST_ADMIN_NAME}.`);
+    expect(await dashboard.greeting()).toBe(`Hola, ${firstName(TEST_ADMIN_NAME)}.`);
     expect(await loginPage.sessionToken()).toEqual(expect.any(String));
     expect(await loginPage.isDisplayed()).toBe(false);
   });
@@ -52,7 +53,7 @@ describe('Inicio de sesión con credenciales válidas', () => {
 
     await dashboard.waitForDashboard();
     expect(await dashboard.role()).toBe('ROL: RECEPCIONISTA');
-    expect(await dashboard.greeting()).toBe(`Hola, ${TEST_RECEPTION_NAME}.`);
+    expect(await dashboard.greeting()).toBe(`Hola, ${firstName(TEST_RECEPTION_NAME)}.`);
     expect(await loginPage.sessionToken()).toEqual(expect.any(String));
   });
 
