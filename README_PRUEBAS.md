@@ -529,6 +529,74 @@ Resultado histórico registrado: **17/17 pruebas aprobadas** en Chrome contra la
 
 Las suites formales apuntan a QA y comprueban disponibilidad de la API y frontend antes de abrir Chrome. Para pruebas de integración visual seguras también se requieren credenciales de QA válidas, frontend en `TEST_APP_URL` y permiso para preparar los fixtures documentados. No se habilitan automáticamente en CI porque esos secretos/datos no están configurados allí.
 
+### UAT local: Smoke y Sanity
+
+La UAT académica se ejecuta únicamente en el equipo local. Tiene una configuración distinta a las suites E2E anteriores: antes de probar, el preflight rechaza API/frontend fuera de `localhost` o loopback y MongoDB fuera de loopback o cuya base no termine en `_test`. No usa servicios desplegados.
+
+#### Preparación local
+
+1. Copia la plantilla local y configura MongoDB en `backend/.env.test`:
+
+   ```bash
+   cd frontend
+   cp tests/e2e/uat.local.env.example .env.uat
+   ```
+
+   En `backend/.env.test`, usa una instancia local replica set y conserva los mismos datos de administrador que `frontend/.env.uat`:
+
+   ```text
+   NODE_ENV=test
+   PORT=3000
+   MONGODB_URI=mongodb://127.0.0.1:27017/hotel_uat_test?replicaSet=rs0
+   JWT_SECRET=uat-local-secret-that-is-longer-than-32-bytes
+   JWT_EXPIRES_IN=30m
+   CORS_ORIGIN=http://127.0.0.1:5174
+   ADMIN_EMAIL=uat-admin@hotel.test
+   ADMIN_PASSWORD=Local-Uat-Admin-2026!
+   ```
+
+2. Asegúrate de tener MongoDB local como replica set. Si aún no existe un contenedor, una opción con Docker es:
+
+   ```bash
+   docker run -d --name hotel-uat-mongo -p 27017:27017 mongo:8.0 --replSet rs0 --bind_ip_all
+   docker exec hotel-uat-mongo mongosh --quiet --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '127.0.0.1:27017' }] })"
+   ```
+
+   Si ya tienes MongoDB local, verifica que acepte transacciones como replica set y no inicies otro contenedor.
+
+3. Crea el administrador de pruebas y levanta el backend desde el entorno test:
+
+   ```bash
+   cd backend
+   NODE_ENV=test npm run seed:admin
+   npm run dev:test
+   ```
+
+4. En otra terminal, inicia el frontend con el perfil UAT, que escucha solo en loopback:
+
+   ```bash
+   cd frontend
+   npm run dev:uat
+   ```
+
+#### Ejecución
+
+Con las dependencias instaladas, ejecuta desde `frontend`:
+
+```bash
+npm run test:uat:config
+npm run test:uat:smoke
+npm run test:uat:sanity
+# O la secuencia completa:
+npm run test:uat
+```
+
+- **Smoke** comprueba `/health` de la API, el proxy Vite hacia la API y que Chrome muestre el formulario de acceso. No requiere sesión ni crea datos.
+- **Sanity** inicia sesión como recepción, comprueba rol, habitaciones, consulta de disponibilidad y búsqueda/selección de habitación para una reservación. Crea o reactiva la cuenta local `uat-reception@hotel.test` y prepara habitaciones `E2E-*` y una reserva futura si faltan. No confirma una reservación nueva.
+- **Configuración** prueba que se rechacen URLs remotas y bases MongoDB que no sean locales `_test`.
+
+Los datos de Sanity permanecen en `hotel_uat_test` y la preparación es idempotente. No reutilices esta base como datos de desarrollo ni ejecutes Newman sobre ella: la colección API crea recursos adicionales. Los reportes JSON quedan en `frontend/reports/uat/`, carpeta ignorada por Git. Estas tareas son manuales y no forman parte de CI.
+
 ## Ejecución segura de integración MongoDB
 
 Ejemplo de preparación local con Docker Desktop/replica set (no elimina ni limpia bases):
