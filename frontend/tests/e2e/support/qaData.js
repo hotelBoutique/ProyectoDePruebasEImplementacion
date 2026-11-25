@@ -132,3 +132,138 @@ export async function ensureReservedWindow(receptionToken, room) {
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Datos del flujo de recepción (reservation-flow: reserva → check-in → consumo → pago y check-out).
+// Usa su propia habitación y su propio producto, con precios 888.xxx, para no alterar las
+// suites de habitaciones y disponibilidad, que esperan exactamente cuatro habitaciones 777.xxx.
+
+export const RECEPTION_PRICE_RANGE = { min: 888000, max: 888999 };
+
+export const RECEPTION_ROOM = {
+  number: 'E2E-R01',
+  type: 'Doble',
+  capacity: 2,
+  price: 888100,
+  status: 'disponible',
+  description: 'Habitación de prueba E2E del flujo de recepción',
+};
+
+export const RECEPTION_PRODUCT = {
+  name: 'Agua E2E Recepción',
+  description: 'Producto de prueba E2E del flujo de recepción',
+  category: 'Minibar',
+  price: 8800,
+  stock: 500,
+  isActive: true,
+};
+
+// Stock mínimo antes de reponer el producto de prueba.
+const RECEPTION_PRODUCT_MIN_STOCK = 50;
+
+// Datos únicos del huésped en cada corrida, para encontrar su reserva entre las demás de QA.
+export function receptionGuest(runId = Date.now().toString(36)) {
+  return {
+    fullName: `Huésped E2E Recepción ${runId}`,
+    email: `e2e.recepcion.${runId}@example.test`,
+    phone: '3001234567',
+    identification: `E2E-${runId}`,
+  };
+}
+
+// Pide el token de administrador solo la primera vez que se necesita.
+function lazyAdminToken() {
+  let token;
+  return {
+    async get() {
+      if (!token) token = await apiLogin(process.env.TEST_ADMIN_EMAIL, process.env.TEST_ADMIN_PASSWORD);
+      return token;
+    },
+    async release() {
+      if (token) await apiLogout(token);
+    },
+  };
+}
+
+async function findReceptionRoom(token) {
+  const query = new URLSearchParams({
+    minPrice: String(RECEPTION_PRICE_RANGE.min),
+    maxPrice: String(RECEPTION_PRICE_RANGE.max),
+  });
+  const data = await request('GET', `/rooms?${query}`, token);
+  return (data.data?.rooms || []).find((room) => room.number === RECEPTION_ROOM.number);
+}
+
+async function findReceptionProduct(token) {
+  const query = new URLSearchParams({ search: RECEPTION_PRODUCT.name });
+  const data = await request('GET', `/products?${query}`, token);
+  return (data.data?.products || []).find((product) => product.name === RECEPTION_PRODUCT.name);
+}
+
+// Cierra lo que haya dejado una corrida anterior que falló a mitad del flujo:
+// hace check-out de una estancia activa en la habitación de prueba y cancela sus reservas pendientes.
+export async function releaseReceptionRoom(receptionToken, room) {
+  const pendingCheckOuts = await request('GET', '/reservations/check-outs/pending', receptionToken);
+  const activeStays = (pendingCheckOuts.data?.reservations || [])
+    .filter((reservation) => reservation.roomNumber === RECEPTION_ROOM.number && reservation.settlementEstimate);
+  for (const stay of activeStays) {
+    await request('POST', `/reservations/${stay._id}/check-out`, receptionToken, {
+      additionalCharges: [],
+      paidAmount: stay.settlementEstimate.totalDue,
+      paymentMethod: 'efectivo',
+    });
+  }
+
+  const query = new URLSearchParams({ roomId: room._id, status: 'reservada' });
+  const reserved = await request('GET', `/reservations?${query}`, receptionToken);
+  for (const reservation of reserved.data?.reservations || []) {
+    await request('POST', `/reservations/${reservation._id}/cancel`, receptionToken, {
+      reason: 'Limpieza automática de la suite E2E del flujo de recepción',
+    });
+  }
+}
+
+// Deja lista la habitación E2E-R01 (libre y con su tarifa) y el producto de prueba con stock.
+// Es idempotente: solo crea o corrige lo que falte.
+export async function prepareReceptionFlow(receptionToken) {
+  const admin = lazyAdminToken();
+  try {
+    let room = await findReceptionRoom(receptionToken);
+    if (!room) {
+      await request('POST', '/rooms', await admin.get(), RECEPTION_ROOM);
+      room = await findReceptionRoom(receptionToken);
+    }
+
+    await releaseReceptionRoom(receptionToken, room);
+    room = await findReceptionRoom(receptionToken);
+    if (room.status !== RECEPTION_ROOM.status || room.price !== RECEPTION_ROOM.price) {
+      await request('PATCH', `/rooms/${room._id}`, await admin.get(), {
+        status: RECEPTION_ROOM.status,
+        price: RECEPTION_ROOM.price,
+      });
+      room = await findReceptionRoom(receptionToken);
+    }
+
+    // La recepción solo ve productos activos; si no aparece, se busca como administrador.
+    let product = await findReceptionProduct(receptionToken)
+      || await findReceptionProduct(await admin.get());
+    if (!product) {
+      await request('POST', '/products', await admin.get(), RECEPTION_PRODUCT);
+    } else if (
+      !product.isActive
+      || product.price !== RECEPTION_PRODUCT.price
+      || product.stock < RECEPTION_PRODUCT_MIN_STOCK
+    ) {
+      await request('PATCH', `/products/${product._id}`, await admin.get(), {
+        isActive: true,
+        price: RECEPTION_PRODUCT.price,
+        stock: Math.max(product.stock, RECEPTION_PRODUCT.stock),
+      });
+    }
+    product = await findReceptionProduct(receptionToken);
+
+    return { room, product };
+  } finally {
+    await admin.release();
+  }
+}
